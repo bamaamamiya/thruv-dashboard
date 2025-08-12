@@ -5,6 +5,7 @@ import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebaseClient";
 
 import ConversionRate from "@/app/components/analytics/ConversionRate";
+import Navbar from "@/app/components/analytics/Navbar";
 import FilterBar from "@/app/components/analytics/FilterBar";
 import Summary from "@/app/components/analytics/Summary";
 import LeadsChart from "@/app/components/analytics/LeadsChart";
@@ -73,7 +74,7 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <div className="min-h-screen px-4 py-6">
+      <div className="min-h-screen  text-black px-4 py-6">
         <div className="max-w-4xl mx-auto space-y-6">
           {/* Filter Selection */}
           <FilterBar
