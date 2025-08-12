@@ -1,11 +1,13 @@
-import withPWA from "next-pwa";
+import withPWA from 'next-pwa';
 
-const nextConfig = withPWA({
-  dest: "public",
-  register: true,
-  skipWaiting: true,
-  disable: process.env.NODE_ENV === "development",
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   reactStrictMode: true,
-});
+  swcMinify: true,
+  // konfigurasi lain Next.js bisa ditambahkan di sini
+};
 
-export default nextConfig;
+export default withPWA({
+  dest: 'public',        // tempat output service worker
+  disable: process.env.NODE_ENV === 'development',
+})(nextConfig);
