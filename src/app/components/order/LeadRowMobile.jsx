@@ -12,7 +12,12 @@ const formatHargaSingkat = (harga) => {
   return (harga / 1000).toFixed(0) + "rb";
 };
 
-export default function LeadRowMobile({ lead, copiedId, setCopiedId, onSelect }) {
+export default function LeadRowMobile({
+  lead,
+  copiedId,
+  setCopiedId,
+  onSelect,
+}) {
   const [showModal, setShowModal] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
@@ -22,6 +27,8 @@ export default function LeadRowMobile({ lead, copiedId, setCopiedId, onSelect })
     price: lead.price || "",
     status: lead.status || "",
     resiCheck: lead.resiCheck || "not",
+    rts: lead.rts || "",
+    address: lead.address || "",
   });
 
   const handleCheckboxChange = (e) => {
@@ -74,7 +81,12 @@ Untuk ongkir, akan dihitung otomatis dan dianggap disetujui oleh sistem 🙏`;
   };
 
   const handleSave = async () => {
-    if (!formData.price || !formData.costProduct) {
+    if (
+      !formData.price ||
+      !formData.costProduct ||
+      !formData.rts ||
+      !formData.address
+    ) {
       alert("Harga dan biaya produk tidak boleh kosong.");
       return;
     }
@@ -85,6 +97,8 @@ Untuk ongkir, akan dihitung otomatis dan dianggap disetujui oleh sistem 🙏`;
         costProduct: Number(formData.costProduct),
         status: formData.status,
         resiCheck: formData.resiCheck,
+        rts: formData.rts,
+        address: formData.address,
       });
       setShowModal(false);
     } catch (err) {
@@ -103,10 +117,10 @@ Untuk ongkir, akan dihitung otomatis dan dianggap disetujui oleh sistem 🙏`;
   };
 
   const statusOptions = [
-    { value: "", label: "🧼 None" },
     { value: "pending", label: "🕓 Pending" },
     { value: "complete", label: "✅ Complete" },
     { value: "cancel", label: "❌ Cancel" },
+    { value: "rts", label: "🚚 RTS" },
   ];
   const resiOptions = [
     { value: "not", label: "🕓 Belum Dicek" },
@@ -127,22 +141,29 @@ Untuk ongkir, akan dihitung otomatis dan dianggap disetujui oleh sistem 🙏`;
       >
         <div className="flex justify-between text-sm mb-2 text-gray-400">
           <span>
-            {new Date(lead.createdAt.seconds * 1000).toLocaleDateString("id-ID", {
-              day: "2-digit",
-              month: "short",
-            })}
+            {new Date(lead.createdAt.seconds * 1000).toLocaleDateString(
+              "id-ID",
+              {
+                day: "2-digit",
+                month: "short",
+              }
+            )}
           </span>
-          <span className="text-emerald-500 font-medium">{lead.paymentMethod}</span>
+          <span className="text-emerald-500 font-medium">
+            {lead.paymentMethod}
+          </span>
         </div>
         <div className="text-gray-800 font-semibold text-base">{lead.name}</div>
         <div className="text-blue-600 text-sm mb-1">{lead.whatsapp}</div>
         <span
           className={`text-sm font-medium capitalize rounded px-2 py-0.5 inline-block mt-1 ${
             lead.status === "complete"
-              ? "bg-green-100 text-green-700"
+              ? "text-green-500"
               : lead.status === "cancel"
-              ? "bg-red-100 text-red-700"
-              : "bg-yellow-100 text-yellow-700"
+              ? "text-red-500"
+              : lead.status === "pending"
+              ? "text-yellow-500"
+              : "text-black"
           }`}
         >
           {lead.status || "None"}
@@ -176,7 +197,9 @@ Untuk ongkir, akan dihitung otomatis dan dianggap disetujui oleh sistem 🙏`;
             <h2 className="text-xl font-semibold mb-4">📄 Detail Order</h2>
 
             <div className="space-y-2">
-              <p><span className="text-gray-500">Nama:</span> {lead.name}</p>
+              <p>
+                <span className="text-gray-500">Nama:</span> {lead.name}
+              </p>
               <p>
                 <span className="text-gray-500">WA:</span>{" "}
                 <a
@@ -188,13 +211,10 @@ Untuk ongkir, akan dihitung otomatis dan dianggap disetujui oleh sistem 🙏`;
                   {lead.whatsapp}
                 </a>
               </p>
-              <p><span className="text-gray-500">Alamat:</span> {lead.address}</p>
-              <p><span className="text-gray-500">Produk:</span> {lead.productTitle}</p>
-            </div>
-
-            <div className="mt-4 space-y-3">
-              <div>
-                <label className="block text-gray-500 text-xs mb-1">Harga:</label>
+							<div>
+                <label className="block text-gray-500 text-xs mb-1">
+                  Harga:
+                </label>
                 <input
                   type="number"
                   value={formData.price}
@@ -202,13 +222,50 @@ Untuk ongkir, akan dihitung otomatis dan dianggap disetujui oleh sistem 🙏`;
                   className="border rounded px-2 py-2 text-sm w-full"
                 />
               </div>
+              {/* <p>
+                <span className="text-gray-500">Alamat:</span> {lead.address}
+              </p> */}
               <div>
-                <label className="block text-gray-500 text-xs mb-1">Cost Product:</label>
+                <label className="block text-gray-500 text-xs mb-1">
+                  Alamat:
+                </label>
+                <input
+                  type="text"
+                  value={formData.address}
+                  onChange={(e) => handleChange("address", e.target.value)}
+                  className="border rounded px-2 py-2 text-sm w-full"
+                />
+              </div>
+              <p>
+                <span className="text-gray-500">Produk:</span>{" "}
+                {lead.productTitle}
+              </p>
+            </div>
+
+            <div className="mt-4 space-y-3">
+              
+              <div>
+                <label className="block text-gray-500 text-xs mb-1">
+                  Cost Product:
+                </label>
                 <input
                   type="number"
                   value={formData.costProduct}
                   onChange={(e) => handleChange("costProduct", e.target.value)}
                   className="border rounded px-2 py-2 text-sm w-full"
+                />
+              </div>
+              <div>
+                <label className="block text-gray-500 text-xs mb-1">
+                  Biaya RTS:
+                </label>
+                <input
+                  type="number"
+                  value={formData.rts}
+                  onChange={(e) => handleChange("rts", e.target.value)}
+                  className="border rounded px-2 py-2 text-sm w-full"
+                  placeholder="Masukkan biaya RTS"
+
                 />
               </div>
 

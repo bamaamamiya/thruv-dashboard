@@ -98,11 +98,33 @@ export default function LeadRow({ lead, copiedId, setCopiedId, onSelect }) {
     [lead, onSelect]
   );
 
+  const handleSave = async () => {
+    if (!priceValue || !costProductValue) {
+      alert("Harga dan biaya produk tidak boleh kosong.");
+      return;
+    }
+    try {
+      await updateDoc(doc(db, "leads", lead.id), {
+        price: Number(priceValue),
+        costProduct: Number(costProductValue),
+        address: addressValue,
+        rts: Number(returnValue) || 0,
+        status: lead.status,
+        resiCheck: lead.resiCheck || "not",
+      });
+      setShowModal(false);
+    } catch (err) {
+      console.error("Gagal update:", err);
+      alert("Gagal menyimpan data.");
+    }
+  };
+
   const handleStatusChange = useCallback(
     async (newStatus) => {
       if (newStatus === lead.status) return;
       try {
         await updateDoc(doc(db, "leads", lead.id), { status: newStatus });
+        lead.status = newStatus; // update langsung biar UI refresh
       } catch (err) {
         console.error("Gagal update status:", err);
         alert("Gagal update status.");
@@ -125,7 +147,7 @@ export default function LeadRow({ lead, copiedId, setCopiedId, onSelect }) {
   );
 
   const handleCopyAddress = () => {
-    const prompt = `[PROVINSI], [KABUPATEN/KOTA], [KECAMATAN], [DESA/KELURAHAN] dan rapikan alamat lengkap, dan kelurahan atau desa terpisah.\n\nAlamat mentah: ${lead.address}`;
+    const prompt = `[PROVINSI], [KABUPATEN/KOTA], [KECAMATAN], [DESA/KELURAHAN] dan rapikan alamat lengkap, dan kelurahan terpisah.\n\nAlamat mentah: ${lead.address}`;
     copyToClipboard(prompt, () => {
       setCopiedId(lead.id);
       setTimeout(() => setCopiedId(null), 2000);
@@ -134,19 +156,19 @@ export default function LeadRow({ lead, copiedId, setCopiedId, onSelect }) {
 
   const handleCopy = () => {
     const pesan = `Terima kasih sudah melakukan pemesanan 🙏  
-Berikut detail pesanan Kakak:
+										Berikut detail pesanan Kakak:
 
-Nama Produk: ${lead.productTitle}  
-Harga Produk: ${formatHargaSingkat(lead.price)}  
-Ongkir: 
-Total Pembayaran: 
+										Nama Produk: ${lead.productTitle}  
+										Harga Produk: ${formatHargaSingkat(lead.price)}  
+										Ongkir: 
+										Total Pembayaran: 
 
-Nama: ${lead.name}  
-Alamat Lengkap: ${lead.address}
+										Nama: ${lead.name}  
+										Alamat Lengkap: ${lead.address}
 
-Apakah alamat yang Kakak berikan sudah benar?  
-Kami akan segera proses pesanan Kakak jika alamatnya sudah sesuai ya.  
-Untuk ongkir, akan dihitung otomatis dan dianggap disetujui oleh sistem 🙏`;
+										Apakah alamat yang Kakak berikan sudah benar?  
+										Kami akan segera proses pesanan Kakak jika alamatnya sudah sesuai ya.  
+										Untuk ongkir, akan dihitung otomatis dan dianggap disetujui oleh sistem 🙏`;
 
     copyToClipboard(pesan, () => {
       setCopiedId(lead.id);
@@ -315,9 +337,13 @@ Untuk ongkir, akan dihitung otomatis dan dianggap disetujui oleh sistem 🙏`;
                 )}
               </p>
 
-              {updating && (
-                <p className="text-xs text-gray-500 mt-1">⏳ Menyimpan...</p>
-              )}
+              <button
+                onClick={handleSave}
+                disabled={updating}
+                className="w-full bg-black text-white text-xs font-semibold px-3 py-2 rounded-md hover:bg-gray-800 transition"
+              >
+                {updating ? "⏳ Menyimpan..." : "💾 Simpan Perubahan"}
+              </button>
             </div>
 
             {/* Status Buttons */}
