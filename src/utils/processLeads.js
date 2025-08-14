@@ -21,6 +21,7 @@ export const filterLeadsByDate = (leads, start, end) => {
 export const calculateSummary = (leads) => {
   const completed = leads.filter((lead) => lead.status === "complete");
   const pending = leads.filter((lead) => lead.status === "pending");
+  const returns = leads.filter((lead) => lead.status === "rts"); 
 
   const totalSales = completed.reduce(
     (sum, lead) => sum + (lead.price || 0),
@@ -35,21 +36,34 @@ export const calculateSummary = (leads) => {
     0
   );
   const pendingCost = pending.reduce(
-    (sum, lead) => sum + (lead.costProduct || 0),
+		(sum, lead) => sum + (lead.costProduct || 0),
     0
   );
   const totalAllTimeCost = leads.reduce(
-    (sum, lead) => sum + (lead.costProduct || 0),
+		(sum, lead) => sum + (lead.costProduct || 0),
     0
   );
+	
+  // Kalau returns sudah array filter khusus yang RTS
+  const totalReturnToSenderCost = returns.reduce(
+		(sum, lead) => sum + Number(lead.rts || 0),
+    0
+  );
+  const totalReturnToSender = returns.reduce(
+		(sum, lead) => sum + (lead.rts || 0),
+    0
+  );
+	
+
 
   const profit = totalSales - totalCost;
-  const pendingProfit = totalPendingValue - pendingCost;
 
   return {
     totalOrders: leads.length,
     completedOrders: completed.length,
     pendingOrders: pending.length,
+    totalReturnToSenderCost,
+    totalReturnToSender : returns.length,
     totalSales,
     totalPendingValue,
     totalCost,
@@ -101,7 +115,8 @@ export const generateChartData = (leads, selectedFilter, start, end) => {
 
       if (map[key]) {
         if (lead.status === "complete") map[key].complete += getRevenue(lead);
-        else if (lead.status === "pending") map[key].pending += getRevenue(lead);
+        else if (lead.status === "pending")
+          map[key].pending += getRevenue(lead);
       }
     });
 
@@ -126,11 +141,14 @@ export const generateChartData = (leads, selectedFilter, start, end) => {
 
     leads.forEach((lead) => {
       const time = new Date(lead.createdAt.seconds * 1000);
-      if (isWithinInterval(time, { start: startOfLastWeek, end: endOfLastWeek })) {
+      if (
+        isWithinInterval(time, { start: startOfLastWeek, end: endOfLastWeek })
+      ) {
         const key = format(time, "dd MMM");
         if (map[key]) {
           if (lead.status === "complete") map[key].complete += getRevenue(lead);
-          else if (lead.status === "pending") map[key].pending += getRevenue(lead);
+          else if (lead.status === "pending")
+            map[key].pending += getRevenue(lead);
         }
       }
     });
@@ -154,11 +172,16 @@ export const generateChartData = (leads, selectedFilter, start, end) => {
         weekMap[label] = { complete: 0, pending: 0 };
       }
 
-      if (lead.status === "complete") weekMap[label].complete += getRevenue(lead);
-      else if (lead.status === "pending") weekMap[label].pending += getRevenue(lead);
+      if (lead.status === "complete")
+        weekMap[label].complete += getRevenue(lead);
+      else if (lead.status === "pending")
+        weekMap[label].pending += getRevenue(lead);
     });
 
-    return Object.entries(weekMap).map(([label, value]) => ({ label, ...value }));
+    return Object.entries(weekMap).map(([label, value]) => ({
+      label,
+      ...value,
+    }));
   }
 
   // ALL TIME (group per month)
@@ -196,7 +219,8 @@ export const generateChartData = (leads, selectedFilter, start, end) => {
 
         if (map[key]) {
           if (lead.status === "complete") map[key].complete += getRevenue(lead);
-          else if (lead.status === "pending") map[key].pending += getRevenue(lead);
+          else if (lead.status === "pending")
+            map[key].pending += getRevenue(lead);
         }
       });
 
@@ -216,10 +240,14 @@ export const generateChartData = (leads, selectedFilter, start, end) => {
       if (!weekMap[key]) weekMap[key] = { complete: 0, pending: 0 };
 
       if (lead.status === "complete") weekMap[key].complete += getRevenue(lead);
-      else if (lead.status === "pending") weekMap[key].pending += getRevenue(lead);
+      else if (lead.status === "pending")
+        weekMap[key].pending += getRevenue(lead);
     });
 
-    return Object.entries(weekMap).map(([label, value]) => ({ label, ...value }));
+    return Object.entries(weekMap).map(([label, value]) => ({
+      label,
+      ...value,
+    }));
   }
 
   return [];

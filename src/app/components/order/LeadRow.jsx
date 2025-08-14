@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { deleteDoc, doc, updateDoc } from "firebase/firestore";
-import { db } from "@/lib/firebaseClient"; // pastikan alias sudah benar di jsconfig/tsconfig
+import { db } from "@/lib/firebaseClient";
 
 // 🔹 Format currency short
 const formatHargaSingkat = (harga) => {
@@ -16,7 +16,7 @@ const formatHargaSingkat = (harga) => {
 
 // 🔹 Copy to clipboard
 const copyToClipboard = async (text, onCopied) => {
-  if (typeof navigator === "undefined") return; // pastikan di client
+  if (typeof navigator === "undefined") return;
   try {
     await navigator.clipboard.writeText(text);
     onCopied?.();
@@ -35,7 +35,12 @@ const useDebouncedSave = (value, originalValue, leadId, field) => {
       if (value !== originalValue) {
         setSaving(true);
         try {
-          await updateDoc(doc(db, "leads", leadId), { [field]: Number(value) });
+          await updateDoc(doc(db, "leads", leadId), {
+            [field]:
+              field === "price" || field === "costProduct"
+                ? Number(value)
+                : value,
+          });
           console.log(`✅ ${field} updated`);
         } catch (err) {
           console.error(`Gagal update ${field}:`, err);
@@ -58,11 +63,31 @@ export default function LeadRow({ lead, copiedId, setCopiedId, onSelect }) {
   const [costProductValue, setCostProductValue] = useState(
     lead.costProduct || ""
   );
+  const [addressValue, setAddressValue] = useState(lead.address || "");
+  const [returnValue, setReturnValue] = useState(lead.rts || "");
   const [isChecked, setIsChecked] = useState(false);
 
-  const savingPrice = useDebouncedSave(priceValue, lead.price, lead.id, "price");
-  const savingCost = useDebouncedSave(costProductValue, lead.costProduct, lead.id, "costProduct");
-  const updating = savingPrice || savingCost;
+  const savingPrice = useDebouncedSave(
+    priceValue,
+    lead.price,
+    lead.id,
+    "price"
+  );
+  const savingCost = useDebouncedSave(
+    costProductValue,
+    lead.costProduct,
+    lead.id,
+    "costProduct"
+  );
+  const savingAddress = useDebouncedSave(
+    addressValue,
+    lead.address,
+    lead.id,
+    "address"
+  );
+  const savingReturn = useDebouncedSave(returnValue, lead.rts, lead.id, "rts");
+
+  const updating = savingPrice || savingCost || savingAddress || savingReturn;
 
   const handleCheckboxChange = useCallback(
     (e) => {
@@ -100,7 +125,7 @@ export default function LeadRow({ lead, copiedId, setCopiedId, onSelect }) {
   );
 
   const handleCopyAddress = () => {
-    const prompt = `[PROVINSI], [KABUPATEN/KOTA], [KECAMATAN], [DESA/KELURAHAN] dan rapikan alamat lengkap, dan kelurahan/desa terpisah.\n\nAlamat mentah: ${lead.address}`;
+    const prompt = `[PROVINSI], [KABUPATEN/KOTA], [KECAMATAN], [DESA/KELURAHAN] dan rapikan alamat lengkap, dan kelurahan atau desa terpisah.\n\nAlamat mentah: ${lead.address}`;
     copyToClipboard(prompt, () => {
       setCopiedId(lead.id);
       setTimeout(() => setCopiedId(null), 2000);
@@ -133,7 +158,7 @@ Untuk ongkir, akan dihitung otomatis dan dianggap disetujui oleh sistem 🙏`;
     { value: "pending", label: "🕓 Pending" },
     { value: "complete", label: "✅ Complete" },
     { value: "cancel", label: "❌ Cancel" },
-    { value: "", label: "🧼 None" },
+    { value: "rts", label: "🚚 RTS" },
   ];
 
   const resiOptions = [
@@ -145,7 +170,7 @@ Untuk ongkir, akan dihitung otomatis dan dianggap disetujui oleh sistem 🙏`;
     <>
       {/* Lead Row */}
       <div
-        className="grid grid-cols-8 items-center gap-2 cursor-pointer hover:bg-gray-50 px-3 py-3 rounded-md transition text-sm  border border-gray-200"
+        className="grid text-sm grid-cols-8 items-center gap-2 cursor-pointer hover:bg-gray-50 px-3 py-3 rounded-md transition border border-gray-200"
         onClick={() => setShowModal(true)}
       >
         <input
@@ -177,15 +202,17 @@ Untuk ongkir, akan dihitung otomatis dan dianggap disetujui oleh sistem 🙏`;
         </span>
         <span className="text-gray-700 truncate">{lead.productTitle}</span>
         <span
-          className={`capitalize font-semibold text-sm text-center ${
+          className={`uppercase font-semibold text-sm text-center ${
             lead.status === "complete"
               ? "text-green-500"
               : lead.status === "cancel"
               ? "text-red-500"
-              : "text-yellow-500"
+              : lead.status === "pending"
+              ? "text-yellow-500"
+              : "text-black"
           }`}
         >
-          {lead.status || "none"}
+          {lead.status}
         </span>
         <span
           className={`text-xs text-center font-semibold px-2 py-0.5 rounded-full ${
@@ -213,7 +240,9 @@ Untuk ongkir, akan dihitung otomatis dan dianggap disetujui oleh sistem 🙏`;
             <h2 className="text-lg font-semibold mb-4">📄 Detail Lead</h2>
 
             <div className="space-y-2">
-              <p><strong>Nama:</strong> {lead.name}</p>
+              <p>
+                <strong>Nama:</strong> {lead.name}
+              </p>
               <p>
                 <strong>WA:</strong>{" "}
                 <a
@@ -237,9 +266,23 @@ Untuk ongkir, akan dihitung otomatis dan dianggap disetujui oleh sistem 🙏`;
                 />
               </div>
 
-              <p><strong>Alamat:</strong> {lead.address}</p>
-              <p><strong>Metode:</strong> {lead.paymentMethod}</p>
-              <p><strong>Produk:</strong> {lead.productTitle}</p>
+              <div>
+                <strong>Alamat:</strong>
+                <textarea
+                  className="border rounded px-2 py-1 text-sm w-full mt-1"
+                  value={addressValue}
+                  onChange={(e) => setAddressValue(e.target.value)}
+                  placeholder="Masukkan alamat baru"
+                  rows={3}
+                />
+              </div>
+
+              <p>
+                <strong>Metode:</strong> {lead.paymentMethod}
+              </p>
+              <p>
+                <strong>Produk:</strong> {lead.productTitle}
+              </p>
 
               <div>
                 <strong>Cost Product:</strong>
@@ -252,9 +295,24 @@ Untuk ongkir, akan dihitung otomatis dan dianggap disetujui oleh sistem 🙏`;
                 />
               </div>
 
-              <p><strong>Resi Check:</strong> {lead.resiCheck || "not"}</p>
+              <p>
+                <strong>Resi Check:</strong> {lead.resiCheck || "not"}
+              </p>
+              <div>
+                <strong>Biaya Return:</strong>
+                <input
+                  type="number"
+                  className="border rounded px-2 py-1 text-sm w-full mt-1"
+                  value={returnValue}
+                  onChange={(e) => setReturnValue(e.target.value)}
+                  placeholder="Masukkan biaya RTS"
+                />
+              </div>
               <p className="text-xs text-gray-500">
-                Masuk: {new Date(lead.createdAt.seconds * 1000).toLocaleString("id-ID")}
+                Masuk:{" "}
+                {new Date(lead.createdAt.seconds * 1000).toLocaleString(
+                  "id-ID"
+                )}
               </p>
 
               {updating && (

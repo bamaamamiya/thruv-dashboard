@@ -12,6 +12,7 @@ import OrderStatus from "@/app/components/analytics/OrderStatus";
 import ProfitSummary from "@/app/components/analytics/ProfitSummary";
 import PendingProfit from "@/app/components/analytics/PendingProfit";
 import ProfitTotal from "@/app/components/analytics/ProfitTotal";
+import Return from "./components/analytics/Return";
 
 import { getDateRange } from "@/utils/dateFilters";
 import { getPreviousRange } from "@/utils/getPreviousRange";
@@ -50,7 +51,8 @@ export default function DashboardPage() {
     totalPendingValue,
     totalCost,
     pendingCost,
-    totalAllTimeCost,
+    totalReturnToSenderCost,
+    totalReturnToSender,
   } = calculateSummary(filteredLeads);
 
   // 3. Previous range & metrics
@@ -111,6 +113,7 @@ export default function DashboardPage() {
             completedOrders={completedOrders}
             pendingOrders={pendingOrders}
             totalOrders={totalOrders}
+            totalReturnToSender={totalReturnToSender}
           />
 
           {/* Profit Info */}
@@ -118,12 +121,18 @@ export default function DashboardPage() {
             totalSales={totalSales}
             totalPendingValue={totalPendingValue}
             totalCost={totalCost}
+            totalReturnToSenderCost={totalReturnToSenderCost}
           />
-          <ProfitSummary totalSales={totalSales} totalCost={totalCost} />
+          <ProfitSummary
+            totalSales={totalSales}
+            totalCost={totalCost}
+            totalReturnToSenderCost={totalReturnToSenderCost}
+          />
           <PendingProfit
             totalPendingValue={totalPendingValue}
             pendingCost={pendingCost}
           />
+          <Return rts={totalReturnToSenderCost} />
         </div>
       </div>
     </div>

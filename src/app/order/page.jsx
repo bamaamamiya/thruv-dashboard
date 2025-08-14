@@ -66,7 +66,7 @@ export default function LeadsDashboard() {
 
     return matchStatus && matchDate;
   });
-  const statusOptions = ["Semua", "pending", "complete", "cancel"];
+  const statusOptions = ["Semua", "pending", "complete", "cancel" , "rts"];
 
   const handleSelectLead = (lead, isChecked) => {
     setSelectedLeads((prev) => {
@@ -199,7 +199,7 @@ export default function LeadsDashboard() {
 
           <div className="flex flex-wrap gap-4 items-center mb-6 justify-between">
             <select
-              className="border border-gray-300 rounded px-4 py-2 shadow-sm"
+              className="border border-gray-300 rounded px-4 py-2 shadow-sm "
               value={selectedFilter}
               onChange={(e) => {
                 setSelectedFilter(e.target.value);
@@ -235,10 +235,10 @@ export default function LeadsDashboard() {
             <select
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
-              className=" border capitalize border-gray-300 text-gray-800 px-4 py-2 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-[200px]"
+              className=" border uppercase border-gray-300 text-gray-800 px-4 py-2 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-[200px]"
             >
               {statusOptions.map((status) => (
-                <option key={status} value={status} className="capitalize">
+                <option key={status} value={status} className="uppercase">
                   {status}
                 </option>
               ))}

@@ -52,6 +52,8 @@ const LeadsChart = ({ data }) => {
     );
   };
 
+
+
   return (
     <div className=" p-4 md:p-6 rounded-2xl shadow-md border border-gray-200">
       <div className="flex justify-between items-center mb-4">
