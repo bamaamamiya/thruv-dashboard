@@ -55,7 +55,6 @@ export const calculateSummary = (leads) => {
   );
 	
 
-
   const profit = totalSales - totalCost;
 
   return {

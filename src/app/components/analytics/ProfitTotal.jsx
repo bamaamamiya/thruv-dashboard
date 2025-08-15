@@ -1,8 +1,8 @@
 import React from "react";
 
-const ProfitTotal = ({ totalSales, totalCost , totalPendingValue , totalReturnToSenderCost}) => {
+const ProfitTotal = ({ totalSales, totalCost , totalPendingValue , totalReturnToSenderCost , pendingCost}) => {
   // Hitung profit
-  const profit = totalSales + totalPendingValue - totalCost - totalReturnToSenderCost;
+  const profit = totalSales + totalPendingValue - totalCost - totalReturnToSenderCost - pendingCost;
 
   // Tentukan warna berdasarkan profit (positif atau negatif)
   const isProfitPositive = profit >= 0;

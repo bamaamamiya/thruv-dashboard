@@ -73,6 +73,7 @@ export default function DashboardPage() {
     end
   );
 
+
   return (
     <div>
       <div className="min-h-screen px-4 py-6">
@@ -119,8 +120,9 @@ export default function DashboardPage() {
           {/* Profit Info */}
           <ProfitTotal
             totalSales={totalSales}
-            totalPendingValue={totalPendingValue}
             totalCost={totalCost}
+						totalPendingValue={totalPendingValue}
+            pendingCost={pendingCost}
             totalReturnToSenderCost={totalReturnToSenderCost}
           />
           <ProfitSummary
