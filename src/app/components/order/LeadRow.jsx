@@ -156,19 +156,19 @@ export default function LeadRow({ lead, copiedId, setCopiedId, onSelect }) {
 
   const handleCopy = () => {
     const pesan = `Terima kasih sudah melakukan pemesanan 🙏  
-										Berikut detail pesanan Kakak:
+Berikut detail pesanan Kakak:
 
-										Nama Produk: ${lead.productTitle}  
-										Harga Produk: ${formatHargaSingkat(lead.price)}  
-										Ongkir: 
-										Total Pembayaran: 
+Nama Produk: ${lead.productTitle}  
+Harga Produk: ${formatHargaSingkat(lead.price)}  
+Ongkir: 
+Total Pembayaran: 
 
-										Nama: ${lead.name}  
-										Alamat Lengkap: ${lead.address}
+Nama: ${lead.name}  
+Alamat Lengkap: ${lead.address}
 
-										Apakah alamat yang Kakak berikan sudah benar?  
-										Kami akan segera proses pesanan Kakak jika alamatnya sudah sesuai ya.  
-										Untuk ongkir, akan dihitung otomatis dan dianggap disetujui oleh sistem 🙏`;
+Apakah alamat yang Kakak berikan sudah benar?  
+Kami akan segera proses pesanan Kakak jika alamatnya sudah sesuai ya.  
+Untuk ongkir, akan dihitung otomatis dan dianggap disetujui oleh sistem 🙏`;
 
     copyToClipboard(pesan, () => {
       setCopiedId(lead.id);
@@ -266,7 +266,7 @@ export default function LeadRow({ lead, copiedId, setCopiedId, onSelect }) {
                 <strong>Nama:</strong> {lead.name}
               </p>
               <p>
-                <strong>WA:</strong>{" "}
+                <strong>WA:</strong>
                 <a
                   href={`https://wa.me/${lead.whatsapp}`}
                   target="_blank"
