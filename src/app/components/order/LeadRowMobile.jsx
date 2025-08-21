@@ -81,24 +81,16 @@ Untuk ongkir, akan dihitung otomatis dan dianggap disetujui oleh sistem 🙏`;
   };
 
   const handleSave = async () => {
-    if (
-      !formData.price ||
-      !formData.costProduct ||
-      !formData.rts ||
-      !formData.address
-    ) {
-      alert("Harga dan biaya produk tidak boleh kosong.");
-      return;
-    }
     setUpdating(true);
     try {
+      // biarkan kosong/null tetap tersimpan
       await updateDoc(doc(db, "leads", lead.id), {
-        price: Number(formData.price),
-        costProduct: Number(formData.costProduct),
-        status: formData.status,
-        resiCheck: formData.resiCheck,
-        rts: formData.rts,
-        address: formData.address,
+        price: formData.price ? Number(formData.price) : null,
+        costProduct: formData.costProduct ? Number(formData.costProduct) : null,
+        status: formData.status || "",
+        resiCheck: formData.resiCheck || "not",
+        rts: formData.rts ? Number(formData.rts) : null,
+        address: formData.address || "",
       });
       setShowModal(false);
     } catch (err) {
@@ -137,9 +129,9 @@ Untuk ongkir, akan dihitung otomatis dan dianggap disetujui oleh sistem 🙏`;
       />
       <div
         onClick={() => setShowModal(true)}
-        className=" rounded-xl p-4 mb-4 shadow-sm hover:ring ring-gray-200 transition cursor-pointer"
+        className="rounded-xl p-4 mb-4 shadow-sm hover:ring ring-gray-200 dark:hover:ring-gray-700 transition cursor-pointer bg-white dark:bg-gray-900"
       >
-        <div className="flex justify-between text-sm mb-2 text-gray-400">
+        <div className="flex justify-between text-sm mb-2 text-gray-400 dark:text-gray-500">
           <span>
             {new Date(lead.createdAt.seconds * 1000).toLocaleDateString(
               "id-ID",
@@ -153,8 +145,12 @@ Untuk ongkir, akan dihitung otomatis dan dianggap disetujui oleh sistem 🙏`;
             {lead.paymentMethod}
           </span>
         </div>
-        <div className="text-gray-800 font-semibold text-base">{lead.name}</div>
-        <div className="text-blue-600 text-sm mb-1">{lead.whatsapp}</div>
+        <div className="text-gray-800 dark:text-gray-100 font-semibold text-base">
+          {lead.name}
+        </div>
+        <div className="text-blue-600 dark:text-blue-400 text-sm mb-1">
+          {lead.whatsapp}
+        </div>
         <span
           className={`text-sm font-medium capitalize rounded px-2 py-0.5 inline-block mt-1 ${
             lead.status === "complete"
@@ -163,19 +159,21 @@ Untuk ongkir, akan dihitung otomatis dan dianggap disetujui oleh sistem 🙏`;
               ? "text-red-500"
               : lead.status === "pending"
               ? "text-yellow-500"
-              : "text-black"
+              : "text-gray-700 dark:text-gray-300"
           }`}
         >
           {lead.status || "None"}
         </span>
-        <div className="text-sm text-gray-700 mt-1">{lead.productTitle}</div>
+        <div className="text-sm text-gray-700 dark:text-gray-300 mt-1">
+          {lead.productTitle}
+        </div>
         <div className="flex justify-between text-sm mt-1">
-          <span className="text-gray-500">Resi:</span>
+          <span className="text-gray-500 dark:text-gray-400">Resi:</span>
           <span
             className={`text-xs font-medium px-2 py-0.5 rounded-full ${
               lead.resiCheck === "done"
-                ? "bg-green-100 text-green-700"
-                : "bg-gray-100 text-gray-600"
+                ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
+                : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
             }`}
           >
             {lead.resiCheck === "done" ? "✅ Dicek" : "❌ Belum"}
@@ -185,10 +183,10 @@ Untuk ongkir, akan dihitung otomatis dan dianggap disetujui oleh sistem 🙏`;
 
       {showModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4">
-          <div className="bg-white w-full max-w-md p-6 rounded-xl shadow-xl relative text-sm text-gray-800">
+          <div className="bg-white dark:bg-gray-900 w-full max-w-md p-6 rounded-xl shadow-xl relative text-sm text-gray-800 dark:text-gray-100">
             <button
               onClick={() => setShowModal(false)}
-              className="absolute top-3 right-4 text-gray-400 hover:text-gray-600 text-xl"
+              className="absolute top-3 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xl"
               aria-label="Close modal"
             >
               ❌
@@ -198,74 +196,70 @@ Untuk ongkir, akan dihitung otomatis dan dianggap disetujui oleh sistem 🙏`;
 
             <div className="space-y-2">
               <p>
-                <span className="text-gray-500">Nama:</span> {lead.name}
+                <span className="text-gray-500 dark:text-gray-400">Nama:</span>{" "}
+                {lead.name}
               </p>
               <p>
-                <span className="text-gray-500">WA:</span>{" "}
+                <span className="text-gray-500 dark:text-gray-400">WA:</span>{" "}
                 <a
                   href={`https://wa.me/${lead.whatsapp}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-blue-600 hover:underline"
+                  className="text-blue-600 dark:text-blue-400 hover:underline"
                 >
                   {lead.whatsapp}
                 </a>
               </p>
-							<div>
-                <label className="block text-gray-500 text-xs mb-1">
+              <div>
+                <label className="block text-gray-500 dark:text-gray-400 text-xs mb-1">
                   Harga:
                 </label>
                 <input
                   type="number"
                   value={formData.price}
                   onChange={(e) => handleChange("price", e.target.value)}
-                  className="border rounded px-2 py-2 text-sm w-full"
+                  className="border rounded px-2 py-2 text-sm w-full bg-white dark:bg-gray-800 dark:text-gray-100"
                 />
               </div>
-              {/* <p>
-                <span className="text-gray-500">Alamat:</span> {lead.address}
-              </p> */}
               <div>
-                <label className="block text-gray-500 text-xs mb-1">
+                <label className="block text-gray-500 dark:text-gray-400 text-xs mb-1">
                   Alamat:
                 </label>
                 <input
                   type="text"
                   value={formData.address}
                   onChange={(e) => handleChange("address", e.target.value)}
-                  className="border rounded px-2 py-2 text-sm w-full"
+                  className="border rounded px-2 py-2 text-sm w-full bg-white dark:bg-gray-800 dark:text-gray-100"
                 />
               </div>
               <p>
-                <span className="text-gray-500">Produk:</span>{" "}
+                <span className="text-gray-500 dark:text-gray-400">Produk:</span>{" "}
                 {lead.productTitle}
               </p>
             </div>
 
             <div className="mt-4 space-y-3">
-              
               <div>
-                <label className="block text-gray-500 text-xs mb-1">
+                <label className="block text-gray-500 dark:text-gray-400 text-xs mb-1">
                   Cost Product:
                 </label>
                 <input
                   type="number"
                   value={formData.costProduct}
                   onChange={(e) => handleChange("costProduct", e.target.value)}
-                  className="border rounded px-2 py-2 text-sm w-full"
+                  className="border rounded px-2 py-2 text-sm w-full bg-white dark:bg-gray-800 dark:text-gray-100"
                 />
               </div>
               <div>
-                <label className="block text-gray-500 text-xs mb-1">
+                <label className="block text-gray-500 dark:text-gray-400 text-xs mb-1">
                   Biaya RTS:
                 </label>
                 <input
                   type="number"
                   value={formData.rts}
                   onChange={(e) => handleChange("rts", e.target.value)}
-                  className="border rounded px-2 py-2 text-sm w-full"
+                  className="border rounded px-2 py-2 text-sm w-full bg-white dark:bg-gray-800 dark:text-gray-100"
                   placeholder="Masukkan biaya RTS"
-
                 />
               </div>
 
@@ -277,8 +271,8 @@ Untuk ongkir, akan dihitung otomatis dan dianggap disetujui oleh sistem 🙏`;
                     onClick={() => handleChange("status", s.value)}
                     className={`px-3 py-1 text-xs font-bold rounded-full border ${
                       formData.status === s.value
-                        ? "bg-black text-white"
-                        : "border-gray-300 text-gray-700 hover:bg-gray-100"
+                        ? "bg-black text-white dark:bg-white dark:text-black"
+                        : "border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
                     }`}
                   >
                     {s.label}
@@ -294,8 +288,8 @@ Untuk ongkir, akan dihitung otomatis dan dianggap disetujui oleh sistem 🙏`;
                     onClick={() => handleChange("resiCheck", r.value)}
                     className={`px-3 py-1 text-xs font-bold rounded-full border ${
                       formData.resiCheck === r.value
-                        ? "bg-black text-white"
-                        : "border-gray-300 text-gray-700 hover:bg-gray-100"
+                        ? "bg-black text-white dark:bg-white dark:text-black"
+                        : "border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
                     }`}
                   >
                     {r.label}
@@ -306,7 +300,7 @@ Untuk ongkir, akan dihitung otomatis dan dianggap disetujui oleh sistem 🙏`;
               <button
                 onClick={handleSave}
                 disabled={updating}
-                className="w-full bg-black text-white text-xs font-semibold px-3 py-2 rounded-md hover:bg-gray-800 transition"
+                className="w-full bg-black dark:bg-white dark:text-black text-white text-xs font-semibold px-3 py-2 rounded-md hover:bg-gray-800 dark:hover:bg-gray-200 transition"
               >
                 {updating ? "⏳ Menyimpan..." : "💾 Simpan Perubahan"}
               </button>
@@ -315,13 +309,13 @@ Untuk ongkir, akan dihitung otomatis dan dianggap disetujui oleh sistem 🙏`;
                 <div className="space-x-2">
                   <button
                     onClick={handleCopyOrder}
-                    className="bg-black text-white text-xs font-semibold px-3 py-1 rounded-md hover:bg-gray-800"
+                    className="bg-black dark:bg-white dark:text-black text-white text-xs font-semibold px-3 py-1 rounded-md hover:bg-gray-800 dark:hover:bg-gray-200"
                   >
                     {copiedId === lead.id ? "✅ Disalin!" : "📋 Salin Total"}
                   </button>
                   <button
                     onClick={handleCopyAddress}
-                    className="bg-black text-white text-xs font-semibold px-3 py-1 rounded-md hover:bg-gray-800"
+                    className="bg-black dark:bg-white dark:text-black text-white text-xs font-semibold px-3 py-1 rounded-md hover:bg-gray-800 dark:hover:bg-gray-200"
                   >
                     {copiedId === lead.id ? "✅ Disalin!" : "📋 Salin Alamat"}
                   </button>

@@ -193,13 +193,13 @@ export default function LeadsDashboard() {
     <div className="font-sans">
       <div className="min-h-screen  text-gray-900 px-4 py-12">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-2xl font-semibold text-center mb-8">
+          <h1 className="text-2xl font-semibold text-center mb-8 dark:text-white">
             📦 Order Masuk
           </h1>
 
           <div className="flex flex-wrap gap-4 items-center mb-6 justify-between">
             <select
-              className="border border-gray-300 rounded px-4 py-2 shadow-sm "
+              className="border border-gray-300 rounded px-4 py-2 shadow-sm dark:text-white"
               value={selectedFilter}
               onChange={(e) => {
                 setSelectedFilter(e.target.value);
@@ -209,7 +209,7 @@ export default function LeadsDashboard() {
               }}
             >
               {FILTER_OPTIONS.map((opt) => (
-                <option key={opt.key} value={opt.key}>
+                <option key={opt.key} value={opt.key} className="dark:bg-gray-900">
                   {opt.label}
                 </option>
               ))}
@@ -227,7 +227,7 @@ export default function LeadsDashboard() {
                 selectsRange
                 isClearable
                 placeholderText="Select custom date range"
-                className="border border-gray-300 rounded px-4 py-2 shadow-sm"
+                className="border border-gray-300 rounded px-4 py-2 shadow-sm dark:text-white"
               />
             )}
 
@@ -235,7 +235,7 @@ export default function LeadsDashboard() {
             <select
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
-              className=" border uppercase border-gray-300 text-gray-800 px-4 py-2 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-[200px]"
+              className=" border uppercase border-gray-300 text-gray-800 px-4 py-2 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-[200px] dark:text-white dark:bg-gray-900"
             >
               {statusOptions.map((status) => (
                 <option key={status} value={status} className="uppercase">
@@ -247,8 +247,8 @@ export default function LeadsDashboard() {
             <button
               onClick={() => setShowExportModal(true)}
               className="border border-gray-300 text-gray-800 px-5 py-2.5 rounded-md 
-          hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 
-          shadow-sm transition-all duration-200 font-medium"
+          focus:outline-none focus:ring-2 focus:ring-emerald-500 
+          shadow-sm transition-all duration-200 font-medium dark:text-white "
             >
               Export Data
             </button>

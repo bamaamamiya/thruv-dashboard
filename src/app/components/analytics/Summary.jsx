@@ -5,6 +5,7 @@ import {
   faCartShopping,
   faArrowTrendUp,
 } from "@fortawesome/free-solid-svg-icons";
+
 const Summary = ({
   totalSales,
   totalPendingValue,
@@ -12,31 +13,34 @@ const Summary = ({
   pendingOrders,
   start,
   end,
-  pendingOrdersPrevious, // ✅
+  pendingOrdersPrevious,
 }) => {
   const [showBreakdown, setShowBreakdown] = useState(false);
 
   const totalAll = totalSales + totalPendingValue;
 
   // 🧠 Persentase kenaikan
-  const pendingChangePercent = pendingOrdersPrevious > 0 ? ((pendingOrders - pendingOrdersPrevious) / pendingOrdersPrevious) * 100 : 0;
+  const pendingChangePercent =
+    pendingOrdersPrevious > 0
+      ? ((pendingOrders - pendingOrdersPrevious) / pendingOrdersPrevious) * 100
+      : 0;
 
   const isIncrease = pendingChangePercent >= 0;
 
   return (
-    <div className="text-center mb-8">
+    <div className="text-center mb-8 text-gray-900 dark:text-gray-100">
       <div className="flex justify-between items-center text-left">
         <div>
-          <h1 className="text-3xl">Total Sales</h1>
+          <h1 className="text-3xl font-semibold">Total Sales</h1>
           <h1 className="text-4xl sm:text-5xl font-bold">
             Rp.{totalAll.toLocaleString()}
           </h1>
 
           <div className="mt-2 space-y-1 text-sm">
-            <p className="text-green-600 font-semibold">
+            <p className="text-green-600 dark:text-green-400 font-semibold">
               Completed: Rp.{totalSales.toLocaleString()}
             </p>
-            <p className="text-yellow-500 font-semibold">
+            <p className="text-yellow-500 dark:text-yellow-400 font-semibold">
               Pending: Rp.{totalPendingValue.toLocaleString()}
             </p>
           </div>
@@ -46,10 +50,10 @@ const Summary = ({
         <p
           className={`text-3xl font-bold ${
             pendingChangePercent === 0
-              ? "text-black"
+              ? "text-gray-700 dark:text-gray-300"
               : isIncrease
-              ? "text-green-600" // karena increase pending = worse
-              : "text-red-500"
+              ? "text-green-600 dark:text-green-400" // increase pending = worse
+              : "text-red-500 dark:text-red-400"
           }`}
         >
           {pendingChangePercent > 0 && "↑"}
@@ -58,10 +62,9 @@ const Summary = ({
         </p>
       </div>
 
-      
       <div className="text-left">
-        <p className=" text-lg mt-2">{totalOrders} Orders</p>
-        <p className="text-sm text-gray-400 mt-1">
+        <p className="text-lg mt-2">{totalOrders} Orders</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
           {format(start, "dd MMM yyyy")} – {format(end, "dd MMM yyyy")}
         </p>
       </div>

@@ -26,10 +26,10 @@ const FilterBar = ({
         <select
           value={selectedFilter}
           onChange={(e) => setSelectedFilter(e.target.value)}
-          className="px-4 py-2 rounded-xl border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          className="px-4 py-2 rounded-xl border border-gray-300 dark:text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-white"
         >
           {FILTER_OPTIONS.map((option) => (
-            <option key={option.key} value={option.key}>
+            <option key={option.key} value={option.key} className="dark:text-white dark:bg-gray-950">
               {option.label}
             </option>
           ))}

@@ -14,6 +14,22 @@ import {
 const LeadsChart = ({ data }) => {
   const [barSize, setBarSize] = useState(30);
   const [chartType, setChartType] = useState("bar"); // "bar" | "line"
+  const [isDark, setIsDark] = useState(false);
+
+  // ✅ Detect dark mode (pakai data-theme="dark")
+  useEffect(() => {
+    const checkDarkMode = () =>
+      setIsDark(document.documentElement.getAttribute("data-theme") === "dark");
+    checkDarkMode();
+
+    const observer = new MutationObserver(checkDarkMode);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme"],
+    });
+
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     const handleResize = () => {
@@ -38,33 +54,37 @@ const LeadsChart = ({ data }) => {
     const total = complete + pending;
 
     return (
-      <div className="bg-white border border-gray-300 rounded-md px-3 py-2 shadow-md text-bold">
-        <p className="text-sm text-emerald-600">
+      <div
+        className={`px-3 py-2 rounded-md shadow-md border ${
+          isDark
+            ? "bg-gray-800 border-gray-700 text-gray-100"
+            : "bg-white border-gray-300 text-black"
+        }`}
+      >
+        <p className="text-sm text-emerald-500">
           {`Complete: Rp${complete.toLocaleString("id-ID")}`}
         </p>
-        <p className="text-sm text-yellow-600">
+        <p className="text-sm text-yellow-500">
           {`Pending: Rp${pending.toLocaleString("id-ID")}`}
         </p>
-        <p className="text-sm text-black">
+        <p className="text-sm font-semibold">
           {`Total: Rp${total.toLocaleString("id-ID")}`}
         </p>
       </div>
     );
   };
 
-
-
   return (
-    <div className=" p-4 md:p-6 rounded-2xl shadow-md border border-gray-200">
+    <div className="p-4 md:p-6 rounded-2xl shadow-md border border-gray-200 dark:border-gray-700 dark:bg-gray-900">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-base md:text-lg font-bold text-gray-800">
+        <h2 className="text-base md:text-lg font-bold text-gray-800 dark:text-white">
           Revenue
         </h2>
         <button
           onClick={() =>
             setChartType((prev) => (prev === "bar" ? "line" : "bar"))
           }
-          className="px-3 py-1 bg-black text-white rounded-lg text-sm  transition"
+          className="px-3 py-1 bg-black dark:bg-white dark:text-black text-white rounded-lg text-sm transition"
         >
           {chartType === "bar" ? "Line" : "Bar"}
         </button>
@@ -73,7 +93,10 @@ const LeadsChart = ({ data }) => {
       <div className="overflow-x-auto">
         <ResponsiveContainer width="100%" height={300}>
           <ComposedChart data={enhancedData} barCategoryGap="20%">
-            <CartesianGrid strokeDasharray="2 6" />
+            <CartesianGrid
+              strokeDasharray="2 6"
+              stroke={isDark ? "#374151" : "#e5e7eb"} // ✅ grid warna
+            />
             <XAxis
               dataKey="label"
               interval={barSize === 20 ? 2 : 1}
@@ -82,6 +105,7 @@ const LeadsChart = ({ data }) => {
               height={barSize === 20 ? 60 : 50}
               axisLine={false}
               tickLine={false}
+              tick={{ fill: isDark ? "#d1d5db" : "#fff", fontSize: 12 }}
             />
             <YAxis
               allowDecimals={false}
@@ -91,12 +115,23 @@ const LeadsChart = ({ data }) => {
                 if (value >= 1_000) return `Rp${(value / 1_000).toFixed(1)}K`;
                 return `Rp${value}`;
               }}
-              tick={{ fontSize: 12, fontWeight: 600, fill: "#6b7280" }}
+              tick={{
+                fontSize: 12,
+                fontWeight: 600,
+                fill: isDark ? "#d1d5db" : "#fff",
+              }}
               axisLine={false}
               tickLine={false}
             />
             <Tooltip content={<CustomTooltip />} />
-            <Legend verticalAlign="top" height={36} />
+            <Legend
+              verticalAlign="top"
+              height={36}
+              wrapperStyle={{
+                color: isDark ? "#d1d5db" : "#fff",
+                fontWeight: 600,
+              }}
+            />
 
             {chartType === "bar" && (
               <>

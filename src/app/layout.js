@@ -18,7 +18,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="id">
+    <html lang="id" className="dark"> 
       <head>
         <link rel="manifest" href="/manifest.json" />
         <meta name="apple-mobile-web-app-title" content="My Store" />
@@ -37,7 +37,7 @@ export default function RootLayout({ children }) {
       </head>
       <body className={`${inter.className}`}>
         <Navbar />
-        <div className="container mx-auto py-6">{children}</div>
+        <div className="container mx-auto py-6 bg-white dark:bg-black dark:text-white">{children}</div>
       </body>
     </html>
   );

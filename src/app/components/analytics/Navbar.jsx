@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { Sun, Moon } from "lucide-react";
 
 const Navbar = () => {
   const router = useRouter();
@@ -10,7 +11,7 @@ const Navbar = () => {
   // Dark mode state
   const [isDark, setIsDark] = useState(false);
 
-  // Inisialisasi dark mode dari localStorage atau system preference
+  // Init dark mode from localStorage / system
   useEffect(() => {
     const saved = localStorage.getItem("theme");
     if (saved === "dark") {
@@ -20,7 +21,6 @@ const Navbar = () => {
       setIsDark(false);
       document.documentElement.classList.remove("dark");
     } else {
-      // fallback system
       const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
       setIsDark(prefersDark);
       if (prefersDark) document.documentElement.classList.add("dark");
@@ -32,19 +32,46 @@ const Navbar = () => {
     setIsThruvShop((prev) => !prev);
   };
 
+  const toggleDarkMode = () => {
+    setIsDark((prev) => {
+      const newMode = !prev;
+      if (newMode) {
+        document.documentElement.classList.add("dark");
+        localStorage.setItem("theme", "dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+        localStorage.setItem("theme", "light");
+      }
+      return newMode;
+    });
+  };
+
   return (
-    <nav className="sticky top-0 z-30 bg-white border-b border-gray-200  px-6 py-3 flex justify-between items-center shadow-sm transition-colors duration-300 ">
+    <nav className="sticky top-0 z-30 
+      bg-white dark:bg-black 
+      border-b border-gray-200 dark:border-gray-800 
+      px-6 py-3 flex justify-between items-center 
+      shadow-sm transition-colors duration-300">
+      
       {/* Left Nav */}
       <div className="flex gap-2">
         <button
           onClick={() => router.push("/")}
-          className="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition"
+          className="px-3 py-1.5 text-sm font-medium 
+          text-gray-700 dark:text-gray-200 
+          hover:text-black dark:hover:text-white 
+          hover:bg-gray-100 dark:hover:bg-gray-900 
+          rounded-md transition"
         >
           Dashboard
         </button>
         <button
           onClick={() => router.push("/order")}
-          className="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition"
+          className="px-3 py-1.5 text-sm font-medium 
+          text-gray-700 dark:text-gray-200 
+          hover:text-black dark:hover:text-white 
+          hover:bg-gray-100 dark:hover:bg-gray-900 
+          rounded-md transition"
         >
           Orders
         </button>
@@ -58,17 +85,31 @@ const Navbar = () => {
           onClick={toggleStoreName}
           title="Toggle Store Name"
         >
-          <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+          <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">
             {isThruvShop ? "Thruv" : "Store"}
           </p>
           <img
             src={isThruvShop ? "/images/thruv.jpg" : "/images/shop.png"}
             alt="Store Logo"
-            className="w-8 h-8 rounded-md object-cover border border-gray-200 dark:border-gray-700"
+            className="w-8 h-8 rounded-md object-cover 
+            border border-gray-200 dark:border-gray-700"
           />
         </div>
 
-
+        {/* Dark Mode Toggle */}
+        <button
+          onClick={toggleDarkMode}
+          className="p-2 rounded-md border border-gray-200 dark:border-gray-700 
+          hover:bg-gray-100 dark:hover:bg-gray-900 
+          transition"
+          title="Toggle Dark Mode"
+        >
+          {isDark ? (
+            <Sun className="w-5 h-5 text-white" />
+          ) : (
+            <Moon className="w-5 h-5 text-gray-700 dark:text-gray-200" />
+          )}
+        </button>
       </div>
     </nav>
   );
