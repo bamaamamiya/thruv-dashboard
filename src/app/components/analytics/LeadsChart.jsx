@@ -105,7 +105,7 @@ const LeadsChart = ({ data }) => {
               height={barSize === 20 ? 60 : 50}
               axisLine={false}
               tickLine={false}
-              tick={{ fill: isDark ? "#d1d5db" : "#fff", fontSize: 12 }}
+              tick={{ fill: isDark ? "#d1d5db" : "#374151", fontSize: 12 }}
             />
             <YAxis
               allowDecimals={false}
@@ -118,7 +118,7 @@ const LeadsChart = ({ data }) => {
               tick={{
                 fontSize: 12,
                 fontWeight: 600,
-                fill: isDark ? "#d1d5db" : "#fff",
+                fill: isDark ? "#d1d5db" : "#6b7280",
               }}
               axisLine={false}
               tickLine={false}
@@ -128,7 +128,7 @@ const LeadsChart = ({ data }) => {
               verticalAlign="top"
               height={36}
               wrapperStyle={{
-                color: isDark ? "#d1d5db" : "#fff",
+                color: isDark ? "#d1d5db" : "#374151",
                 fontWeight: 600,
               }}
             />
