@@ -50,11 +50,11 @@ const Navbar = () => {
     <nav className="sticky top-0 z-30 
       bg-white dark:bg-black 
       border-b border-gray-200 dark:border-gray-800 
-      px-6 py-3 flex justify-between items-center 
+      px-4 py-3 flex justify-between items-center 
       shadow-sm transition-colors duration-300">
       
       {/* Left Nav */}
-      <div className="flex gap-2">
+      <div className="flex">
         <button
           onClick={() => router.push("/")}
           className="px-3 py-1.5 text-sm font-medium 
@@ -78,7 +78,7 @@ const Navbar = () => {
       </div>
 
       {/* Right - Store Brand + Dark Mode Toggle */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2">
         {/* Store brand toggle */}
         <div
           className="flex items-center gap-3 cursor-pointer select-none"
@@ -99,7 +99,7 @@ const Navbar = () => {
         {/* Dark Mode Toggle */}
         <button
           onClick={toggleDarkMode}
-          className="p-2 rounded-md border border-gray-200 dark:border-gray-700 
+          className="p-1 rounded-md border border-gray-200 dark:border-gray-500 
           hover:bg-gray-100 dark:hover:bg-gray-900 
           transition"
           title="Toggle Dark Mode"
