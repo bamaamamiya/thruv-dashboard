@@ -2,5 +2,30 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 html {
-  transition: background-color 0.3s ease, color 0.3s ease;
+  /* transition: background-color 0.3s ease, color 0.3s ease; */
+}
+.small-heatmap .react-calendar-heatmap__day {
+  width: 10px;
+  height: 10px;
+}
+.small-heatmap {
+  transform: scale(0.8);
+  transform-origin: top left;
+}
+
+/* styles/globals.css */
+.react-calendar-heatmap .color-empty {
+  fill: #eeeeee;
+}
+.react-calendar-heatmap .color-scale-1 {
+  fill: #d1fae5; /* hijau muda */
+}
+.react-calendar-heatmap .color-scale-2 {
+  fill: #6ee7b7;
+}
+.react-calendar-heatmap .color-scale-3 {
+  fill: #34d399;
+}
+.react-calendar-heatmap .color-scale-4 {
+  fill: #059669; /* hijau tua */
 }

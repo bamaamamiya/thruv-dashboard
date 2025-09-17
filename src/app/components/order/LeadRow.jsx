@@ -66,6 +66,16 @@ export default function LeadRow({ lead, copiedId, setCopiedId, onSelect }) {
   const [addressValue, setAddressValue] = useState(lead.address || "");
   const [returnValue, setReturnValue] = useState(lead.rts || "");
   const [isChecked, setIsChecked] = useState(false);
+  const [cleanAddressValue, setCleanAddressValue] = useState(
+    lead.addressClean || ""
+  );
+  const [productTitleValue, setProductTitleValue] = useState(
+    lead.productTitle || ""
+  );
+
+  const [showCleanAddress, setShowCleanAddress] = useState(false);
+  const [ongkirValue, setOngkirValue] = useState(lead.ongkir || "");
+  const [showUpdateFields, setShowUpdateFields] = useState(false);
 
   const savingPrice = useDebouncedSave(
     priceValue,
@@ -85,9 +95,35 @@ export default function LeadRow({ lead, copiedId, setCopiedId, onSelect }) {
     lead.id,
     "address"
   );
+  const savingCleanAddress = useDebouncedSave(
+    cleanAddressValue,
+    lead.addressClean,
+    lead.id,
+    "cleanAddress"
+  );
+  const savingProductTitle = useDebouncedSave(
+    productTitleValue,
+    lead.productTitle,
+    lead.id,
+    "productTitle"
+  );
+  const savingOngkir = useDebouncedSave(
+    ongkirValue,
+    lead.ongkir,
+    lead.id,
+    "ongkir"
+  );
+
   const savingReturn = useDebouncedSave(returnValue, lead.rts, lead.id, "rts");
 
-  const updating = savingPrice || savingCost || savingAddress || savingReturn;
+  const updating =
+    savingPrice ||
+    savingCost ||
+    savingAddress ||
+    savingReturn ||
+    savingCleanAddress ||
+    savingProductTitle ||
+    savingOngkir;
 
   const handleCheckboxChange = useCallback(
     (e) => {
@@ -275,7 +311,7 @@ Untuk ongkir, akan dihitung otomatis dan dianggap disetujui oleh sistem 🙏`;
                 <strong>Nama:</strong> {lead.name}
               </p>
               <p>
-                <strong>WA:</strong>
+                <strong>WA: </strong>
                 <a
                   href={`https://wa.me/${lead.whatsapp}`}
                   target="_blank"
@@ -285,6 +321,19 @@ Untuk ongkir, akan dihitung otomatis dan dianggap disetujui oleh sistem 🙏`;
                   {lead.whatsapp}
                 </a>
               </p>
+
+              <div>
+                <strong>Produk:</strong>
+                <input
+                  type="text"
+                  className="border rounded px-2 py-1 text-sm w-full mt-1 
+               bg-white dark:bg-gray-800 dark:border-gray-600 
+               dark:text-gray-100"
+                  value={productTitleValue}
+                  onChange={(e) => setProductTitleValue(e.target.value)}
+                  placeholder="Masukkan nama produk"
+                />
+              </div>
 
               <div>
                 <strong>Harga Produk:</strong>
@@ -307,38 +356,62 @@ Untuk ongkir, akan dihitung otomatis dan dianggap disetujui oleh sistem 🙏`;
                   rows={3}
                 />
               </div>
+              <button
+                onClick={() => setShowUpdateFields(!showUpdateFields)}
+                className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline mb-2"
+              >
+                {showUpdateFields ? "🔽 Tutup Update Data" : "🔼 Update Data"}
+              </button>
+              {showUpdateFields && (
+                <>
+                  <div>
+                    <strong>Cost Product:</strong>
+                    <input
+                      type="number"
+                      className="border rounded px-2 py-1 text-sm w-full mt-1 bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
+                      value={costProductValue}
+                      onChange={(e) => setCostProductValue(e.target.value)}
+                      placeholder="Masukkan cost product"
+                    />
+                  </div>
 
-              <p>
-                <strong>Metode:</strong> {lead.paymentMethod}
-              </p>
-              <p>
-                <strong>Produk:</strong> {lead.productTitle}
-              </p>
-
-              <div>
-                <strong>Cost Product:</strong>
-                <input
-                  type="number"
+									  <div>
+                <strong>Alamat Rapi:</strong>
+                <textarea
                   className="border rounded px-2 py-1 text-sm w-full mt-1 bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
-                  value={costProductValue}
-                  onChange={(e) => setCostProductValue(e.target.value)}
-                  placeholder="Masukkan cost product"
+                  value={cleanAddressValue}
+                  onChange={(e) => setCleanAddressValuessValue(e.target.value)}
+                  placeholder="Masukkan alamat Rapi"
+                  rows={3}
                 />
               </div>
 
-              <p>
-                <strong>Resi Check:</strong> {lead.resiCheck || "not"}
-              </p>
-              <div>
-                <strong>Biaya Return:</strong>
-                <input
-                  type="number"
-                  className="border rounded px-2 py-1 text-sm w-full mt-1 bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
-                  value={returnValue}
-                  onChange={(e) => setReturnValue(e.target.value)}
-                  placeholder="Masukkan biaya RTS"
-                />
-              </div>
+                  <div>
+                    <strong>Biaya Ongkir:</strong>
+                    <input
+                      type="number"
+                      className="border rounded px-2 py-1 text-sm w-full mt-1 bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
+                      value={ongkirValue}
+                      onChange={(e) => setOngkirValue(e.target.value)}
+                      placeholder="Masukkan biaya ongkir"
+                    />
+                  </div>
+
+                  {lead.status === "rts" && (
+                    <div>
+                      <strong>Biaya Return:</strong>
+                      <input
+                        type="number"
+                        className="border rounded px-2 py-1 text-sm w-full mt-1 bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
+                        value={returnValue}
+                        onChange={(e) => setReturnValue(e.target.value)}
+                        placeholder="Masukkan biaya RTS"
+                      />
+                    </div>
+                  )}
+                </>
+              )}
+
               <p className="text-xs text-gray-500 dark:text-gray-400">
                 Masuk:{" "}
                 {new Date(lead.createdAt.seconds * 1000).toLocaleString(

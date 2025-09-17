@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Sun, Moon } from "lucide-react";
+import MobileSidebar from "./MobileSidebar";
 
 const Navbar = () => {
   const router = useRouter();
@@ -21,7 +22,9 @@ const Navbar = () => {
       setIsDark(false);
       document.documentElement.classList.remove("dark");
     } else {
-      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      const prefersDark = window.matchMedia(
+        "(prefers-color-scheme: dark)"
+      ).matches;
       setIsDark(prefersDark);
       if (prefersDark) document.documentElement.classList.add("dark");
       else document.documentElement.classList.remove("dark");
@@ -47,14 +50,9 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="sticky top-0 z-30 
-      bg-white dark:bg-black 
-      border-b border-gray-200 dark:border-gray-800 
-      px-4 py-3 flex justify-between items-center 
-      shadow-sm transition-colors duration-300">
-      
+    <nav className="sticky top-0 z-30 bg-white dark:bg-black border-b border-gray-200 dark:border-gray-800 px-4 py-3 flex justify-between items-center shadow-sm">
       {/* Left Nav */}
-      <div className="flex">
+      <div className="hidden md:flex">
         <button
           onClick={() => router.push("/")}
           className="px-3 py-1.5 text-sm font-medium 
@@ -75,10 +73,38 @@ const Navbar = () => {
         >
           Orders
         </button>
+        <button
+          onClick={() => router.push("/heat")}
+          className="px-3 py-1.5 text-sm font-medium 
+          text-gray-700 dark:text-gray-200 
+          hover:text-black dark:hover:text-white 
+          hover:bg-gray-100 dark:hover:bg-gray-900 
+          rounded-md transition"
+        >
+          Heat
+        </button>
+        <button
+          onClick={() => router.push("/ads")}
+          className="px-3 py-1.5 text-sm font-medium 
+          text-gray-700 dark:text-gray-200 
+          hover:text-black dark:hover:text-white 
+          hover:bg-gray-100 dark:hover:bg-gray-900 
+          rounded-md transition"
+        >
+          Ads
+        </button>
       </div>
 
+      {/* Mobile Sidebar Trigger */}
+      <MobileSidebar
+        isDark={isDark}
+        toggleDarkMode={toggleDarkMode}
+        isThruvShop={isThruvShop}
+        toggleStoreName={toggleStoreName}
+      />
+
       {/* Right - Store Brand + Dark Mode Toggle */}
-      <div className="flex items-center gap-2">
+      <div className="hidden md:flex items-center gap-2">
         {/* Store brand toggle */}
         <div
           className="flex items-center gap-3 cursor-pointer select-none"
