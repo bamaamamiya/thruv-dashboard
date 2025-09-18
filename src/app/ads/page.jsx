@@ -14,7 +14,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebaseClient";
 import dayjs from "dayjs";
-import { Moon, Sun, Plus, Edit2, Trash2, Save, X } from "lucide-react";
+import { Plus, Edit2, Trash2, Save, X } from "lucide-react";
 
 export default function AdsPage() {
   const [platform, setPlatform] = useState("Facebook Ads");
@@ -22,38 +22,18 @@ export default function AdsPage() {
   const [adSpend, setAdSpend] = useState("");
   const [ads, setAds] = useState([]);
   const [ordersCount, setOrdersCount] = useState({});
+  const [grossProfitMap, setGrossProfitMap] = useState({});
   const [editingId, setEditingId] = useState(null);
   const [editValue, setEditValue] = useState("");
-  const [darkMode, setDarkMode] = useState(false);
 
-  // Load dark mode preference
-  useEffect(() => {
-    const savedTheme = localStorage.getItem("theme");
-    if (savedTheme === "dark") {
-      setDarkMode(true);
-      document.documentElement.classList.add("dark");
-    }
-  }, []);
-
-  // Toggle dark mode
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
-    if (!darkMode) {
-      document.documentElement.classList.add("dark");
-      localStorage.setItem("theme", "dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-      localStorage.setItem("theme", "light");
-    }
-  };
-
-  // Listen to ads + order count
+  // Listen to ads + order count + gross profit
   useEffect(() => {
     const unsub = onSnapshot(collection(db, "adSpends"), async (snapshot) => {
       const docs = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
       setAds(docs);
 
       const counts = {};
+      const gpMap = {};
       for (let ad of docs) {
         if (!ad.date) continue;
         const start = new Date(`${ad.date}T00:00:00.000Z`);
@@ -64,9 +44,20 @@ export default function AdsPage() {
           where("createdAt", "<=", end)
         );
         const snap = await getDocs(q);
+
         counts[ad.date] = snap.size;
+
+        let gpTotal = 0;
+        snap.forEach((doc) => {
+          const lead = doc.data();
+          const price = lead.price || 0;
+          const cost = lead.costProduct || 0;
+          gpTotal += price - cost;
+        });
+        gpMap[ad.date] = gpTotal;
       }
       setOrdersCount(counts);
+      setGrossProfitMap(gpMap);
     });
     return () => unsub();
   }, []);
@@ -223,6 +214,23 @@ export default function AdsPage() {
                       ) : (
                         "-"
                       )}
+                    </div>
+
+                    {/* LTGP:CAC */}
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                      LTGP:CAC:{" "}
+                      {(() => {
+                        const gp = grossProfitMap[ad.date] ?? 0;
+                        if (ad.adSpend > 0 && gp > 0) {
+                          const ratio = gp / ad.adSpend;
+                          return (
+                            <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                              {ratio.toFixed(2)}
+                            </span>
+                          );
+                        }
+                        return "-";
+                      })()}
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
