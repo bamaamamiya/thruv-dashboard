@@ -186,101 +186,103 @@ export default function AdsPage() {
             Entries
           </h2>
           <ul className="space-y-3">
-            {ads.map((ad) => {
-              const orders = ordersCount[ad.date] ?? 0;
-              const cac = orders > 0 ? ad.adSpend / orders : null; // hitung CAC
+            {[...ads]
+              .sort((a, b) => new Date(b.date) - new Date(a.date))
+              .map((ad) => {
+                const orders = ordersCount[ad.date] ?? 0;
+                const cac = orders > 0 ? ad.adSpend / orders : null;
 
-              return (
-                <li
-                  key={ad.id}
-                  className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-xl"
-                >
-                  <div className="text-gray-800 dark:text-gray-200">
-                    <div className="font-medium">
-                      {ad.date} - {ad.platform}
+                return (
+                  <li
+                    key={ad.id}
+                    className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-xl"
+                  >
+                    <div className="text-gray-800 dark:text-gray-200">
+                      <div className="font-medium">
+                        {ad.date} - {ad.platform}
+                      </div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">
+                        {orders} orders
+                      </div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">
+                        CAC:{" "}
+                        {cac !== null ? (
+                          <span className="font-semibold text-indigo-600 dark:text-indigo-400">
+                            Rp{" "}
+                            {cac.toLocaleString(undefined, {
+                              maximumFractionDigits: 0,
+                            })}
+                          </span>
+                        ) : (
+                          "-"
+                        )}
+                      </div>
+
+                      {/* LTGP:CAC */}
+                      <div className="text-sm text-gray-600 dark:text-gray-400">
+                        LTGP:CAC:{" "}
+                        {(() => {
+                          const gp = grossProfitMap[ad.date] ?? 0;
+                          if (ad.adSpend > 0 && gp > 0) {
+                            const ratio = gp / ad.adSpend;
+                            return (
+                              <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                                {ratio.toFixed(2)}
+                              </span>
+                            );
+                          }
+                          return "-";
+                        })()}
+                      </div>
                     </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                      {orders} orders
-                    </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                      CAC:{" "}
-                      {cac !== null ? (
-                        <span className="font-semibold text-indigo-600 dark:text-indigo-400">
-                          Rp{" "}
-                          {cac.toLocaleString(undefined, {
-                            maximumFractionDigits: 0,
-                          })}
-                        </span>
+                    <div className="flex items-center space-x-2">
+                      {editingId === ad.id ? (
+                        <>
+                          <input
+                            type="number"
+                            value={editValue}
+                            onChange={(e) => setEditValue(e.target.value)}
+                            className="border dark:border-gray-600 p-1 rounded-lg w-24 bg-white dark:bg-gray-600 dark:text-white"
+                          />
+                          <button
+                            onClick={() => handleUpdate(ad.id)}
+                            className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+                          >
+                            <Save className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => setEditingId(null)}
+                            className="p-2 bg-gray-400 text-white rounded-lg hover:bg-gray-500"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </>
                       ) : (
-                        "-"
+                        <>
+                          <span className="text-gray-900 dark:text-gray-100 font-semibold">
+                            Rp {ad.adSpend?.toLocaleString()}
+                          </span>
+                          <button
+                            onClick={() => {
+                              setEditingId(ad.id);
+                              setEditValue(ad.adSpend);
+                            }}
+                            className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(ad.id)}
+                            className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </>
                       )}
                     </div>
-
-                    {/* LTGP:CAC */}
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                      LTGP:CAC:{" "}
-                      {(() => {
-                        const gp = grossProfitMap[ad.date] ?? 0;
-                        if (ad.adSpend > 0 && gp > 0) {
-                          const ratio = gp / ad.adSpend;
-                          return (
-                            <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                              {ratio.toFixed(2)}
-                            </span>
-                          );
-                        }
-                        return "-";
-                      })()}
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    {editingId === ad.id ? (
-                      <>
-                        <input
-                          type="number"
-                          value={editValue}
-                          onChange={(e) => setEditValue(e.target.value)}
-                          className="border dark:border-gray-600 p-1 rounded-lg w-24 bg-white dark:bg-gray-600 dark:text-white"
-                        />
-                        <button
-                          onClick={() => handleUpdate(ad.id)}
-                          className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
-                        >
-                          <Save className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => setEditingId(null)}
-                          className="p-2 bg-gray-400 text-white rounded-lg hover:bg-gray-500"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <span className="text-gray-900 dark:text-gray-100 font-semibold">
-                          Rp {ad.adSpend?.toLocaleString()}
-                        </span>
-                        <button
-                          onClick={() => {
-                            setEditingId(ad.id);
-                            setEditValue(ad.adSpend);
-                          }}
-                          className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-                        >
-                          <Edit2 className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(ad.id)}
-                          className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </li>
-              );
-            })}
+                  </li>
+                );
+              })}
           </ul>
         </div>
       </div>
