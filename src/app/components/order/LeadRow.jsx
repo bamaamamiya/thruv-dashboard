@@ -196,7 +196,7 @@ Berikut detail pesanan Kakak:
 
 Nama Produk: ${lead.productTitle}  
 Harga Produk: ${formatHargaSingkat(lead.price)}  
-Ongkir: 
+Ongkir: 20rb
 Total Pembayaran: 
 
 Nama: ${lead.name}  

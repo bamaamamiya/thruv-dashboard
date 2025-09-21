@@ -6,6 +6,7 @@ import {
   endOfWeek,
   subWeeks,
   startOfMonth,
+	endOfMonth,
 } from "date-fns";
 
 // Filter leads berdasarkan rentang tanggal
@@ -156,32 +157,39 @@ export const generateChartData = (leads, selectedFilter, start, end) => {
   }
 
   // MONTH / LAST MONTH (group per week)
-  if (selectedFilter === "month" || selectedFilter === "lastMonth") {
-    const weekMap = {};
-    const monthStart = startOfMonth(start);
+ if (selectedFilter === "month" || selectedFilter === "lastMonth") {
+  const weekMap = {};
+  let current = startOfWeek(startOfMonth(start), { weekStartsOn: 1 });
+  const endMonth = endOfMonth(start);
+
+  let weekIndex = 1;
+  while (current <= endMonth) {
+    const weekStart = current;
+    const weekEnd = endOfWeek(current, { weekStartsOn: 1 });
+    const label = `Week ${weekIndex}`;
+
+    weekMap[label] = { complete: 0, pending: 0 };
 
     leads.forEach((lead) => {
       const time = new Date(lead.createdAt.seconds * 1000);
-      const startWeek = startOfWeek(time, { weekStartsOn: 1 });
-      const diffDays = differenceInDays(startWeek, monthStart);
-      const weekNumber = Math.floor(diffDays / 7) + 1;
-      const label = `Week ${weekNumber}`;
-
-      if (!weekMap[label]) {
-        weekMap[label] = { complete: 0, pending: 0 };
+      if (isWithinInterval(time, { start: weekStart, end: weekEnd })) {
+        if (lead.status === "complete") weekMap[label].complete += lead.price || 0;
+        else if (lead.status === "pending") weekMap[label].pending += lead.price || 0;
       }
-
-      if (lead.status === "complete")
-        weekMap[label].complete += getRevenue(lead);
-      else if (lead.status === "pending")
-        weekMap[label].pending += getRevenue(lead);
     });
 
-    return Object.entries(weekMap).map(([label, value]) => ({
-      label,
-      ...value,
-    }));
+    current = new Date(weekEnd);
+    current.setDate(current.getDate() + 1);
+    weekIndex++;
   }
+
+  // 🔹 Hanya return week yang ada data
+  return Object.entries(weekMap)
+    .map(([label, value]) => ({ label, ...value }))
+    .filter((item) => item.complete > 0 || item.pending > 0);
+}
+
+
 
   // ALL TIME (group per month)
   if (selectedFilter === "allTime") {
