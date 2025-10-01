@@ -13,6 +13,7 @@ import ProfitSummary from "@/app/components/analytics/ProfitSummary";
 import PendingProfit from "@/app/components/analytics/PendingProfit";
 import ProfitTotal from "@/app/components/analytics/ProfitTotal";
 import Return from "./components/analytics/Return";
+import TotalAdSpend from "@/app/components/analytics/AdSpend";
 
 import { getDateRange } from "@/utils/dateFilters";
 import { getPreviousRange } from "@/utils/getPreviousRange";
@@ -20,10 +21,13 @@ import {
   filterLeadsByDate,
   calculateSummary,
   generateChartData,
+  filterAdsByDate,
+	calculateTotalAdSpend
 } from "@/utils/processLeads";
 
 export default function DashboardPage() {
   const [leads, setLeads] = useState([]);
+  const [ads, setAds] = useState([]);
   const [selectedFilter, setSelectedFilter] = useState("month");
   const [customRange, setCustomRange] = useState([new Date(), new Date()]);
 
@@ -40,8 +44,23 @@ export default function DashboardPage() {
     return () => unsub();
   }, []);
 
+  useEffect(() => {
+    const unsub = onSnapshot(collection(db, "adSpends"), (snapshot) => {
+      const docs = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setAds(docs);
+    });
+
+    return () => unsub();
+  }, []);
+
   // 2. Active range & metrics
   const [start, end] = getDateRange(selectedFilter, customRange);
+  // 1️⃣ Filter ads sesuai range yang sama dengan leads
+  const filteredAds = filterAdsByDate(ads, start, end);
+
   const filteredLeads = filterLeadsByDate(leads, start, end);
   const {
     totalOrders,
@@ -54,6 +73,9 @@ export default function DashboardPage() {
     totalReturnToSenderCost,
     totalReturnToSender,
   } = calculateSummary(filteredLeads);
+
+  // 2️⃣ Hitung total Ad Spend
+  const totalFilteredAdSpend = calculateTotalAdSpend(filteredAds);
 
   // 3. Previous range & metrics
   const [prevStart, prevEnd] = getPreviousRange(selectedFilter, start, end);
@@ -72,7 +94,6 @@ export default function DashboardPage() {
     start,
     end
   );
-
 
   return (
     <div>
@@ -121,7 +142,7 @@ export default function DashboardPage() {
           <ProfitTotal
             totalSales={totalSales}
             totalCost={totalCost}
-						totalPendingValue={totalPendingValue}
+            totalPendingValue={totalPendingValue}
             pendingCost={pendingCost}
             totalReturnToSenderCost={totalReturnToSenderCost}
           />
@@ -135,6 +156,7 @@ export default function DashboardPage() {
             pendingCost={pendingCost}
           />
           <Return rts={totalReturnToSenderCost} />
+          <TotalAdSpend totalAdSpend={totalFilteredAdSpend} />
         </div>
       </div>
     </div>

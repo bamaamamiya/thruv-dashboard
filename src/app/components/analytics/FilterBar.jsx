@@ -26,7 +26,7 @@ const FilterBar = ({
         <select
           value={selectedFilter}
           onChange={(e) => setSelectedFilter(e.target.value)}
-          className="px-4 py-2 rounded-xl border border-gray-300 dark:text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-white"
+          className="px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-700 dark:text-white dark:bg-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-white"
         >
           {FILTER_OPTIONS.map((option) => (
             <option key={option.key} value={option.key} className="dark:text-white dark:bg-gray-950">
@@ -34,15 +34,14 @@ const FilterBar = ({
             </option>
           ))}
         </select>
-
       </div>
 
       {/* Custom Date Range Picker */}
       {selectedFilter === "custom" && (
-        <div className="flex flex-wrap items-center gap-4 bg-gray-100 px-4 py-3 rounded-xl shadow-sm border border-gray-200">
+        <div className="flex flex-wrap items-center gap-4 bg-gray-100 dark:bg-gray-900 px-4 py-3 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
           {/* Start Date */}
           <div className="flex flex-col items-start">
-            <label className="text-sm font-medium text-gray-700 mb-1">
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               From
             </label>
             <DatePicker
@@ -52,7 +51,7 @@ const FilterBar = ({
               startDate={customRange[0]}
               endDate={customRange[1]}
               dateFormat="dd MMM yyyy"
-              className="px-2 py-1 border border-gray-300 rounded-md text-sm w-36"
+              className="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded-md text-sm w-36 dark:bg-gray-700 dark:text-white"
               placeholderText="Select start date"
               isClearable
             />
@@ -60,7 +59,7 @@ const FilterBar = ({
 
           {/* End Date */}
           <div className="flex flex-col items-start">
-            <label className="text-sm font-medium text-gray-700 mb-1">To</label>
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">To</label>
             <DatePicker
               selected={customRange[1]}
               onChange={handleEndDateChange}
@@ -69,7 +68,7 @@ const FilterBar = ({
               endDate={customRange[1]}
               minDate={customRange[0]}
               dateFormat="dd MMM yyyy"
-              className="px-2 py-1 border border-gray-300 rounded-md text-sm w-36"
+              className="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded-md text-sm w-36 dark:bg-gray-700 dark:text-white"
               placeholderText="Select end date"
               isClearable
             />

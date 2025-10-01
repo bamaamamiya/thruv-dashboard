@@ -9,6 +9,20 @@ import {
 	endOfMonth,
 } from "date-fns";
 
+// Filter ads berdasarkan rentang tanggal
+export const filterAdsByDate = (ads, start, end) => {
+  return ads.filter(ad => {
+    if (!ad.date) return false;
+    const adDate = new Date(ad.date);
+    return adDate >= start && adDate <= end;
+  });
+};
+
+// Hitung total Ad Spend
+export const calculateTotalAdSpend = (ads) => {
+  return ads.reduce((sum, ad) => sum + (ad.adSpend || 0), 0);
+};
+
 // Filter leads berdasarkan rentang tanggal
 export const filterLeadsByDate = (leads, start, end) => {
   return leads.filter((lead) => {
