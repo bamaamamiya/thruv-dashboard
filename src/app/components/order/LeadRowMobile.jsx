@@ -120,20 +120,7 @@ export default function LeadRowMobile({ lead, copiedId, setCopiedId, onSelect })
   };
 
   const handleCopyAddress = () => {
-    const prompt = `Rapikan alamat mentah ini menjadi format administrasi Indonesia dengan struktur:  
-[PROVINSI], [KABUPATEN/KOTA], [KECAMATAN], [DESA/KELURAHAN], [KODE POS]  
-Sertakan juga "Alamat Lengkap" yang sudah rapi.  
-
-Contoh Output:  
-- Provinsi: ...  
-- Kabupaten/Kota: ...  
-- Kecamatan: ...  
-- Desa/Kelurahan: ...  
-- Kode Pos: ...  
-- Alamat Lengkap: ...  
-
-Alamat mentah: ${lead.address}`;
-
+    const prompt = `[PROVINSI], [KABUPATEN/KOTA], [KECAMATAN], [DESA/KELURAHAN] dan rapikan alamat lengkap, dan kelurahan/desa terpisah.\n\nAlamat mentah: ${lead.address}`;
     copyToClipboard(prompt, () => {
       setCopiedId(lead.id);
       setTimeout(() => setCopiedId(null), 2000);

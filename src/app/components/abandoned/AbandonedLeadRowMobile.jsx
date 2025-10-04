@@ -5,7 +5,6 @@ import { useState, useCallback } from "react";
 import { updateDoc, doc, deleteDoc } from "firebase/firestore";
 import { db } from "@/lib/firebaseClient";
 
-// 🔹 Copy helper
 const copyToClipboard = async (text, onCopied) => {
   if (typeof navigator === "undefined") return;
   try {
@@ -24,10 +23,8 @@ export default function AbandonedLeadRowMobile({ lead, copiedId, setCopiedId }) 
     async (newStatus) => {
       if (newStatus === lead.status) return;
       try {
-        await updateDoc(doc(db, "abandonedLeads", lead.id), {
-          status: newStatus,
-        });
-        lead.status = newStatus; // quick update
+        await updateDoc(doc(db, "abandonedLeads", lead.id), { status: newStatus });
+        lead.status = newStatus;
       } catch (err) {
         console.error("Gagal update status:", err);
         alert("Gagal update status.");
@@ -66,7 +63,7 @@ Kalau Kakak masih berminat, tinggal klik link ini ya 👉 wa.me/${lead.whatsapp}
       {/* Card row */}
       <div
         onClick={() => setShowModal(true)}
-        className="rounded-xl p-4 mb-3 shadow-sm hover:ring ring-gray-200 dark:hover:ring-gray-700 transition cursor-pointer bg-white dark:bg-gray-900"
+        className="rounded-xl p-4 mb-3 shadow-sm hover:ring ring-gray-200 dark:hover:ring-gray-600 transition cursor-pointer bg-white dark:bg-gray-900"
       >
         <div className="flex justify-between text-sm text-gray-400 dark:text-gray-500 mb-2">
           <span>
@@ -78,10 +75,10 @@ Kalau Kakak masih berminat, tinggal klik link ini ya 👉 wa.me/${lead.whatsapp}
           <span
             className={`uppercase font-semibold text-xs ${
               lead.status === "converted"
-                ? "text-green-500"
+                ? "text-green-500 dark:text-green-400"
                 : lead.status === "followup"
-                ? "text-yellow-500"
-                : "text-red-500"
+                ? "text-yellow-500 dark:text-yellow-400"
+                : "text-red-500 dark:text-red-400"
             }`}
           >
             {lead.status}
@@ -90,31 +87,25 @@ Kalau Kakak masih berminat, tinggal klik link ini ya 👉 wa.me/${lead.whatsapp}
         <div className="text-gray-800 dark:text-gray-100 font-semibold text-base">
           {lead.name}
         </div>
-        <div className="text-blue-600 dark:text-blue-400 text-sm mb-1">
-          {lead.whatsapp}
-        </div>
-        <div className="text-sm text-gray-700 dark:text-gray-300 truncate">
-          {lead.productTitle}
-        </div>
+        <div className="text-blue-600 dark:text-blue-400 text-sm mb-1">{lead.whatsapp}</div>
+        <div className="text-sm text-gray-700 dark:text-gray-300 truncate">{lead.productTitle}</div>
       </div>
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center px-4">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4">
           <div
-            className="bg-white dark:bg-gray-900 w-full max-w-sm p-6 rounded-xl shadow-xl relative text-sm text-gray-800 dark:text-gray-100"
+            className="bg-white dark:bg-gray-900 w-full max-w-sm p-6 rounded-xl shadow-xl relative text-sm text-gray-900 dark:text-gray-200"
             onClick={(e) => e.stopPropagation()}
           >
             <button
               onClick={() => setShowModal(false)}
-              className="absolute top-3 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xl"
+              className="absolute top-3 right-4 text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 text-xl transition"
             >
               ❌
             </button>
 
-            <h2 className="text-lg font-semibold mb-4">
-              🛑 Detail Abandoned Lead
-            </h2>
+            <h2 className="text-lg font-semibold mb-4">🛑 Detail Abandoned Lead</h2>
 
             <p><strong>Nama:</strong> {lead.name}</p>
             <p>
@@ -133,15 +124,19 @@ Kalau Kakak masih berminat, tinggal klik link ini ya 👉 wa.me/${lead.whatsapp}
               Masuk: {new Date(lead.createdAt.seconds * 1000).toLocaleString("id-ID")}
             </p>
 
-            {/* Status */}
+            {/* Status Buttons */}
             <div className="flex flex-wrap gap-2 mt-4">
               {statusOptions.map(({ value, label }) => (
                 <button
                   key={value}
                   onClick={() => handleStatusChange(value)}
-                  className={`px-3 py-1 text-xs font-bold rounded-full border ${
+                  className={`px-3 py-1 text-xs font-bold rounded-full border transition ${
                     lead.status === value
-                      ? "bg-black dark:bg-white text-white dark:text-black"
+                      ? value === "converted"
+                        ? "bg-green-500 dark:bg-green-400 text-white"
+                        : value === "followup"
+                        ? "bg-yellow-500 dark:bg-yellow-400 text-white"
+                        : "bg-red-500 dark:bg-red-400 text-white"
                       : "border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
                   }`}
                 >
@@ -154,14 +149,14 @@ Kalau Kakak masih berminat, tinggal klik link ini ya 👉 wa.me/${lead.whatsapp}
             <div className="flex justify-between items-center mt-6">
               <button
                 onClick={handleCopy}
-                className="bg-black dark:bg-white dark:text-black text-white text-xs font-semibold px-3 py-1 rounded-md hover:bg-gray-800 dark:hover:bg-gray-200"
+                className="bg-gray-900 dark:bg-gray-700 text-white dark:text-gray-100 text-xs font-semibold px-3 py-1 rounded-md hover:bg-gray-800 dark:hover:bg-gray-600 transition"
               >
                 {copiedId === lead.id ? "✅ Disalin!" : "📋 Salin Follow-up"}
               </button>
 
               <button
                 onClick={handleDelete}
-                className="text-red-500 hover:text-red-600 text-sm flex"
+                className="text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300 text-sm flex transition"
               >
                 🗑️ Hapus
               </button>

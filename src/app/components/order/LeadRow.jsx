@@ -99,7 +99,7 @@ export default function LeadRow({ lead, copiedId, setCopiedId, onSelect }) {
     cleanAddressValue,
     lead.addressClean,
     lead.id,
-    "addressClean"
+    "cleanAddress"
   );
   const savingProductTitle = useDebouncedSave(
     productTitleValue,
@@ -183,20 +183,7 @@ export default function LeadRow({ lead, copiedId, setCopiedId, onSelect }) {
   );
 
   const handleCopyAddress = () => {
-    const prompt = `Rapikan alamat mentah ini menjadi format administrasi Indonesia dengan struktur:  
-[PROVINSI], [KABUPATEN/KOTA], [KECAMATAN], [DESA/KELURAHAN], [KODE POS]  
-Sertakan juga "Alamat Lengkap" yang sudah rapi.  
-
-Contoh Output:  
-- Provinsi: ...  
-- Kabupaten/Kota: ...  
-- Kecamatan: ...  
-- Desa/Kelurahan: ...  
-- Kode Pos: ...  
-- Alamat Lengkap: ...  
-
-Alamat mentah: ${lead.address}`;
-
+    const prompt = `[PROVINSI], [KABUPATEN/KOTA], [KECAMATAN], [DESA/KELURAHAN] dan rapikan alamat lengkap, dan kelurahan terpisah.\n\nAlamat mentah: ${lead.address}`;
     copyToClipboard(prompt, () => {
       setCopiedId(lead.id);
       setTimeout(() => setCopiedId(null), 2000);
@@ -209,7 +196,7 @@ Berikut detail pesanan Kakak:
 
 Nama Produk: ${lead.productTitle}  
 Harga Produk: ${formatHargaSingkat(lead.price)}  
-Ongkir: ~25rb~ 20rb
+Ongkir: 20rb
 Total Pembayaran: 
 
 Nama: ${lead.name}  
@@ -388,18 +375,16 @@ Untuk ongkir, akan dihitung otomatis dan dianggap disetujui oleh sistem 🙏`;
                     />
                   </div>
 
-                  <div>
-                    <strong>Alamat Rapi:</strong>
-                    <textarea
-                      className="border rounded px-2 py-1 text-sm w-full mt-1 bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
-                      value={cleanAddressValue}
-                      onChange={(e) =>
-                        setCleanAddressValuessValue(e.target.value)
-                      }
-                      placeholder="Masukkan alamat Rapi"
-                      rows={3}
-                    />
-                  </div>
+									  <div>
+                <strong>Alamat Rapi:</strong>
+                <textarea
+                  className="border rounded px-2 py-1 text-sm w-full mt-1 bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
+                  value={cleanAddressValue}
+                  onChange={(e) => setCleanAddressValuessValue(e.target.value)}
+                  placeholder="Masukkan alamat Rapi"
+                  rows={3}
+                />
+              </div>
 
                   <div>
                     <strong>Biaya Ongkir:</strong>
