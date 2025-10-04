@@ -99,7 +99,7 @@ export default function LeadRow({ lead, copiedId, setCopiedId, onSelect }) {
     cleanAddressValue,
     lead.addressClean,
     lead.id,
-    "cleanAddress"
+    "addressClean"
   );
   const savingProductTitle = useDebouncedSave(
     productTitleValue,
@@ -209,7 +209,7 @@ Berikut detail pesanan Kakak:
 
 Nama Produk: ${lead.productTitle}  
 Harga Produk: ${formatHargaSingkat(lead.price)}  
-Ongkir: 20rb
+Ongkir: ~25rb~ 20rb
 Total Pembayaran: 
 
 Nama: ${lead.name}  
