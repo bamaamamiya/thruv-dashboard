@@ -76,6 +76,12 @@ const MobileSidebar = ({ isDark, toggleDarkMode, isThruvShop, toggleStoreName })
           >
             Ads
           </button>
+          <button
+            onClick={() => handleNav("/abandoned")}
+            className="text-left px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-900"
+          >
+            Abandoned
+          </button>
         </div>
 
         {/* Footer - Store toggle + Dark mode */}
