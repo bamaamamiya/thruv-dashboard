@@ -99,7 +99,7 @@ export default function LeadRow({ lead, copiedId, setCopiedId, onSelect }) {
     cleanAddressValue,
     lead.addressClean,
     lead.id,
-    "cleanAddress"
+    "addressClean"
   );
   const savingProductTitle = useDebouncedSave(
     productTitleValue,
