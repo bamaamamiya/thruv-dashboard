@@ -33,12 +33,25 @@ export default function AbandonedLeadRow({ lead, copiedId, setCopiedId }) {
     [lead]
   );
 
-  const handleCopy = () => {
-    const pesan = `Halo ${lead.name || "Kak"},  
-Kami lihat Kakak sempat isi data tapi belum melanjutkan pesanan.  
-Produk: ${lead.productTitle}  
+  const productLinks = {
+    "CCTV E27": "https://thruv.vercel.app/cctv",
+    "Alat Pijat 4 in 1": "https://thruv.vercel.app/pijat",
+    // tambahkan produk lain di sini
+  };
 
-Kalau Kakak masih berminat, tinggal klik link ini ya 👉 wa.me/${lead.whatsapp}`;
+  const handleCopy = () => {
+    const link = productLinks[lead.productTitle] || "https://thruv.vercel.app"; // fallback
+    const pesan = `Halo Kak ${
+      lead.name || "Kak"
+    }, kami lihat Kakak sempat tertarik dengan produk *${
+      lead.productTitle
+    }* 🎯  
+
+Promo spesialnya hampir berakhir ⏳  
+Jangan sampai kehabisan, langsung checkout sekarang!  
+
+👉 ${link}`;
+
     copyToClipboard(pesan, () => {
       setCopiedId(lead.id);
       setTimeout(() => setCopiedId(null), 2000);
@@ -80,7 +93,9 @@ Kalau Kakak masih berminat, tinggal klik link ini ya 👉 wa.me/${lead.whatsapp}
         >
           {lead.whatsapp}
         </a>
-        <span className="truncate text-gray-800 dark:text-gray-200">{lead.productTitle}</span>
+        <span className="truncate text-gray-800 dark:text-gray-200">
+          {lead.productTitle}
+        </span>
         <span
           className={`uppercase font-semibold text-xs text-center ${
             lead.status === "converted"
@@ -106,7 +121,9 @@ Kalau Kakak masih berminat, tinggal klik link ini ya 👉 wa.me/${lead.whatsapp}
               ❌
             </button>
 
-            <h2 className="text-lg font-semibold mb-4">🛑 Detail Abandoned Lead</h2>
+            <h2 className="text-lg font-semibold mb-4">
+              🛑 Detail Abandoned Lead
+            </h2>
 
             <p>
               <strong>Nama:</strong> {lead.name}
@@ -126,7 +143,8 @@ Kalau Kakak masih berminat, tinggal klik link ini ya 👉 wa.me/${lead.whatsapp}
               <strong>Produk:</strong> {lead.productTitle}
             </p>
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              Masuk: {new Date(lead.createdAt.seconds * 1000).toLocaleString("id-ID")}
+              Masuk:{" "}
+              {new Date(lead.createdAt.seconds * 1000).toLocaleString("id-ID")}
             </p>
 
             {/* Status Buttons */}

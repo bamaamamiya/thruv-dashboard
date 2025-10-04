@@ -16,14 +16,20 @@ const copyToClipboard = async (text, onCopied) => {
   }
 };
 
-export default function AbandonedLeadRowMobile({ lead, copiedId, setCopiedId }) {
+export default function AbandonedLeadRowMobile({
+  lead,
+  copiedId,
+  setCopiedId,
+}) {
   const [showModal, setShowModal] = useState(false);
 
   const handleStatusChange = useCallback(
     async (newStatus) => {
       if (newStatus === lead.status) return;
       try {
-        await updateDoc(doc(db, "abandonedLeads", lead.id), { status: newStatus });
+        await updateDoc(doc(db, "abandonedLeads", lead.id), {
+          status: newStatus,
+        });
         lead.status = newStatus;
       } catch (err) {
         console.error("Gagal update status:", err);
@@ -34,11 +40,18 @@ export default function AbandonedLeadRowMobile({ lead, copiedId, setCopiedId }) 
   );
 
   const handleCopy = () => {
-    const pesan = `Halo ${lead.name || "Kak"},  
-Kami lihat Kakak sempat isi data tapi belum melanjutkan pesanan.  
-Produk: ${lead.productTitle}  
+    const link = productLinks[lead.productTitle] || "https://thruv.vercel.app"; // fallback
+    const pesan = `Halo Kak ${
+      lead.name || "Kak"
+    }, kami lihat Kakak sempat tertarik dengan produk *${
+      lead.productTitle
+    }* 🎯  
 
-Kalau Kakak masih berminat, tinggal klik link ini ya 👉 wa.me/${lead.whatsapp}`;
+Promo spesialnya hampir berakhir ⏳  
+Jangan sampai kehabisan, langsung checkout sekarang!  
+
+👉 ${link}`;
+
     copyToClipboard(pesan, () => {
       setCopiedId(lead.id);
       setTimeout(() => setCopiedId(null), 2000);
@@ -67,10 +80,13 @@ Kalau Kakak masih berminat, tinggal klik link ini ya 👉 wa.me/${lead.whatsapp}
       >
         <div className="flex justify-between text-sm text-gray-400 dark:text-gray-500 mb-2">
           <span>
-            {new Date(lead.createdAt.seconds * 1000).toLocaleDateString("id-ID", {
-              day: "2-digit",
-              month: "short",
-            })}
+            {new Date(lead.createdAt.seconds * 1000).toLocaleDateString(
+              "id-ID",
+              {
+                day: "2-digit",
+                month: "short",
+              }
+            )}
           </span>
           <span
             className={`uppercase font-semibold text-xs ${
@@ -87,8 +103,12 @@ Kalau Kakak masih berminat, tinggal klik link ini ya 👉 wa.me/${lead.whatsapp}
         <div className="text-gray-800 dark:text-gray-100 font-semibold text-base">
           {lead.name}
         </div>
-        <div className="text-blue-600 dark:text-blue-400 text-sm mb-1">{lead.whatsapp}</div>
-        <div className="text-sm text-gray-700 dark:text-gray-300 truncate">{lead.productTitle}</div>
+        <div className="text-blue-600 dark:text-blue-400 text-sm mb-1">
+          {lead.whatsapp}
+        </div>
+        <div className="text-sm text-gray-700 dark:text-gray-300 truncate">
+          {lead.productTitle}
+        </div>
       </div>
 
       {/* Modal */}
@@ -105,9 +125,13 @@ Kalau Kakak masih berminat, tinggal klik link ini ya 👉 wa.me/${lead.whatsapp}
               ❌
             </button>
 
-            <h2 className="text-lg font-semibold mb-4">🛑 Detail Abandoned Lead</h2>
+            <h2 className="text-lg font-semibold mb-4">
+              🛑 Detail Abandoned Lead
+            </h2>
 
-            <p><strong>Nama:</strong> {lead.name}</p>
+            <p>
+              <strong>Nama:</strong> {lead.name}
+            </p>
             <p>
               <strong>WA:</strong>{" "}
               <a
@@ -119,9 +143,12 @@ Kalau Kakak masih berminat, tinggal klik link ini ya 👉 wa.me/${lead.whatsapp}
                 {lead.whatsapp}
               </a>
             </p>
-            <p><strong>Produk:</strong> {lead.productTitle}</p>
+            <p>
+              <strong>Produk:</strong> {lead.productTitle}
+            </p>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              Masuk: {new Date(lead.createdAt.seconds * 1000).toLocaleString("id-ID")}
+              Masuk:{" "}
+              {new Date(lead.createdAt.seconds * 1000).toLocaleString("id-ID")}
             </p>
 
             {/* Status Buttons */}

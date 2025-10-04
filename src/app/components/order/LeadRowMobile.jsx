@@ -1,14 +1,15 @@
 // app/dashboard/LeadRowMobile.jsx
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { deleteDoc, doc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebaseClient";
 
 // 🔹 Format currency short
 const formatHargaSingkat = (harga) => {
   if (!harga) return "-";
-  if (harga >= 1_000_000) return (harga / 1_000_000).toFixed(1).replace(".0", "") + "jt";
+  if (harga >= 1_000_000)
+    return (harga / 1_000_000).toFixed(1).replace(".0", "") + "jt";
   return (harga / 1000).toFixed(0) + "rb";
 };
 
@@ -24,60 +25,31 @@ const copyToClipboard = async (text, onCopied) => {
   }
 };
 
-// 🔹 Hook untuk debounce save Firestore
-const useDebouncedSave = (value, originalValue, leadId, field) => {
-  const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    const timeout = setTimeout(async () => {
-      if (value !== originalValue) {
-        setSaving(true);
-        try {
-          await updateDoc(doc(db, "leads", leadId), {
-            [field]: field === "price" || field === "costProduct" || field === "rts"
-              ? Number(value)
-              : value,
-          });
-          console.log(`✅ ${field} updated`);
-        } catch (err) {
-          console.error(`Gagal update ${field}:`, err);
-          alert(`Gagal update ${field}.`);
-        } finally {
-          setSaving(false);
-        }
-      }
-    }, 500);
-
-    return () => clearTimeout(timeout);
-  }, [value, originalValue, leadId, field]);
-
-  return saving;
-};
-
-export default function LeadRowMobile({ lead, copiedId, setCopiedId, onSelect }) {
+export default function LeadRowMobile({
+  lead,
+  copiedId,
+  setCopiedId,
+  onSelect,
+}) {
   const [showModal, setShowModal] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
   const [showUpdateFields, setShowUpdateFields] = useState(false);
 
   const [priceValue, setPriceValue] = useState(lead.price || "");
-  const [costProductValue, setCostProductValue] = useState(lead.costProduct || "");
+  const [costProductValue, setCostProductValue] = useState(
+    lead.costProduct || ""
+  );
   const [addressValue, setAddressValue] = useState(lead.address || "");
-  const [cleanAddressValue, setCleanAddressValue] = useState(lead.addressClean || "");
-  const [productTitleValue, setProductTitleValue] = useState(lead.productTitle || "");
+  const [cleanAddressValue, setCleanAddressValue] = useState(
+    lead.addressClean || ""
+  );
+  const [productTitleValue, setProductTitleValue] = useState(
+    lead.productTitle || ""
+  );
   const [ongkirValue, setOngkirValue] = useState(lead.ongkir || "");
   const [returnValue, setReturnValue] = useState(lead.rts || "");
   const [statusValue, setStatusValue] = useState(lead.status || "");
   const [resiCheckValue, setResiCheckValue] = useState(lead.resiCheck || "not");
-
-  const savingPrice = useDebouncedSave(priceValue, lead.price, lead.id, "price");
-  const savingCost = useDebouncedSave(costProductValue, lead.costProduct, lead.id, "costProduct");
-  const savingAddress = useDebouncedSave(addressValue, lead.address, lead.id, "address");
-  const savingCleanAddress = useDebouncedSave(cleanAddressValue, lead.addressClean, lead.id, "addressClean");
-  const savingProductTitle = useDebouncedSave(productTitleValue, lead.productTitle, lead.id, "productTitle");
-  const savingOngkir = useDebouncedSave(ongkirValue, lead.ongkir, lead.id, "ongkir");
-  const savingReturn = useDebouncedSave(returnValue, lead.rts, lead.id, "rts");
-
-  const updating = savingPrice || savingCost || savingAddress || savingCleanAddress || savingProductTitle || savingOngkir || savingReturn;
 
   const handleCheckboxChange = useCallback(
     (e) => {
@@ -88,6 +60,7 @@ export default function LeadRowMobile({ lead, copiedId, setCopiedId, onSelect })
     [lead, onSelect]
   );
 
+  // 🔹 Simpan semua perubahan
   const handleSave = async () => {
     if (!priceValue || !costProductValue) {
       alert("Harga dan biaya produk tidak boleh kosong.");
@@ -120,7 +93,20 @@ export default function LeadRowMobile({ lead, copiedId, setCopiedId, onSelect })
   };
 
   const handleCopyAddress = () => {
-    const prompt = `[PROVINSI], [KABUPATEN/KOTA], [KECAMATAN], [DESA/KELURAHAN] dan rapikan alamat lengkap, dan kelurahan/desa terpisah.\n\nAlamat mentah: ${lead.address}`;
+    const prompt = `Rapikan alamat mentah ini menjadi format administrasi Indonesia dengan struktur:
+[PROVINSI], [KABUPATEN/KOTA], [KECAMATAN], [DESA/KELURAHAN], [KODE POS]
+Sertakan juga "Alamat Lengkap" yang sudah rapi.
+
+Contoh Output:
+- Provinsi: ...
+- Kabupaten/Kota: ...
+- Kecamatan: ...
+- Desa/Kelurahan: ...
+- Kode Pos: ...
+- Alamat Lengkap: ...
+
+Alamat mentah: ${lead.address}`;
+
     copyToClipboard(prompt, () => {
       setCopiedId(lead.id);
       setTimeout(() => setCopiedId(null), 2000);
@@ -128,17 +114,22 @@ export default function LeadRowMobile({ lead, copiedId, setCopiedId, onSelect })
   };
 
   const handleCopyOrder = () => {
-    const pesan = `Terima kasih sudah melakukan pemesanan 🙏  
+    const pesan = `
+Terima kasih sudah melakukan pemesanan 🙏  
+Berikut detail pesanan Kakak:
+
 Nama Produk: ${productTitleValue}  
-Harga Produk: ${formatHargaSingkat(priceValue)}  
-Ongkir: ${ongkirValue}  
-Total Pembayaran:  
+Harga Produk: ${formatHargaSingkat(priceValue)}   
+Ongkir: ~25rb~ 20rb
+Total Pembayaran: 
 
 Nama: ${lead.name}  
-Alamat Lengkap: ${addressValue || lead.address}
+Alamat Lengkap: ${lead.address}
 
 Apakah alamat yang Kakak berikan sudah benar?  
-Kami akan segera proses pesanan jika alamatnya sudah sesuai 🙏`;
+Kami akan segera proses pesanan Kakak jika alamatnya sudah sesuai ya.  
+Untuk ongkir, akan dihitung otomatis dan dianggap disetujui oleh sistem 🙏
+`;
 
     copyToClipboard(pesan, () => {
       setCopiedId(lead.id);
@@ -160,58 +151,119 @@ Kami akan segera proses pesanan jika alamatnya sudah sesuai 🙏`;
 
   return (
     <>
-      <input type="checkbox" checked={isChecked} onChange={handleCheckboxChange} className="scale-125" />
+      <input
+        type="checkbox"
+        checked={isChecked}
+        onChange={handleCheckboxChange}
+        className="scale-125"
+      />
       <div
         onClick={() => setShowModal(true)}
         className="rounded-xl p-4 mb-4 shadow-sm hover:ring ring-gray-200 dark:hover:ring-gray-700 transition cursor-pointer bg-white dark:bg-gray-900"
       >
         <div className="flex justify-between text-sm mb-2 text-gray-400 dark:text-gray-500">
-          <span>{new Date(lead.createdAt.seconds * 1000).toLocaleDateString("id-ID", { day: "2-digit", month: "short" })}</span>
-          <span className="text-emerald-500 font-medium">{lead.paymentMethod}</span>
+          <span>
+            {new Date(lead.createdAt.seconds * 1000).toLocaleDateString(
+              "id-ID",
+              { day: "2-digit", month: "short" }
+            )}
+          </span>
+          <span className="text-emerald-500 font-medium">
+            {lead.paymentMethod}
+          </span>
         </div>
-        <div className="text-gray-800 dark:text-gray-100 font-semibold text-base">{lead.name}</div>
-        <div className="text-blue-600 dark:text-blue-400 text-sm mb-1">{lead.whatsapp}</div>
-        <span className={`text-sm font-medium capitalize rounded px-2 py-0.5 inline-block mt-1 ${
-          statusValue === "complete" ? "text-green-500" :
-          statusValue === "cancel" ? "text-red-500" :
-          statusValue === "pending" ? "text-yellow-500" : "text-gray-700 dark:text-gray-300"
-        }`}>{statusValue}</span>
-        <div className="text-sm text-gray-700 dark:text-gray-300 mt-1 truncate">{productTitleValue}</div>
+        <div className="text-gray-800 dark:text-gray-100 font-semibold text-base">
+          {lead.name}
+        </div>
+        <div className="text-blue-600 dark:text-blue-400 text-sm mb-1">
+          {lead.whatsapp}
+        </div>
+        <span
+          className={`text-sm font-medium capitalize rounded px-2 py-0.5 inline-block mt-1 ${
+            statusValue === "complete"
+              ? "text-green-500"
+              : statusValue === "cancel"
+              ? "text-red-500"
+              : statusValue === "pending"
+              ? "text-yellow-500"
+              : "text-gray-700 dark:text-gray-300"
+          }`}
+        >
+          {statusValue}
+        </span>
+        <div className="text-sm text-gray-700 dark:text-gray-300 mt-1 truncate">
+          {productTitleValue}
+        </div>
         <div className="flex justify-between text-sm mt-1">
           <span className="text-gray-500 dark:text-gray-400">Resi:</span>
-          <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-            resiCheckValue === "done" ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300" :
-            "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
-          }`}>{resiCheckValue === "done" ? "✅ Dicek" : "❌ Belum"}</span>
+          <span
+            className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+              resiCheckValue === "done"
+                ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
+                : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
+            }`}
+          >
+            {resiCheckValue === "done" ? "✅ Dicek" : "❌ Belum"}
+          </span>
         </div>
       </div>
 
+      {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4">
-          <div className="bg-white dark:bg-gray-900 w-full max-w-md p-6 rounded-xl shadow-xl relative text-sm text-gray-800 dark:text-gray-100" onClick={(e) => e.stopPropagation()}>
-            <button onClick={() => setShowModal(false)} className="absolute top-3 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xl">❌</button>
+          <div
+            className="bg-white dark:bg-gray-900 w-full max-w-md p-6 rounded-xl shadow-xl relative text-sm text-gray-800 dark:text-gray-100"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <button
+              onClick={() => setShowModal(false)}
+              className="absolute top-3 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xl"
+            >
+              ❌
+            </button>
             <h2 className="text-xl font-semibold mb-4">📄 Detail Lead</h2>
 
+            {/* Body */}
             <div className="space-y-2">
-              <p><strong>Nama:</strong> {lead.name}</p>
-              <p><strong>WA:</strong> {lead.whatsapp}</p>
-
+              <p>
+                <strong>Nama:</strong> {lead.name}
+              </p>
+              <p>
+                <strong>WA:</strong> {lead.whatsapp}
+              </p>
               <div>
                 <label className="block text-xs mb-1">Produk:</label>
-                <input type="text" className="border rounded px-2 py-1 w-full bg-white dark:bg-gray-800 dark:text-gray-100" value={productTitleValue} onChange={(e) => setProductTitleValue(e.target.value)} />
+                <input
+                  type="text"
+                  value={productTitleValue}
+                  onChange={(e) => setProductTitleValue(e.target.value)}
+                  className="border rounded px-2 py-1 w-full bg-white dark:bg-gray-800 dark:text-gray-100"
+                />
               </div>
-
               <div>
                 <label className="block text-xs mb-1">Harga:</label>
-                <input type="number" className="border rounded px-2 py-1 w-full bg-white dark:bg-gray-800 dark:text-gray-100" value={priceValue} onChange={(e) => setPriceValue(e.target.value)} />
+                <input
+                  type="number"
+                  value={priceValue}
+                  onChange={(e) => setPriceValue(e.target.value)}
+                  className="border rounded px-2 py-1 w-full bg-white dark:bg-gray-800 dark:text-gray-100"
+                />
               </div>
-
               <div>
                 <label className="block text-xs mb-1">Alamat:</label>
-                <textarea className="border rounded px-2 py-1 w-full bg-white dark:bg-gray-800 dark:text-gray-100" value={addressValue} onChange={(e) => setAddressValue(e.target.value)} rows={3} />
+                <textarea
+                  value={addressValue}
+                  onChange={(e) => setAddressValue(e.target.value)}
+                  rows={3}
+                  className="border rounded px-2 py-1 w-full bg-white dark:bg-gray-800 dark:text-gray-100"
+                />
               </div>
 
-              <button onClick={() => setShowUpdateFields(!showUpdateFields)} className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline mb-2">
+              <button
+                onClick={() => setShowUpdateFields(!showUpdateFields)}
+                className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline mb-2"
+              >
                 {showUpdateFields ? "🔽 Tutup Update Data" : "🔼 Update Data"}
               </button>
 
@@ -219,51 +271,106 @@ Kami akan segera proses pesanan jika alamatnya sudah sesuai 🙏`;
                 <>
                   <div>
                     <label className="block text-xs mb-1">Cost Product:</label>
-                    <input type="number" className="border rounded px-2 py-1 w-full bg-white dark:bg-gray-800 dark:text-gray-100" value={costProductValue} onChange={(e) => setCostProductValue(e.target.value)} />
+                    <input
+                      type="number"
+                      value={costProductValue}
+                      onChange={(e) => setCostProductValue(e.target.value)}
+                      className="border rounded px-2 py-1 w-full bg-white dark:bg-gray-800 dark:text-gray-100"
+                    />
                   </div>
-
                   <div>
                     <label className="block text-xs mb-1">Alamat Rapi:</label>
-                    <textarea className="border rounded px-2 py-1 w-full bg-white dark:bg-gray-800 dark:text-gray-100" value={cleanAddressValue} onChange={(e) => setCleanAddressValue(e.target.value)} rows={3} />
+                    <textarea
+                      value={cleanAddressValue}
+                      onChange={(e) => setCleanAddressValue(e.target.value)}
+                      rows={3}
+                      className="border rounded px-2 py-1 w-full bg-white dark:bg-gray-800 dark:text-gray-100"
+                    />
                   </div>
-
                   <div>
-                    <label className="block text-xs mb-1">Biaya Ongkir:</label>
-                    <input type="number" className="border rounded px-2 py-1 w-full bg-white dark:bg-gray-800 dark:text-gray-100" value={ongkirValue} onChange={(e) => setOngkirValue(e.target.value)} />
+                    <label className="block text-xs mb-1">Ongkir:</label>
+                    <input
+                      type="number"
+                      value={ongkirValue}
+                      onChange={(e) => setOngkirValue(e.target.value)}
+                      className="border rounded px-2 py-1 w-full bg-white dark:bg-gray-800 dark:text-gray-100"
+                    />
                   </div>
-
                   {statusValue === "rts" && (
                     <div>
                       <label className="block text-xs mb-1">Biaya RTS:</label>
-                      <input type="number" className="border rounded px-2 py-1 w-full bg-white dark:bg-gray-800 dark:text-gray-100" value={returnValue} onChange={(e) => setReturnValue(e.target.value)} />
+                      <input
+                        type="number"
+                        value={returnValue}
+                        onChange={(e) => setReturnValue(e.target.value)}
+                        className="border rounded px-2 py-1 w-full bg-white dark:bg-gray-800 dark:text-gray-100"
+                      />
                     </div>
                   )}
                 </>
               )}
             </div>
 
+            {/* Status & Resi Buttons */}
             <div className="flex flex-wrap gap-2 mt-3">
-              {statusOptions.map(s => (
-                <button key={s.value} disabled={updating} onClick={() => setStatusValue(s.value)} className={`px-3 py-1 text-xs font-bold rounded-full border ${statusValue === s.value ? "bg-black text-white dark:bg-white dark:text-black" : "border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"}`}>{s.label}</button>
+              {statusOptions.map((s) => (
+                <button
+                  key={s.value}
+                  onClick={() => setStatusValue(s.value)}
+                  className={`px-3 py-1 text-xs font-bold rounded-full border ${
+                    statusValue === s.value
+                      ? "bg-black text-white dark:bg-white dark:text-black"
+                      : "border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  }`}
+                >
+                  {s.label}
+                </button>
               ))}
             </div>
-
             <div className="flex flex-wrap gap-2 mt-2">
-              {resiOptions.map(r => (
-                <button key={r.value} disabled={updating} onClick={() => setResiCheckValue(r.value)} className={`px-3 py-1 text-xs font-bold rounded-full border ${resiCheckValue === r.value ? "bg-black text-white dark:bg-white dark:text-black" : "border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"}`}>{r.label}</button>
+              {resiOptions.map((r) => (
+                <button
+                  key={r.value}
+                  onClick={() => setResiCheckValue(r.value)}
+                  className={`px-3 py-1 text-xs font-bold rounded-full border ${
+                    resiCheckValue === r.value
+                      ? "bg-black text-white dark:bg-white dark:text-black"
+                      : "border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  }`}
+                >
+                  {r.label}
+                </button>
               ))}
             </div>
 
-            <button onClick={handleSave} disabled={updating} className="w-full mt-4 bg-black dark:bg-white dark:text-black text-white text-xs font-semibold px-3 py-2 rounded-md hover:bg-gray-800 dark:hover:bg-gray-200">
-              {updating ? "⏳ Menyimpan..." : "💾 Simpan Perubahan"}
+            {/* Save & Copy Buttons */}
+            <button
+              onClick={handleSave}
+              className="w-full mt-4 bg-black dark:bg-white dark:text-black text-white text-xs font-semibold px-3 py-2 rounded-md hover:bg-gray-800 dark:hover:bg-gray-200"
+            >
+              💾 Simpan Perubahan
             </button>
-
             <div className="flex justify-between items-center mt-4">
               <div className="space-x-2">
-                <button onClick={handleCopyOrder} className="bg-black dark:bg-white dark:text-black text-white text-xs font-semibold px-3 py-1 rounded-md hover:bg-gray-800 dark:hover:bg-gray-200">{copiedId === lead.id ? "✅ Disalin!" : "📋 Salin Total"}</button>
-                <button onClick={handleCopyAddress} className="bg-black dark:bg-white dark:text-black text-white text-xs font-semibold px-3 py-1 rounded-md hover:bg-gray-800 dark:hover:bg-gray-200">{copiedId === lead.id ? "✅ Disalin!" : "📋 Salin Alamat"}</button>
+                <button
+                  onClick={handleCopyOrder}
+                  className="bg-black dark:bg-white dark:text-black text-white text-xs font-semibold px-3 py-1 rounded-md hover:bg-gray-800 dark:hover:bg-gray-200"
+                >
+                  {copiedId === lead.id ? "✅ Disalin!" : "📋 Salin Total"}
+                </button>
+                <button
+                  onClick={handleCopyAddress}
+                  className="bg-black dark:bg-white dark:text-black text-white text-xs font-semibold px-3 py-1 rounded-md hover:bg-gray-800 dark:hover:bg-gray-200"
+                >
+                  {copiedId === lead.id ? "✅ Disalin!" : "📋 Salin Alamat"}
+                </button>
               </div>
-              <button onClick={handleDelete} className="text-red-500 hover:text-red-600 text-sm flex">🗑️ Hapus</button>
+              <button
+                onClick={handleDelete}
+                className="text-red-500 hover:text-red-600 text-sm flex"
+              >
+                🗑️ Hapus
+              </button>
             </div>
           </div>
         </div>

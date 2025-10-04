@@ -1,7 +1,7 @@
 // app/dashboard/LeadRow.jsx
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { deleteDoc, doc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebaseClient";
 
@@ -26,105 +26,19 @@ const copyToClipboard = async (text, onCopied) => {
   }
 };
 
-// 🔹 Hook untuk debounce save Firestore
-const useDebouncedSave = (value, originalValue, leadId, field) => {
-  const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    const timeout = setTimeout(async () => {
-      if (value !== originalValue) {
-        setSaving(true);
-        try {
-          await updateDoc(doc(db, "leads", leadId), {
-            [field]:
-              field === "price" || field === "costProduct"
-                ? Number(value)
-                : value,
-          });
-          console.log(`✅ ${field} updated`);
-        } catch (err) {
-          console.error(`Gagal update ${field}:`, err);
-          alert(`Gagal update ${field}.`);
-        } finally {
-          setSaving(false);
-        }
-      }
-    }, 500);
-
-    return () => clearTimeout(timeout);
-  }, [value, originalValue, leadId, field]);
-
-  return saving;
-};
-
 export default function LeadRow({ lead, copiedId, setCopiedId, onSelect }) {
   const [showModal, setShowModal] = useState(false);
   const [priceValue, setPriceValue] = useState(lead.price || "");
-  const [costProductValue, setCostProductValue] = useState(
-    lead.costProduct || ""
-  );
+  const [costProductValue, setCostProductValue] = useState(lead.costProduct || "");
   const [addressValue, setAddressValue] = useState(lead.address || "");
   const [returnValue, setReturnValue] = useState(lead.rts || "");
   const [isChecked, setIsChecked] = useState(false);
-  const [cleanAddressValue, setCleanAddressValue] = useState(
-    lead.addressClean || ""
-  );
-  const [productTitleValue, setProductTitleValue] = useState(
-    lead.productTitle || ""
-  );
-
-  const [showCleanAddress, setShowCleanAddress] = useState(false);
+  const [cleanAddressValue, setCleanAddressValue] = useState(lead.addressClean || "");
+  const [productTitleValue, setProductTitleValue] = useState(lead.productTitle || "");
   const [ongkirValue, setOngkirValue] = useState(lead.ongkir || "");
   const [showUpdateFields, setShowUpdateFields] = useState(false);
 
-  const savingPrice = useDebouncedSave(
-    priceValue,
-    lead.price,
-    lead.id,
-    "price"
-  );
-  const savingCost = useDebouncedSave(
-    costProductValue,
-    lead.costProduct,
-    lead.id,
-    "costProduct"
-  );
-  const savingAddress = useDebouncedSave(
-    addressValue,
-    lead.address,
-    lead.id,
-    "address"
-  );
-  const savingCleanAddress = useDebouncedSave(
-    cleanAddressValue,
-    lead.addressClean,
-    lead.id,
-    "addressClean"
-  );
-  const savingProductTitle = useDebouncedSave(
-    productTitleValue,
-    lead.productTitle,
-    lead.id,
-    "productTitle"
-  );
-  const savingOngkir = useDebouncedSave(
-    ongkirValue,
-    lead.ongkir,
-    lead.id,
-    "ongkir"
-  );
-
-  const savingReturn = useDebouncedSave(returnValue, lead.rts, lead.id, "rts");
-
-  const updating =
-    savingPrice ||
-    savingCost ||
-    savingAddress ||
-    savingReturn ||
-    savingCleanAddress ||
-    savingProductTitle ||
-    savingOngkir;
-
+  // Checkbox
   const handleCheckboxChange = useCallback(
     (e) => {
       const checked = e.target.checked;
@@ -134,6 +48,7 @@ export default function LeadRow({ lead, copiedId, setCopiedId, onSelect }) {
     [lead, onSelect]
   );
 
+  // Simpan semua update
   const handleSave = async () => {
     if (!priceValue || !costProductValue) {
       alert("Harga dan biaya produk tidak boleh kosong.");
@@ -144,6 +59,9 @@ export default function LeadRow({ lead, copiedId, setCopiedId, onSelect }) {
         price: Number(priceValue),
         costProduct: Number(costProductValue),
         address: addressValue,
+        addressClean: cleanAddressValue,
+        productTitle: productTitleValue,
+        ongkir: Number(ongkirValue) || 0,
         rts: Number(returnValue) || 0,
         status: lead.status,
         resiCheck: lead.resiCheck || "not",
@@ -155,12 +73,13 @@ export default function LeadRow({ lead, copiedId, setCopiedId, onSelect }) {
     }
   };
 
+  // Status change
   const handleStatusChange = useCallback(
     async (newStatus) => {
       if (newStatus === lead.status) return;
       try {
         await updateDoc(doc(db, "leads", lead.id), { status: newStatus });
-        lead.status = newStatus; // update langsung biar UI refresh
+        lead.status = newStatus;
       } catch (err) {
         console.error("Gagal update status:", err);
         alert("Gagal update status.");
@@ -169,6 +88,7 @@ export default function LeadRow({ lead, copiedId, setCopiedId, onSelect }) {
     [lead]
   );
 
+  // Resi check change
   const handleResiCheckChange = useCallback(
     async (newResiCheck) => {
       if (newResiCheck === lead.resiCheck) return;
@@ -182,21 +102,14 @@ export default function LeadRow({ lead, copiedId, setCopiedId, onSelect }) {
     [lead]
   );
 
-  const handleCopyAddress = () => {
-    const prompt = `[PROVINSI], [KABUPATEN/KOTA], [KECAMATAN], [DESA/KELURAHAN] dan rapikan alamat lengkap, dan kelurahan terpisah.\n\nAlamat mentah: ${lead.address}`;
-    copyToClipboard(prompt, () => {
-      setCopiedId(lead.id);
-      setTimeout(() => setCopiedId(null), 2000);
-    });
-  };
-
+  // Copy total
   const handleCopy = () => {
     const pesan = `Terima kasih sudah melakukan pemesanan 🙏  
 Berikut detail pesanan Kakak:
 
 Nama Produk: ${lead.productTitle}  
 Harga Produk: ${formatHargaSingkat(lead.price)}  
-Ongkir: 20rb
+Ongkir: ~25rb~ 20rb
 Total Pembayaran: 
 
 Nama: ${lead.name}  
@@ -211,6 +124,29 @@ Untuk ongkir, akan dihitung otomatis dan dianggap disetujui oleh sistem 🙏`;
       setTimeout(() => setCopiedId(null), 2000);
     });
   };
+
+  // Copy alamat
+ const handleCopyAddress = () => {
+  const prompt = `Rapikan alamat mentah ini menjadi format administrasi Indonesia dengan struktur:
+[PROVINSI], [KABUPATEN/KOTA], [KECAMATAN], [DESA/KELURAHAN], [KODE POS]
+Sertakan juga "Alamat Lengkap" yang sudah rapi.
+
+Contoh Output:
+- Provinsi: ...
+- Kabupaten/Kota: ...
+- Kecamatan: ...
+- Desa/Kelurahan: ...
+- Kode Pos: ...
+- Alamat Lengkap: ...
+
+Alamat mentah: ${lead.address}`;
+  
+  copyToClipboard(prompt, () => {
+    setCopiedId(lead.id);
+    setTimeout(() => setCopiedId(null), 2000);
+  });
+};
+
 
   const statusOptions = [
     { value: "pending", label: "🕓 Pending" },
@@ -356,12 +292,14 @@ Untuk ongkir, akan dihitung otomatis dan dianggap disetujui oleh sistem 🙏`;
                   rows={3}
                 />
               </div>
+
               <button
                 onClick={() => setShowUpdateFields(!showUpdateFields)}
                 className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline mb-2"
               >
                 {showUpdateFields ? "🔽 Tutup Update Data" : "🔼 Update Data"}
               </button>
+
               {showUpdateFields && (
                 <>
                   <div>
@@ -375,16 +313,16 @@ Untuk ongkir, akan dihitung otomatis dan dianggap disetujui oleh sistem 🙏`;
                     />
                   </div>
 
-									  <div>
-                <strong>Alamat Rapi:</strong>
-                <textarea
-                  className="border rounded px-2 py-1 text-sm w-full mt-1 bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
-                  value={cleanAddressValue}
-                  onChange={(e) => setCleanAddressValuessValue(e.target.value)}
-                  placeholder="Masukkan alamat Rapi"
-                  rows={3}
-                />
-              </div>
+                  <div>
+                    <strong>Alamat Rapi:</strong>
+                    <textarea
+                      className="border rounded px-2 py-1 text-sm w-full mt-1 bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
+                      value={cleanAddressValue}
+                      onChange={(e) => setCleanAddressValue(e.target.value)}
+                      placeholder="Masukkan alamat Rapi"
+                      rows={3}
+                    />
+                  </div>
 
                   <div>
                     <strong>Biaya Ongkir:</strong>
@@ -413,20 +351,16 @@ Untuk ongkir, akan dihitung otomatis dan dianggap disetujui oleh sistem 🙏`;
               )}
 
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                Masuk:{" "}
-                {new Date(lead.createdAt.seconds * 1000).toLocaleString(
-                  "id-ID"
-                )}
+                Masuk: {new Date(lead.createdAt.seconds * 1000).toLocaleString("id-ID")}
               </p>
 
               <button
                 onClick={handleSave}
-                disabled={updating}
                 className="w-full bg-gray-900 dark:bg-gray-700 text-white 
              text-xs font-semibold px-3 py-2 rounded-md 
              hover:bg-gray-800 dark:hover:bg-gray-600 transition"
               >
-                {updating ? "⏳ Menyimpan..." : "💾 Simpan Perubahan"}
+                💾 Simpan Perubahan
               </button>
             </div>
 
@@ -435,7 +369,6 @@ Untuk ongkir, akan dihitung otomatis dan dianggap disetujui oleh sistem 🙏`;
               {statusOptions.map(({ value, label }) => (
                 <button
                   key={value}
-                  disabled={updating}
                   onClick={() => handleStatusChange(value)}
                   className={`px-3 py-1 text-xs font-bold rounded-full transition border ${
                     lead.status === value
@@ -453,7 +386,6 @@ Untuk ongkir, akan dihitung otomatis dan dianggap disetujui oleh sistem 🙏`;
               {resiOptions.map(({ value, label }) => (
                 <button
                   key={value}
-                  disabled={updating}
                   onClick={() => handleResiCheckChange(value)}
                   className={`px-3 py-1 text-xs font-bold rounded-full transition border ${
                     (lead.resiCheck || "not") === value
