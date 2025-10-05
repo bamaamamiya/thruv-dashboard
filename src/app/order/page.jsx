@@ -26,7 +26,7 @@ export default function LeadsDashboard() {
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedLeads, setSelectedLeads] = useState([]);
   const [showExportModal, setShowExportModal] = useState(false);
-  const [selectedFilter, setSelectedFilter] = useState("allTime");
+  const [selectedFilter, setSelectedFilter] = useState("month");
   const [customRange, setCustomRange] = useState([null, null]);
 
   const [startDate, endDate] = getDateRange(selectedFilter, customRange);

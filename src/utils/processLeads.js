@@ -6,12 +6,22 @@ import {
   endOfWeek,
   subWeeks,
   startOfMonth,
-	endOfMonth,
+  endOfMonth,
 } from "date-fns";
+
+// 🔹 Helper aman buat ambil Date dari createdAt
+const getCreatedAtDate = (lead) => {
+  if (!lead.createdAt) return null;
+  if (lead.createdAt.toDate) return lead.createdAt.toDate(); // Firestore Timestamp asli
+  if (lead.createdAt.seconds) return new Date(lead.createdAt.seconds * 1000); // object {seconds, nanos}
+  if (typeof lead.createdAt === "string" || typeof lead.createdAt === "number")
+    return new Date(lead.createdAt);
+  return null;
+};
 
 // Filter ads berdasarkan rentang tanggal
 export const filterAdsByDate = (ads, start, end) => {
-  return ads.filter(ad => {
+  return ads.filter((ad) => {
     if (!ad.date) return false;
     const adDate = new Date(ad.date);
     return adDate >= start && adDate <= end;
@@ -26,8 +36,8 @@ export const calculateTotalAdSpend = (ads) => {
 // Filter leads berdasarkan rentang tanggal
 export const filterLeadsByDate = (leads, start, end) => {
   return leads.filter((lead) => {
-    if (!lead.createdAt?.seconds) return false;
-    const createdAt = new Date(lead.createdAt.seconds * 1000);
+    const createdAt = getCreatedAtDate(lead);
+    if (!createdAt) return false;
     return isWithinInterval(createdAt, { start, end });
   });
 };
@@ -36,7 +46,7 @@ export const filterLeadsByDate = (leads, start, end) => {
 export const calculateSummary = (leads) => {
   const completed = leads.filter((lead) => lead.status === "complete");
   const pending = leads.filter((lead) => lead.status === "pending");
-  const returns = leads.filter((lead) => lead.status === "rts"); 
+  const returns = leads.filter((lead) => lead.status === "rts");
 
   const totalSales = completed.reduce(
     (sum, lead) => sum + (lead.price || 0),
@@ -51,24 +61,22 @@ export const calculateSummary = (leads) => {
     0
   );
   const pendingCost = pending.reduce(
-		(sum, lead) => sum + (lead.costProduct || 0),
+    (sum, lead) => sum + (lead.costProduct || 0),
     0
   );
   const totalAllTimeCost = leads.reduce(
-		(sum, lead) => sum + (lead.costProduct || 0),
+    (sum, lead) => sum + (lead.costProduct || 0),
     0
   );
-	
-  // Kalau returns sudah array filter khusus yang RTS
+
   const totalReturnToSenderCost = returns.reduce(
-		(sum, lead) => sum + Number(lead.rts || 0),
+    (sum, lead) => sum + Number(lead.rts || 0),
     0
   );
   const totalReturnToSender = returns.reduce(
-		(sum, lead) => sum + (lead.rts || 0),
+    (sum, lead) => sum + (lead.rts || 0),
     0
   );
-	
 
   const profit = totalSales - totalCost;
 
@@ -77,7 +85,7 @@ export const calculateSummary = (leads) => {
     completedOrders: completed.length,
     pendingOrders: pending.length,
     totalReturnToSenderCost,
-    totalReturnToSender : returns.length,
+    totalReturnToSender: returns.length,
     totalSales,
     totalPendingValue,
     totalCost,
@@ -99,15 +107,15 @@ export const generateChartData = (leads, selectedFilter, start, end) => {
 
       const complete = leads
         .filter((lead) => {
-          const time = new Date(lead.createdAt.seconds * 1000);
-          return time.getHours() === hour && lead.status === "complete";
+          const time = getCreatedAtDate(lead);
+          return time && time.getHours() === hour && lead.status === "complete";
         })
         .reduce((sum, lead) => sum + getRevenue(lead), 0);
 
       const pending = leads
         .filter((lead) => {
-          const time = new Date(lead.createdAt.seconds * 1000);
-          return time.getHours() === hour && lead.status === "pending";
+          const time = getCreatedAtDate(lead);
+          return time && time.getHours() === hour && lead.status === "pending";
         })
         .reduce((sum, lead) => sum + getRevenue(lead), 0);
 
@@ -124,13 +132,13 @@ export const generateChartData = (leads, selectedFilter, start, end) => {
     }
 
     leads.forEach((lead) => {
-      const time = new Date(lead.createdAt.seconds * 1000);
+      const time = getCreatedAtDate(lead);
+      if (!time) return;
       const key = format(time, "dd MMM");
 
       if (map[key]) {
         if (lead.status === "complete") map[key].complete += getRevenue(lead);
-        else if (lead.status === "pending")
-          map[key].pending += getRevenue(lead);
+        else if (lead.status === "pending") map[key].pending += getRevenue(lead);
       }
     });
 
@@ -154,15 +162,13 @@ export const generateChartData = (leads, selectedFilter, start, end) => {
     }
 
     leads.forEach((lead) => {
-      const time = new Date(lead.createdAt.seconds * 1000);
-      if (
-        isWithinInterval(time, { start: startOfLastWeek, end: endOfLastWeek })
-      ) {
+      const time = getCreatedAtDate(lead);
+      if (!time) return;
+      if (isWithinInterval(time, { start: startOfLastWeek, end: endOfLastWeek })) {
         const key = format(time, "dd MMM");
         if (map[key]) {
           if (lead.status === "complete") map[key].complete += getRevenue(lead);
-          else if (lead.status === "pending")
-            map[key].pending += getRevenue(lead);
+          else if (lead.status === "pending") map[key].pending += getRevenue(lead);
         }
       }
     });
@@ -171,46 +177,44 @@ export const generateChartData = (leads, selectedFilter, start, end) => {
   }
 
   // MONTH / LAST MONTH (group per week)
- if (selectedFilter === "month" || selectedFilter === "lastMonth") {
-  const weekMap = {};
-  let current = startOfWeek(startOfMonth(start), { weekStartsOn: 1 });
-  const endMonth = endOfMonth(start);
+  if (selectedFilter === "month" || selectedFilter === "lastMonth") {
+    const weekMap = {};
+    let current = startOfWeek(startOfMonth(start), { weekStartsOn: 1 });
+    const endMonth = endOfMonth(start);
 
-  let weekIndex = 1;
-  while (current <= endMonth) {
-    const weekStart = current;
-    const weekEnd = endOfWeek(current, { weekStartsOn: 1 });
-    const label = `Week ${weekIndex}`;
+    let weekIndex = 1;
+    while (current <= endMonth) {
+      const weekStart = current;
+      const weekEnd = endOfWeek(current, { weekStartsOn: 1 });
+      const label = `Week ${weekIndex}`;
 
-    weekMap[label] = { complete: 0, pending: 0 };
+      weekMap[label] = { complete: 0, pending: 0 };
 
-    leads.forEach((lead) => {
-      const time = new Date(lead.createdAt.seconds * 1000);
-      if (isWithinInterval(time, { start: weekStart, end: weekEnd })) {
-        if (lead.status === "complete") weekMap[label].complete += lead.price || 0;
-        else if (lead.status === "pending") weekMap[label].pending += lead.price || 0;
-      }
-    });
+      leads.forEach((lead) => {
+        const time = getCreatedAtDate(lead);
+        if (time && isWithinInterval(time, { start: weekStart, end: weekEnd })) {
+          if (lead.status === "complete") weekMap[label].complete += getRevenue(lead);
+          else if (lead.status === "pending") weekMap[label].pending += getRevenue(lead);
+        }
+      });
 
-    current = new Date(weekEnd);
-    current.setDate(current.getDate() + 1);
-    weekIndex++;
+      current = new Date(weekEnd);
+      current.setDate(current.getDate() + 1);
+      weekIndex++;
+    }
+
+    return Object.entries(weekMap)
+      .map(([label, value]) => ({ label, ...value }))
+      .filter((item) => item.complete > 0 || item.pending > 0);
   }
-
-  // 🔹 Hanya return week yang ada data
-  return Object.entries(weekMap)
-    .map(([label, value]) => ({ label, ...value }))
-    .filter((item) => item.complete > 0 || item.pending > 0);
-}
-
-
 
   // ALL TIME (group per month)
   if (selectedFilter === "allTime") {
     const map = {};
 
     leads.forEach((lead) => {
-      const time = new Date(lead.createdAt.seconds * 1000);
+      const time = getCreatedAtDate(lead);
+      if (!time) return;
       const key = format(time, "MMM yyyy");
 
       if (!map[key]) map[key] = { complete: 0, pending: 0 };
@@ -226,7 +230,6 @@ export const generateChartData = (leads, selectedFilter, start, end) => {
   if (selectedFilter === "custom") {
     const dayDiff = differenceInDays(end, start);
 
-    // Per hari jika <= 31 hari
     if (dayDiff <= 31) {
       const map = {};
       for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
@@ -235,13 +238,13 @@ export const generateChartData = (leads, selectedFilter, start, end) => {
       }
 
       leads.forEach((lead) => {
-        const time = new Date(lead.createdAt.seconds * 1000);
+        const time = getCreatedAtDate(lead);
+        if (!time) return;
         const key = format(time, "dd MMM");
 
         if (map[key]) {
           if (lead.status === "complete") map[key].complete += getRevenue(lead);
-          else if (lead.status === "pending")
-            map[key].pending += getRevenue(lead);
+          else if (lead.status === "pending") map[key].pending += getRevenue(lead);
         }
       });
 
@@ -252,7 +255,8 @@ export const generateChartData = (leads, selectedFilter, start, end) => {
     const weekMap = {};
 
     leads.forEach((lead) => {
-      const time = new Date(lead.createdAt.seconds * 1000);
+      const time = getCreatedAtDate(lead);
+      if (!time) return;
       if (!isWithinInterval(time, { start, end })) return;
 
       const startWeek = startOfWeek(time, { weekStartsOn: 1 });
@@ -261,8 +265,7 @@ export const generateChartData = (leads, selectedFilter, start, end) => {
       if (!weekMap[key]) weekMap[key] = { complete: 0, pending: 0 };
 
       if (lead.status === "complete") weekMap[key].complete += getRevenue(lead);
-      else if (lead.status === "pending")
-        weekMap[key].pending += getRevenue(lead);
+      else if (lead.status === "pending") weekMap[key].pending += getRevenue(lead);
     });
 
     return Object.entries(weekMap).map(([label, value]) => ({
