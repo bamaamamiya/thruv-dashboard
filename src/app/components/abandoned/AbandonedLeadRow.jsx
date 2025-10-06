@@ -136,6 +136,9 @@ Khusus Kak aku kasih diskon 50% ya. Silakan tulis alamat lengkap kalau masih min
             <p>
               <strong>Produk:</strong> {lead.productTitle}
             </p>
+            <p>
+              <strong>Alamat:</strong> {lead.address}
+            </p>
             <p className="text-xs text-gray-500 dark:text-gray-400">
               Masuk:{" "}
               {new Date(lead.createdAt.seconds * 1000).toLocaleString("id-ID")}
