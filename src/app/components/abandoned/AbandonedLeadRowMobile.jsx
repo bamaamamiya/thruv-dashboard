@@ -40,14 +40,12 @@ export default function AbandonedLeadRowMobile({
   );
 
   const handleCopy = () => {
-    const link = productLinks[lead.productTitle] || "https://thruv.vercel.app"; // fallback
-    const pesan = `Kak ${lead.name || "Kak"}, jangan lewatkan promo *${
+    const pesan = `Permisi Kak ${lead.name || ""} 🌟,
+Aku cek tadi Kak sempat lihat produk kami *${
       lead.productTitle
-    }* 🎯  
+    }* tapi belum tulis alamat lengkap🙏
 
-Promo tinggal sebentar lagi, stok terbatas banget!  
-
-Amankan sekarang sebelum kehabisan 👉 ${link}`;
+Khusus Kak aku kasih diskon 50% ya. Silakan tulis alamat lengkap kalau masih minat sama promonya😊`;
 
     copyToClipboard(pesan, () => {
       setCopiedId(lead.id);

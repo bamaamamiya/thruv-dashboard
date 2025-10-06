@@ -40,20 +40,17 @@ export default function AbandonedLeadRow({ lead, copiedId, setCopiedId }) {
   };
 
   const handleCopy = () => {
-    const link = productLinks[lead.productTitle] || "https://thruv.vercel.app"; // fallback
-    const pesan = `Kak ${lead.name || "Kak"}, jangan lewatkan promo *${
-      lead.productTitle
-    }* 🎯  
+  const pesan = `Permisi Kak ${lead.name || ""} 🌟,
+Aku cek tadi Kak sempat lihat produk kami *${lead.productTitle}* tapi belum tulis alamat lengkap🙏
 
-Promo tinggal sebentar lagi, stok terbatas banget!  
+Khusus Kak aku kasih diskon 50% ya. Silakan tulis alamat lengkap kalau masih minat sama promonya😊`;
 
-Amankan sekarang sebelum kehabisan 👉 ${link}`;
+  copyToClipboard(pesan, () => {
+    setCopiedId(lead.id);
+    setTimeout(() => setCopiedId(null), 2000);
+  });
+};
 
-    copyToClipboard(pesan, () => {
-      setCopiedId(lead.id);
-      setTimeout(() => setCopiedId(null), 2000);
-    });
-  };
 
   const statusOptions = [
     { value: "abandoned", label: "🛑 Abandoned" },
