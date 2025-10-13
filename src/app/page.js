@@ -14,6 +14,7 @@ import PendingProfit from "@/app/components/analytics/PendingProfit";
 import ProfitTotal from "@/app/components/analytics/ProfitTotal";
 import Return from "./components/analytics/Return";
 import TotalAdSpend from "@/app/components/analytics/AdSpend";
+import AllProfitNet from "@/app/components/analytics/AllProfitNet";
 
 import { getDateRange } from "@/utils/dateFilters";
 import { getPreviousRange } from "@/utils/getPreviousRange";
@@ -22,7 +23,7 @@ import {
   calculateSummary,
   generateChartData,
   filterAdsByDate,
-	calculateTotalAdSpend
+  calculateTotalAdSpend,
 } from "@/utils/processLeads";
 
 export default function DashboardPage() {
@@ -150,6 +151,14 @@ export default function DashboardPage() {
             totalSales={totalSales}
             totalCost={totalCost}
             totalReturnToSenderCost={totalReturnToSenderCost}
+          />
+          <AllProfitNet
+            totalSales={totalSales}
+            totalCost={totalCost}
+            totalPendingValue={totalPendingValue}
+            pendingCost={pendingCost}
+            totalReturnToSenderCost={totalReturnToSenderCost}
+            totalAdSpend={totalFilteredAdSpend}
           />
           <PendingProfit
             totalPendingValue={totalPendingValue}
