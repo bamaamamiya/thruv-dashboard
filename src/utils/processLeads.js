@@ -78,6 +78,9 @@ export const calculateSummary = (
     (sum, lead) => sum + Number(lead.rts || 0),
     0
   );
+	const validLeads = leads.filter(
+  (lead) => lead.status === "complete" || lead.status === "pending"
+);
 
   const totalReturnToSender = returns.length;
 
@@ -101,7 +104,8 @@ export const calculateSummary = (
   const avgCOGS = completed.length > 0 ? totalCost / completed.length : 0;
   const adCostPerOrder =
     completed.length > 0 ? totalAdSpend / completed.length : 0;
-  const cac = leads.length > 0 ? totalAdSpend / leads.length : 0;
+		const cac = validLeads.length > 0 ? totalAdSpend / validLeads.length : 0;
+
 
   // 🔹 Persentase dibulatkan ke integer
   const grossMargin =
