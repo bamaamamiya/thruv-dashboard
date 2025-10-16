@@ -31,7 +31,7 @@ export default function RootLayout({ children }) {
         className={`${inter.className} bg-white text-black dark:bg-black dark:text-white`}
       >
         <Navbar />
-        <div className="container mx-auto">{children}</div>
+        <div className="container mx-auto ">{children}</div>
       </body>
     </html>
   );

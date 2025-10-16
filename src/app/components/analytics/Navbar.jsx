@@ -103,6 +103,16 @@ const Navbar = () => {
         >
           Abandoned
         </button>
+        <button
+          onClick={() => router.push("/wa")}
+          className="px-3 py-1.5 text-sm font-medium 
+          text-gray-700 dark:text-gray-200 
+          hover:text-black dark:hover:text-white 
+          hover:bg-gray-100 dark:hover:bg-gray-900 
+          rounded-md transition"
+        >
+          WA
+        </button>
       </div>
 
       {/* Mobile Sidebar Trigger */}

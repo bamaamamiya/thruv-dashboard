@@ -42,8 +42,13 @@ export const filterLeadsByDate = (leads, start, end) => {
   });
 };
 
-// Hitung ringkasan data leads
-export const calculateSummary = (leads) => {
+// 🧮 Hitung ringkasan data leads + metrik lanjutan
+export const calculateSummary = (
+  leads,
+  totalAdSpend = 0,
+  totalCustomers = 0,
+  monthlyExpenses = 0
+) => {
   const completed = leads.filter((lead) => lead.status === "complete");
   const pending = leads.filter((lead) => lead.status === "pending");
   const returns = leads.filter((lead) => lead.status === "rts");
@@ -73,25 +78,77 @@ export const calculateSummary = (leads) => {
     (sum, lead) => sum + Number(lead.rts || 0),
     0
   );
-  const totalReturnToSender = returns.reduce(
-    (sum, lead) => sum + (lead.rts || 0),
-    0
-  );
 
-  const profit = totalSales - totalCost;
+  const totalReturnToSender = returns.length;
 
+  // 🔹 Dasar profit
+  const profit = totalSales - totalCost - monthlyExpenses - totalAdSpend;
+  const grossProfit = totalSales - totalCost;
+
+  // ✅ New: Net Profit
+  const netProfit =
+    totalSales +
+    totalPendingValue -
+    totalCost -
+    pendingCost -
+    totalAdSpend -
+    totalReturnToSenderCost -
+    monthlyExpenses;
+
+  // 🔹 Derived metrics
+  const avgOrderValue =
+    completed.length > 0 ? totalSales / completed.length : 0;
+  const avgCOGS = completed.length > 0 ? totalCost / completed.length : 0;
+  const adCostPerOrder =
+    completed.length > 0 ? totalAdSpend / completed.length : 0;
+  const cac = leads.length > 0 ? totalAdSpend / leads.length : 0;
+
+  // 🔹 Persentase dibulatkan ke integer
+  const grossMargin =
+    totalSales > 0 ? Math.round((grossProfit / totalSales) * 100) : 0;
+  const profitMargin =
+    totalSales > 0 ? Math.round((profit / totalSales) * 100) : 0;
+  const VAT_RATE = 0.11;
+  const pmVatIncluded =
+    totalSales > 0
+      ? Math.round(((grossProfit - totalSales * VAT_RATE) / totalSales) * 100)
+      : 0;
+  const purchaseFrequency =
+    totalCustomers > 0 ? completed.length / totalCustomers : 0;
+  const clv = avgOrderValue * (grossMargin / 100) * purchaseFrequency;
+
+  const ltgpToCac = cac > 0 ? Number((clv / cac).toFixed(2)) : 0;
+  const conversionRate =
+    leads.length > 0 ? Math.round((completed.length / leads.length) * 100) : 0;
   return {
+    // Original fields
     totalOrders: leads.length,
     completedOrders: completed.length,
     pendingOrders: pending.length,
     totalReturnToSenderCost,
-    totalReturnToSender: returns.length,
+    totalReturnToSender,
     totalSales,
     totalPendingValue,
     totalCost,
     profit,
+    netProfit, // ✅ Added here
     pendingCost,
     totalAllTimeCost,
+
+    // New advanced metrics
+    grossProfit,
+    avgOrderValue,
+    avgCOGS,
+    adCostPerOrder,
+    cac,
+    grossMargin,
+    profitMargin,
+    pmVatIncluded,
+    purchaseFrequency,
+    clv,
+    ltgpToCac, // ✅ Tambahan baru
+    monthlyExpenses,
+    conversionRate, // %
   };
 };
 
@@ -138,7 +195,8 @@ export const generateChartData = (leads, selectedFilter, start, end) => {
 
       if (map[key]) {
         if (lead.status === "complete") map[key].complete += getRevenue(lead);
-        else if (lead.status === "pending") map[key].pending += getRevenue(lead);
+        else if (lead.status === "pending")
+          map[key].pending += getRevenue(lead);
       }
     });
 
@@ -164,11 +222,14 @@ export const generateChartData = (leads, selectedFilter, start, end) => {
     leads.forEach((lead) => {
       const time = getCreatedAtDate(lead);
       if (!time) return;
-      if (isWithinInterval(time, { start: startOfLastWeek, end: endOfLastWeek })) {
+      if (
+        isWithinInterval(time, { start: startOfLastWeek, end: endOfLastWeek })
+      ) {
         const key = format(time, "dd MMM");
         if (map[key]) {
           if (lead.status === "complete") map[key].complete += getRevenue(lead);
-          else if (lead.status === "pending") map[key].pending += getRevenue(lead);
+          else if (lead.status === "pending")
+            map[key].pending += getRevenue(lead);
         }
       }
     });
@@ -192,9 +253,14 @@ export const generateChartData = (leads, selectedFilter, start, end) => {
 
       leads.forEach((lead) => {
         const time = getCreatedAtDate(lead);
-        if (time && isWithinInterval(time, { start: weekStart, end: weekEnd })) {
-          if (lead.status === "complete") weekMap[label].complete += getRevenue(lead);
-          else if (lead.status === "pending") weekMap[label].pending += getRevenue(lead);
+        if (
+          time &&
+          isWithinInterval(time, { start: weekStart, end: weekEnd })
+        ) {
+          if (lead.status === "complete")
+            weekMap[label].complete += getRevenue(lead);
+          else if (lead.status === "pending")
+            weekMap[label].pending += getRevenue(lead);
         }
       });
 
@@ -244,7 +310,8 @@ export const generateChartData = (leads, selectedFilter, start, end) => {
 
         if (map[key]) {
           if (lead.status === "complete") map[key].complete += getRevenue(lead);
-          else if (lead.status === "pending") map[key].pending += getRevenue(lead);
+          else if (lead.status === "pending")
+            map[key].pending += getRevenue(lead);
         }
       });
 
@@ -265,7 +332,8 @@ export const generateChartData = (leads, selectedFilter, start, end) => {
       if (!weekMap[key]) weekMap[key] = { complete: 0, pending: 0 };
 
       if (lead.status === "complete") weekMap[key].complete += getRevenue(lead);
-      else if (lead.status === "pending") weekMap[key].pending += getRevenue(lead);
+      else if (lead.status === "pending")
+        weekMap[key].pending += getRevenue(lead);
     });
 
     return Object.entries(weekMap).map(([label, value]) => ({

@@ -4,20 +4,11 @@ import React, { useEffect, useState } from "react";
 import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebaseClient";
 
-import ConversionRate from "@/app/components/analytics/ConversionRate";
 import FilterBar from "@/app/components/analytics/FilterBar";
-import Summary from "@/app/components/analytics/Summary";
 import LeadsChart from "@/app/components/analytics/LeadsChart";
-import OrderStatus from "@/app/components/analytics/OrderStatus";
-import ProfitSummary from "@/app/components/analytics/ProfitSummary";
-import PendingProfit from "@/app/components/analytics/PendingProfit";
-import ProfitTotal from "@/app/components/analytics/ProfitTotal";
-import Return from "./components/analytics/Return";
-import TotalAdSpend from "@/app/components/analytics/AdSpend";
-import AllProfitNet from "@/app/components/analytics/AllProfitNet";
+import MetricCard from "@/app/components/analytics/MetricCard";
 
 import { getDateRange } from "@/utils/dateFilters";
-import { getPreviousRange } from "@/utils/getPreviousRange";
 import {
   filterLeadsByDate,
   calculateSummary,
@@ -25,6 +16,7 @@ import {
   filterAdsByDate,
   calculateTotalAdSpend,
 } from "@/utils/processLeads";
+import Summary from "./components/analytics/Summary";
 
 export default function DashboardPage() {
   const [leads, setLeads] = useState([]);
@@ -32,140 +24,115 @@ export default function DashboardPage() {
   const [selectedFilter, setSelectedFilter] = useState("month");
   const [customRange, setCustomRange] = useState([new Date(), new Date()]);
 
-  // 1. Listen to Firebase leads
+  // 🔹 Listen to Firestore
   useEffect(() => {
-    const unsub = onSnapshot(collection(db, "leads"), (snapshot) => {
-      const docs = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setLeads(docs);
-    });
+    const unsubLeads = onSnapshot(collection(db, "leads"), (snapshot) =>
+      setLeads(snapshot.docs.map((d) => ({ id: d.id, ...d.data() })))
+    );
 
-    return () => unsub();
+    const unsubAds = onSnapshot(collection(db, "adSpends"), (snapshot) =>
+      setAds(snapshot.docs.map((d) => ({ id: d.id, ...d.data() })))
+    );
+
+    return () => {
+      unsubLeads();
+      unsubAds();
+    };
   }, []);
 
-  useEffect(() => {
-    const unsub = onSnapshot(collection(db, "adSpends"), (snapshot) => {
-      const docs = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setAds(docs);
-    });
-
-    return () => unsub();
-  }, []);
-
-  // 2. Active range & metrics
+  // 🔹 Date filters
   const [start, end] = getDateRange(selectedFilter, customRange);
-  // 1️⃣ Filter ads sesuai range yang sama dengan leads
-  const filteredAds = filterAdsByDate(ads, start, end);
-
   const filteredLeads = filterLeadsByDate(leads, start, end);
-  const {
-    totalOrders,
-    completedOrders,
-    pendingOrders,
-    totalSales,
-    totalPendingValue,
-    totalCost,
-    pendingCost,
-    totalReturnToSenderCost,
-    totalReturnToSender,
-  } = calculateSummary(filteredLeads);
+  const filteredAds = filterAdsByDate(ads, start, end);
+  const previousSummary = {};
 
-  // 2️⃣ Hitung total Ad Spend
-  const totalFilteredAdSpend = calculateTotalAdSpend(filteredAds);
+  // 🔹 Summaries
+  const totalAdSpend = calculateTotalAdSpend(filteredAds);
+  const uniqueCustomers = new Set(filteredLeads.map((l) => l.phone || l.email))
+    .size;
+  const summary = calculateSummary(
+    filteredLeads,
+    totalAdSpend,
+    uniqueCustomers,
+    0
+  );
 
-  // 3. Previous range & metrics
-  const [prevStart, prevEnd] = getPreviousRange(selectedFilter, start, end);
-  const previousLeads = filterLeadsByDate(leads, prevStart, prevEnd);
-  const previousSummary = calculateSummary(previousLeads);
-
-  const previousConversionRate =
-    previousSummary.totalOrders > 0
-      ? (previousSummary.completedOrders / previousSummary.totalOrders) * 100
-      : null;
-
-  // 4. Chart data
   const chartData = generateChartData(
     filteredLeads,
     selectedFilter,
     start,
     end
   );
+  const roas =
+    totalAdSpend > 0
+      ? Number((summary.totalSales / totalAdSpend).toFixed(2))
+      : 0;
+
+  // 🔹 Metric list
+  const metrics = [
+    { label: "Total Sales", value: summary.totalSales, prefix: "Rp" },
+    { label: "Gross Profit", value: summary.grossProfit, prefix: "Rp" },
+    { label: "AOV", value: summary.avgOrderValue, prefix: "Rp" },
+    { label: "Gross Margin", value: summary.grossMargin, suffix: "%" },
+    { label: "Profit Margin", value: summary.profitMargin, suffix: "%" },
+    { label: "Ad Cost / Order", value: summary.adCostPerOrder, prefix: "Rp" },
+    { label: "CAC", value: summary.cac, prefix: "Rp" },
+    { label: "CLV", value: summary.clv, prefix: "Rp" },
+    { label: "Total Ad Spend", value: totalAdSpend, prefix: "Rp" },
+    { label: "Total Product Cost", value: summary.totalCost, prefix: "Rp" },
+    {
+      label: "Return Cost (RTS)",
+      value: summary.totalReturnToSenderCost,
+      prefix: "Rp",
+    },
+    { label: "Pending Value", value: summary.totalPendingValue, prefix: "Rp" },
+    { label: "Net Profit", value: summary.netProfit, prefix: "Rp" },
+    { label: "Number of Orders (Complete)", value: summary.completedOrders },
+    { label: "Number of Orders (Pending)", value: summary.pendingOrders },
+    { label: "ROAS", value: roas, suffix: "x" },
+    { label: "LTGP : CAC", value: summary.ltgpToCac, suffix: "x" },
+    { label: "Conversion Rate", value: summary.conversionRate, suffix: "%" }, // ✅ baru
+  ];
 
   return (
-    <div>
-      <div className="min-h-screen px-4 py-6">
-        <div className="max-w-4xl mx-auto space-y-6">
-          {/* Filter Selection */}
-          <FilterBar
-            selectedFilter={selectedFilter}
-            setSelectedFilter={setSelectedFilter}
-            customRange={customRange}
-            setCustomRange={setCustomRange}
-          />
+    <div className="min-h-screen px-4 py-6">
+      <div className="max-w-6xl mx-auto space-y-6">
+        <FilterBar
+          selectedFilter={selectedFilter}
+          setSelectedFilter={setSelectedFilter}
+          customRange={customRange}
+          setCustomRange={setCustomRange}
+        />
 
-          {/* Summary Cards */}
-          <Summary
-            totalSales={totalSales}
-            totalOrders={totalOrders}
-            completedOrders={completedOrders}
-            pendingOrders={pendingOrders}
-            totalPendingValue={totalPendingValue}
-            totalCost={totalCost}
-            start={start}
-            end={end}
-            pendingOrdersPrevious={previousSummary.pendingOrders || 0}
-          />
+        {/* Summary Cards */}
+        <Summary
+          totalSales={summary.totalSales}
+          totalOrders={summary.totalOrders}
+          completedOrders={summary.completedOrders}
+          pendingOrders={summary.pendingOrders}
+          totalPendingValue={summary.totalPendingValue}
+          totalCost={summary.totalCost}
+          start={start}
+          end={end}
+          pendingOrdersPrevious={previousSummary?.pendingOrders || 0}
+        />
 
-          {/* Leads Chart */}
+        {/* Chart Section */}
+        <div className="mt-10">
           <LeadsChart data={chartData} />
+        </div>
 
-          {/* Conversion Rate */}
-          <ConversionRate
-            completedOrders={completedOrders}
-            totalOrders={totalOrders}
-            previousRate={previousConversionRate}
-          />
-
-          {/* Order Status */}
-          <OrderStatus
-            completedOrders={completedOrders}
-            pendingOrders={pendingOrders}
-            totalOrders={totalOrders}
-            totalReturnToSender={totalReturnToSender}
-          />
-
-          {/* Profit Info */}
-          <ProfitTotal
-            totalSales={totalSales}
-            totalCost={totalCost}
-            totalPendingValue={totalPendingValue}
-            pendingCost={pendingCost}
-            totalReturnToSenderCost={totalReturnToSenderCost}
-          />
-          <ProfitSummary
-            totalSales={totalSales}
-            totalCost={totalCost}
-            totalReturnToSenderCost={totalReturnToSenderCost}
-          />
-          <AllProfitNet
-            totalSales={totalSales}
-            totalCost={totalCost}
-            totalPendingValue={totalPendingValue}
-            pendingCost={pendingCost}
-            totalReturnToSenderCost={totalReturnToSenderCost}
-            totalAdSpend={totalFilteredAdSpend}
-          />
-          <PendingProfit
-            totalPendingValue={totalPendingValue}
-            pendingCost={pendingCost}
-          />
-          <Return rts={totalReturnToSenderCost} />
-          <TotalAdSpend totalAdSpend={totalFilteredAdSpend} />
+        {/* Metrics Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mt-6">
+          {metrics.map((m) => (
+            <MetricCard
+              key={m.label}
+              label={m.label}
+              value={m.value}
+              prefix={m.prefix}
+              suffix={m.suffix}
+            />
+          ))}
         </div>
       </div>
     </div>

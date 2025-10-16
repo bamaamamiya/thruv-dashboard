@@ -1,27 +1,23 @@
-// app/dashboard/LeadRow.jsx
 "use client";
 
 import { useState, useCallback } from "react";
 import { deleteDoc, doc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebaseClient";
 
-// 🔹 Format currency short
 const formatHargaSingkat = (harga) => {
   if (!harga) return "-";
-  if (harga >= 1_000_000) {
+  if (harga >= 1_000_000)
     return (harga / 1_000_000).toFixed(1).replace(".0", "") + "jt";
-  }
   return (harga / 1000).toFixed(0) + "rb";
 };
 
-// 🔹 Copy to clipboard
 const copyToClipboard = async (text, onCopied) => {
   if (typeof navigator === "undefined") return;
   try {
     await navigator.clipboard.writeText(text);
     onCopied?.();
   } catch (err) {
-    console.error("Clipboard error:", err);
+    console.error(err);
     alert("Gagal menyalin teks.");
   }
 };
@@ -29,26 +25,26 @@ const copyToClipboard = async (text, onCopied) => {
 export default function LeadRow({ lead, copiedId, setCopiedId, onSelect }) {
   const [showModal, setShowModal] = useState(false);
   const [priceValue, setPriceValue] = useState(lead.price || "");
-  const [costProductValue, setCostProductValue] = useState(lead.costProduct || "");
+  const [costProductValue, setCostProductValue] = useState(
+    lead.costProduct || ""
+  );
   const [addressValue, setAddressValue] = useState(lead.address || "");
   const [returnValue, setReturnValue] = useState(lead.rts || "");
   const [isChecked, setIsChecked] = useState(false);
-  const [cleanAddressValue, setCleanAddressValue] = useState(lead.addressClean || "");
-  const [productTitleValue, setProductTitleValue] = useState(lead.productTitle || "");
-  const [ongkirValue, setOngkirValue] = useState(lead.ongkir || "");
-  const [showUpdateFields, setShowUpdateFields] = useState(false);
-
-  // Checkbox
-  const handleCheckboxChange = useCallback(
-    (e) => {
-      const checked = e.target.checked;
-      setIsChecked(checked);
-      onSelect?.(lead, checked);
-    },
-    [lead, onSelect]
+  const [cleanAddressValue, setCleanAddressValue] = useState(
+    lead.addressClean || ""
   );
+  const [productTitleValue, setProductTitleValue] = useState(
+    lead.productTitle || ""
+  );
+  const [ongkirValue, setOngkirValue] = useState(lead.ongkir || "");
 
-  // Simpan semua update
+  const handleCheckboxChange = (e) => {
+    const checked = e.target.checked;
+    setIsChecked(checked);
+    onSelect?.(lead, checked);
+  };
+
   const handleSave = async () => {
     if (!priceValue || !costProductValue) {
       alert("Harga dan biaya produk tidak boleh kosong.");
@@ -73,7 +69,6 @@ export default function LeadRow({ lead, copiedId, setCopiedId, onSelect }) {
     }
   };
 
-  // Status change
   const handleStatusChange = useCallback(
     async (newStatus) => {
       if (newStatus === lead.status) return;
@@ -88,7 +83,6 @@ export default function LeadRow({ lead, copiedId, setCopiedId, onSelect }) {
     [lead]
   );
 
-  // Resi check change
   const handleResiCheckChange = useCallback(
     async (newResiCheck) => {
       if (newResiCheck === lead.resiCheck) return;
@@ -102,13 +96,13 @@ export default function LeadRow({ lead, copiedId, setCopiedId, onSelect }) {
     [lead]
   );
 
-  // Copy total
   const handleCopy = () => {
-    const pesan = `Terima kasih sudah melakukan pemesanan 🙏  
+    const pesan = `
+Terima kasih sudah melakukan pemesanan 🙏  
 Berikut detail pesanan Kakak:
 
-Nama Produk: ${lead.productTitle}  
-Harga Produk: ${formatHargaSingkat(lead.price)}  
+Nama Produk: ${productTitleValue}  
+Harga Produk: ${formatHargaSingkat(priceValue)}   
 Ongkir: ~25rb~ 20rb
 Total Pembayaran: 
 
@@ -117,7 +111,8 @@ Alamat Lengkap: ${lead.address}
 
 Apakah alamat yang Kakak berikan sudah benar?  
 Kami akan segera proses pesanan Kakak jika alamatnya sudah sesuai ya.  
-Untuk ongkir, akan dihitung otomatis dan dianggap disetujui oleh sistem 🙏`;
+Untuk ongkir, akan dihitung otomatis dan dianggap disetujui oleh sistem 🙏
+`;
 
     copyToClipboard(pesan, () => {
       setCopiedId(lead.id);
@@ -125,9 +120,8 @@ Untuk ongkir, akan dihitung otomatis dan dianggap disetujui oleh sistem 🙏`;
     });
   };
 
-  // Copy alamat
- const handleCopyAddress = () => {
-  const prompt = `Rapikan alamat mentah ini menjadi format administrasi Indonesia dengan struktur:
+  const handleCopyAddress = () => {
+    const prompt = `Rapikan alamat mentah ini menjadi format administrasi Indonesia dengan struktur:
 [PROVINSI], [KABUPATEN/KOTA], [KECAMATAN], [DESA/KELURAHAN], [KODE POS]
 Sertakan juga "Alamat Lengkap" yang sudah rapi.
 
@@ -139,14 +133,13 @@ Contoh Output:
 - Kode Pos: ...
 - Alamat Lengkap: ...
 
-Alamat mentah: ${lead.address}`;
-  
-  copyToClipboard(prompt, () => {
-    setCopiedId(lead.id);
-    setTimeout(() => setCopiedId(null), 2000);
-  });
-};
+Alamat mentah: ${cleanAddressValue}`;
 
+    copyToClipboard(prompt, () => {
+      setCopiedId(lead.id);
+      setTimeout(() => setCopiedId(null), 2000);
+    });
+  };
 
   const statusOptions = [
     { value: "pending", label: "🕓 Pending" },
@@ -154,7 +147,6 @@ Alamat mentah: ${lead.address}`;
     { value: "cancel", label: "❌ Cancel" },
     { value: "rts", label: "🚚 RTS" },
   ];
-
   const resiOptions = [
     { value: "not", label: "🕓 Belum Dicek" },
     { value: "done", label: "📦 Resi Dicek" },
@@ -165,10 +157,10 @@ Alamat mentah: ${lead.address}`;
       {/* Lead Row */}
       <div
         className="grid text-sm grid-cols-8 items-center gap-2 cursor-pointer 
-             hover:bg-gray-50 dark:hover:bg-gray-700 
-             px-3 py-3 rounded-md transition 
-             border border-gray-200 dark:border-gray-700
-             bg-white dark:bg-black"
+                   hover:bg-gray-50 dark:hover:bg-gray-700 
+                   px-3 py-3 rounded-md transition 
+                   border border-gray-200 dark:border-gray-700
+                   bg-white dark:bg-black"
         onClick={() => setShowModal(true)}
       >
         <input
@@ -176,7 +168,6 @@ Alamat mentah: ${lead.address}`;
           checked={isChecked}
           onChange={handleCheckboxChange}
           onClick={(e) => e.stopPropagation()}
-          aria-label="Select lead"
           className="scale-125 accent-gray-800 dark:accent-gray-200"
         />
         <span className="text-xs text-gray-500 dark:text-gray-400">
@@ -216,7 +207,6 @@ Alamat mentah: ${lead.address}`;
         >
           {lead.status}
         </span>
-
         <span
           className={`text-xs text-center font-semibold px-2 py-0.5 rounded-full ${
             lead.resiCheck === "done"
@@ -228,26 +218,24 @@ Alamat mentah: ${lead.address}`;
         </span>
       </div>
 
-      {/* Modal */}
+      {/* Modal full update */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-900 w-full max-w-md p-6 rounded-xl shadow-xl relative text-sm text-gray-800 dark:text-gray-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 bg-black/30 backdrop-blur-sm">
+          <div className="bg-white dark:bg-gray-900 w-full max-w-3xl h-[85vh] p-6 rounded-2xl shadow-xl relative overflow-y-auto space-y-4 text-gray-800 dark:text-gray-200">
             <button
               onClick={() => setShowModal(false)}
-              className="absolute top-3 right-4 text-gray-400 dark:text-gray-500 hover:text-black dark:hover:text-white text-xl"
-              aria-label="Close modal"
+              className="absolute top-4 right-4 text-gray-400 dark:text-gray-500 hover:text-black dark:hover:text-white text-xl"
             >
               ❌
             </button>
+            <h2 className="text-xl font-bold mb-2">📄 Detail Lead</h2>
 
-            <h2 className="text-lg font-semibold mb-4">📄 Detail Lead</h2>
-
-            <div className="space-y-2">
+            <div className="space-y-3">
               <p>
-                <strong>Nama:</strong> {lead.name}
+                <span className="font-semibold">Nama:</span> {lead.name}
               </p>
               <p>
-                <strong>WA: </strong>
+                <span className="font-semibold">WA:</span>{" "}
                 <a
                   href={`https://wa.me/${lead.whatsapp}`}
                   target="_blank"
@@ -258,114 +246,82 @@ Alamat mentah: ${lead.address}`;
                 </a>
               </p>
 
-              <div>
-                <strong>Produk:</strong>
-                <input
-                  type="text"
-                  className="border rounded px-2 py-1 text-sm w-full mt-1 
-               bg-white dark:bg-gray-800 dark:border-gray-600 
-               dark:text-gray-100"
-                  value={productTitleValue}
-                  onChange={(e) => setProductTitleValue(e.target.value)}
-                  placeholder="Masukkan nama produk"
-                />
-              </div>
-
-              <div>
-                <strong>Harga Produk:</strong>
-                <input
-                  type="number"
-                  className="border rounded px-2 py-1 text-sm w-full mt-1 bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
-                  value={priceValue}
-                  onChange={(e) => setPriceValue(e.target.value)}
-                  placeholder="Masukkan harga jual terbaru"
-                />
-              </div>
-
-              <div>
-                <strong>Alamat:</strong>
-                <textarea
-                  className="border rounded px-2 py-1 text-sm w-full mt-1 bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
-                  value={addressValue}
-                  onChange={(e) => setAddressValue(e.target.value)}
-                  placeholder="Masukkan alamat baru"
-                  rows={3}
-                />
-              </div>
-
-              <button
-                onClick={() => setShowUpdateFields(!showUpdateFields)}
-                className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline mb-2"
-              >
-                {showUpdateFields ? "🔽 Tutup Update Data" : "🔼 Update Data"}
-              </button>
-
-              {showUpdateFields && (
-                <>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="font-medium text-sm">Produk</label>
+                  <input
+                    type="text"
+                    className="w-full border border-gray-300 dark:border-gray-700 rounded px-3 py-2 mt-1 text-sm bg-white dark:bg-gray-800"
+                    value={productTitleValue}
+                    onChange={(e) => setProductTitleValue(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="font-medium text-sm">Harga</label>
+                  <input
+                    type="number"
+                    className="w-full border border-gray-300 dark:border-gray-700 rounded px-3 py-2 mt-1 text-sm bg-white dark:bg-gray-800"
+                    value={priceValue}
+                    onChange={(e) => setPriceValue(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="font-medium text-sm">Cost Product</label>
+                  <input
+                    type="number"
+                    className="w-full border border-gray-300 dark:border-gray-700 rounded px-3 py-2 mt-1 text-sm bg-white dark:bg-gray-800"
+                    value={costProductValue}
+                    onChange={(e) => setCostProductValue(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="font-medium text-sm">Biaya Ongkir</label>
+                  <input
+                    type="number"
+                    className="w-full border border-gray-300 dark:border-gray-700 rounded px-3 py-2 mt-1 text-sm bg-white dark:bg-gray-800"
+                    value={ongkirValue}
+                    onChange={(e) => setOngkirValue(e.target.value)}
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="font-medium text-sm">Alamat Rapi</label>
+                  <textarea
+                    className="w-full border border-gray-300 dark:border-gray-700 rounded px-3 py-2 mt-1 text-sm bg-white dark:bg-gray-800"
+                    rows={3}
+                    value={cleanAddressValue}
+                    onChange={(e) => setCleanAddressValue(e.target.value)}
+                  />
+                </div>
+                {lead.status === "rts" && (
                   <div>
-                    <strong>Cost Product:</strong>
+                    <label className="font-medium text-sm">Biaya Return</label>
                     <input
                       type="number"
-                      className="border rounded px-2 py-1 text-sm w-full mt-1 bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
-                      value={costProductValue}
-                      onChange={(e) => setCostProductValue(e.target.value)}
-                      placeholder="Masukkan cost product"
+                      className="w-full border border-gray-300 dark:border-gray-700 rounded px-3 py-2 mt-1 text-sm bg-white dark:bg-gray-800"
+                      value={returnValue}
+                      onChange={(e) => setReturnValue(e.target.value)}
                     />
                   </div>
-
-                  <div>
-                    <strong>Alamat Rapi:</strong>
-                    <textarea
-                      className="border rounded px-2 py-1 text-sm w-full mt-1 bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
-                      value={cleanAddressValue}
-                      onChange={(e) => setCleanAddressValue(e.target.value)}
-                      placeholder="Masukkan alamat Rapi"
-                      rows={3}
-                    />
-                  </div>
-
-                  <div>
-                    <strong>Biaya Ongkir:</strong>
-                    <input
-                      type="number"
-                      className="border rounded px-2 py-1 text-sm w-full mt-1 bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
-                      value={ongkirValue}
-                      onChange={(e) => setOngkirValue(e.target.value)}
-                      placeholder="Masukkan biaya ongkir"
-                    />
-                  </div>
-
-                  {lead.status === "rts" && (
-                    <div>
-                      <strong>Biaya Return:</strong>
-                      <input
-                        type="number"
-                        className="border rounded px-2 py-1 text-sm w-full mt-1 bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
-                        value={returnValue}
-                        onChange={(e) => setReturnValue(e.target.value)}
-                        placeholder="Masukkan biaya RTS"
-                      />
-                    </div>
-                  )}
-                </>
-              )}
+                )}
+              </div>
 
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                Masuk: {new Date(lead.createdAt.seconds * 1000).toLocaleString("id-ID")}
+                Masuk:{" "}
+                {new Date(lead.createdAt.seconds * 1000).toLocaleString(
+                  "id-ID"
+                )}
               </p>
 
               <button
                 onClick={handleSave}
-                className="w-full bg-gray-900 dark:bg-gray-700 text-white 
-             text-xs font-semibold px-3 py-2 rounded-md 
-             hover:bg-gray-800 dark:hover:bg-gray-600 transition"
+                className="w-full bg-black dark:bg-gray-700 text-white py-2 px-4 rounded-lg font-semibold hover:bg-gray-800 dark:hover:bg-gray-600 transition"
               >
                 💾 Simpan Perubahan
               </button>
             </div>
 
-            {/* Status Buttons */}
-            <div className="flex flex-wrap gap-2 mt-5">
+            {/* Status & Resi */}
+            <div className="flex flex-wrap gap-2 mt-4">
               {statusOptions.map(({ value, label }) => (
                 <button
                   key={value}
@@ -380,9 +336,7 @@ Alamat mentah: ${lead.address}`;
                 </button>
               ))}
             </div>
-
-            {/* Resi Buttons */}
-            <div className="flex flex-wrap gap-2 mt-3">
+            <div className="flex flex-wrap gap-2 mt-2">
               {resiOptions.map(({ value, label }) => (
                 <button
                   key={value}
@@ -398,25 +352,23 @@ Alamat mentah: ${lead.address}`;
               ))}
             </div>
 
-            {/* Footer Buttons */}
-            <div className="flex justify-between items-center mt-6">
-              <div className="space-x-2">
+            {/* Footer */}
+            <div className="flex justify-between items-center mt-6 gap-2">
+              <div className="flex gap-2">
                 <button
                   onClick={handleCopy}
-                  className="bg-gray-900 dark:bg-gray-700 text-white 
-             text-xs font-semibold px-3 py-1 rounded-md 
-             hover:bg-gray-800 dark:hover:bg-gray-600 transition"
+                  className="bg-black dark:bg-gray-700 text-white text-xs font-semibold px-3 py-1 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-600 transition"
                 >
                   {copiedId === lead.id ? "✅ Disalin!" : "📋 Salin Total"}
                 </button>
-
                 <button
                   onClick={handleCopyAddress}
-                  className="bg-black dark:bg-gray-700 text-white text-xs font-semibold px-3 py-1 rounded-md hover:bg-gray-800 dark:hover:bg-gray-600 transition"
+                  className="bg-black dark:bg-gray-700 text-white text-xs font-semibold px-3 py-1 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-600 transition"
                 >
                   {copiedId === lead.id ? "✅ Disalin!" : "📋 Salin Alamat"}
                 </button>
               </div>
+
               <button
                 onClick={async () => {
                   if (window.confirm(`Hapus data atas nama ${lead.name}?`)) {
