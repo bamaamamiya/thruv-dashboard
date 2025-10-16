@@ -27,7 +27,7 @@ const MetricCard = ({ label, value, prefix = "", suffix = "" }) => {
   const formatted = formatValue(value);
 
   const lower = label.toLowerCase();
-  const isExpense = lower.includes("cost") 
+  const isExpense = lower.includes("cost");
   const isProfit =
     lower.includes("profit") ||
     lower.includes("sales") ||
@@ -48,16 +48,17 @@ const MetricCard = ({ label, value, prefix = "", suffix = "" }) => {
   return (
     <div
       className="p-5 rounded-xl border border-gray-200 dark:border-gray-800
+			w-full sm:w-auto
       bg-white dark:bg-[#000]
       shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_4px_rgba(0,0,0,0.04)]
       hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)]
       transition-all duration-200"
     >
-      <p className="text-sm text-gray-500 dark:text-gray-400 mb-1 truncate">
+      <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 break-words">
         {label}
       </p>
       <p
-        className={`text-2xl sm:text-xl font-semibold tracking-tight ${valueColor} break-words`}
+        className={`text-xl sm:text-2xl font-semibold tracking-tight ${valueColor} break-words`}
       >
         {formatted}
       </p>
