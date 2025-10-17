@@ -13,32 +13,44 @@ const MetricCard = ({ label, value, prefix = "", suffix = "" }) => {
 
   // 🔹 Format angka → hapus semua, tampil apa adanya
   const formatValue = (val) => {
-  if (typeof val !== "number") return "-";
-  // Gunakan format ribuan Indonesia
-  return `${prefix}${val.toLocaleString("id-ID")}${suffix}`;
-};
-
+    if (typeof val !== "number") return "-";
+    // Gunakan format ribuan Indonesia
+    return `${prefix}${val.toLocaleString("id-ID")}${suffix}`;
+  };
 
   const formatted = formatValue(value);
 
   const lower = label.toLowerCase();
   const isExpense = lower.includes("cost");
+  const isPending =
+    lower.includes("pending") ||
+    lower.includes("net pending profit") ||
+    lower.includes("pending profit");
   const isProfit =
-    lower.includes("profit") ||
-    lower.includes("sales") ||
-    lower.includes("revenue") ||
-    lower.includes("clv");
-  const isPending = lower.includes("pending");
+    !isPending &&
+    (lower.includes("profit") ||
+      lower.includes("sales") ||
+      lower.includes("revenue") ||
+      lower.includes("clv"));
+
   const isRoas =
     lower.includes("roas") || lower.includes("spend") || lower.includes("ad");
-
   // 🔹 Warna angka sesuai konteks
   let valueColor = "text-gray-800 dark:text-gray-100";
-  if (lower === "ltgptocac") valueColor = "text-white"; // ✅ tambahan ini
-  else if (isExpense) valueColor = "text-red-500 dark:text-red-400";
-  else if (isProfit) valueColor = "text-emerald-600 dark:text-emerald-400";
-  else if (isPending) valueColor = "text-orange-500 dark:text-orange-400";
-  else if (isRoas) valueColor = "text-blue-500 dark:text-blue-400";
+
+  if (lower === "ltgptocac") {
+    valueColor = "text-white";
+  } else if (isExpense) {
+    valueColor = "text-red-500 dark:text-red-400"; // 🔻 Cost / Loss
+  } else if (isProfit) {
+    valueColor = "text-emerald-500 dark:text-emerald-400"; // 💰 Profit / Sales
+  } else if (isPending) {
+    valueColor = "text-yellow-500 dark:text-yellow-400"; // ⏳ Pending
+  } else if (isRoas) {
+    valueColor = "text-sky-500 dark:text-sky-400"; // 📈 ROAS / Ad metrics
+  } else {
+    valueColor = "text-gray-800 dark:text-gray-100"; // ⚪ Default
+  }
 
   return (
     <div

@@ -70,29 +70,76 @@ export default function DashboardPage() {
       : 0;
 
   // 🔹 Metric list
-  const metrics = [
-    { label: "Total Sales", value: summary.totalSales, prefix: "Rp" },
-    { label: "Gross Profit", value: summary.grossProfit, prefix: "Rp" },
-    { label: "AOV", value: summary.avgOrderValue, prefix: "Rp" },
-    { label: "Gross Margin", value: summary.grossMargin, suffix: "%" },
-    { label: "Profit Margin", value: summary.profitMargin, suffix: "%" },
-    { label: "Ad Cost / Order", value: summary.adCostPerOrder, prefix: "Rp" },
-    { label: "CAC", value: summary.cac, prefix: "Rp" },
-    { label: "CLV", value: summary.clv, prefix: "Rp" },
-    { label: "Total Ad Spend", value: totalAdSpend, prefix: "Rp" },
-    { label: "Total Product Cost", value: summary.totalCost, prefix: "Rp" },
+  const metricGroups = [
     {
-      label: "Return Cost (RTS)",
-      value: summary.totalReturnToSenderCost,
-      prefix: "Rp",
+      title: "📊 Sales & Profit",
+      items: [
+        { label: "Total Sales", value: summary.totalSales, prefix: "Rp" },
+        { label: "Gross Profit", value: summary.grossProfit, prefix: "Rp" },
+        {
+          label: "Net Profit (Real)",
+          value: summary.netProfitReal,
+          prefix: "Rp",
+        },
+        {
+          label: "Net Profit (Projected)",
+          value: summary.netProfitProjected,
+          prefix: "Rp",
+        },
+        { label: "Profit Margin", value: summary.profitMargin, suffix: "%" },
+      ],
     },
-    { label: "Pending Value", value: summary.totalPendingValue, prefix: "Rp" },
-    { label: "Net Profit", value: summary.netProfit, prefix: "Rp" },
-    { label: "Number of Orders (Complete)", value: summary.completedOrders },
-    { label: "Number of Orders (Pending)", value: summary.pendingOrders },
-    { label: "ROAS", value: roas, suffix: "x" },
-    { label: "LTGP : CAC", value: summary.ltgpToCac, suffix: "x" },
-    { label: "Conversion Rate", value: summary.conversionRate, suffix: "%" }, // ✅ baru
+    {
+      title: "💸 Ad Performance",
+      items: [
+        { label: "Total Ad Spend", value: totalAdSpend, prefix: "Rp" },
+        { label: "CAC", value: summary.cac, prefix: "Rp" },
+        { label: "ROAS", value: roas, suffix: "x" },
+      ],
+    },
+    {
+      title: "🧾 Orders & Pending",
+      items: [
+        { label: "Pending Profit", value: summary.pendingProfit, prefix: "Rp" },
+        {
+          label: "Net Pending Profit",
+          value: summary.netPendingProfit,
+          prefix: "Rp",
+        },
+        {
+          label: "Pending Value",
+          value: summary.totalPendingValue,
+          prefix: "Rp",
+        },
+        { label: "Number of Orders (Pending)", value: summary.pendingOrders },
+        {
+          label: "Number of Orders (Complete)",
+          value: summary.completedOrders,
+        },
+      ],
+    },
+    {
+      title: "🏭 Cost & Return",
+      items: [
+        { label: "Total Product Cost", value: summary.totalCost, prefix: "Rp" },
+        {
+          label: "Return Cost (RTS)",
+          value: summary.totalReturnToSenderCost,
+          prefix: "Rp",
+        },
+      ],
+    },
+    {
+      title: "📈 Ratios & Metrics",
+      items: [
+        { label: "LTGP : CAC", value: summary.ltgpToCac, suffix: "x" },
+        {
+          label: "Conversion Rate",
+          value: summary.conversionRate,
+          suffix: "%",
+        },
+      ],
+    },
   ];
 
   return (
@@ -121,19 +168,29 @@ export default function DashboardPage() {
         {/* Chart Section */}
         <div className="mt-10 space-y-4">
           <LeadsChart data={chartData} />
-        <LeadsStatusChart data={chartData} />
+          <LeadsStatusChart data={chartData} />
         </div>
 
         {/* Metrics Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mt-6">
-          {metrics.map((m) => (
-            <MetricCard
-              key={m.label}
-              label={m.label}
-              value={m.value}
-              prefix={m.prefix}
-              suffix={m.suffix}
-            />
+        {/* Metrics Section by Category */}
+        <div className="space-y-8 mt-10">
+          {metricGroups.map((group) => (
+            <div key={group.title}>
+              <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">
+                {group.title}
+              </h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                {group.items.map((m) => (
+                  <MetricCard
+                    key={m.label}
+                    label={m.label}
+                    value={m.value}
+                    prefix={m.prefix}
+                    suffix={m.suffix}
+                  />
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       </div>

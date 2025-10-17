@@ -49,50 +49,33 @@ export const calculateSummary = (
   totalCustomers = 0,
   monthlyExpenses = 0
 ) => {
-  const completed = leads.filter((lead) => lead.status === "complete");
-  const pending = leads.filter((lead) => lead.status === "pending");
-  const returns = leads.filter((lead) => lead.status === "rts");
+  const completed = leads.filter((l) => l.status === "complete");
+  const pending = leads.filter((l) => l.status === "pending");
+  const returns = leads.filter((l) => l.status === "rts");
 
-  const totalSales = completed.reduce(
-    (sum, lead) => sum + (lead.price || 0),
-    0
-  );
-  const totalPendingValue = pending.reduce(
-    (sum, lead) => sum + (lead.price || 0),
-    0
-  );
-  const totalCost = completed.reduce(
-    (sum, lead) => sum + (lead.costProduct || 0),
-    0
-  );
-  const pendingCost = pending.reduce(
-    (sum, lead) => sum + (lead.costProduct || 0),
-    0
-  );
-  const totalAllTimeCost = leads.reduce(
-    (sum, lead) => sum + (lead.costProduct || 0),
-    0
-  );
-
+  // 🔹 Data dasar
+  const totalSales = completed.reduce((s, l) => s + (l.price || 0), 0);
+  const totalPendingValue = pending.reduce((s, l) => s + (l.price || 0), 0);
+  const totalCost = completed.reduce((s, l) => s + (l.costProduct || 0), 0);
+  const pendingCost = pending.reduce((s, l) => s + (l.costProduct || 0), 0);
   const totalReturnToSenderCost = returns.reduce(
-    (sum, lead) => sum + Number(lead.rts || 0),
+    (s, l) => s + Number(l.rts || 0),
     0
   );
-  const validLeads = leads.filter(
-    (lead) => lead.status === "complete" || lead.status === "pending"
-  );
-  const validLeadsForFrequency = leads.filter(
-    (lead) => lead.status === "complete" || lead.status === "pending"
-  );
 
-  const totalReturnToSender = returns.length;
-
-  // 🔹 Dasar profit
-  const profit = totalSales - totalCost - monthlyExpenses - totalAdSpend;
+  // 🔹 Gross Profit (tanpa ads)
   const grossProfit = totalSales - totalCost;
 
-  // ✅ New: Net Profit
-  const netProfit =
+  // 🔹 Profit real: semua biaya nyata dikurangi dari penjualan yang sudah complete
+  const netProfitReal =
+    totalSales -
+    totalCost -
+    totalAdSpend -
+    totalReturnToSenderCost -
+    monthlyExpenses;
+
+  // 🔹 Projected: asumsikan semua pending sukses
+  const netProfitProjected =
     totalSales +
     totalPendingValue -
     totalCost -
@@ -101,62 +84,65 @@ export const calculateSummary = (
     totalReturnToSenderCost -
     monthlyExpenses;
 
-  // 🔹 Derived metrics
+  // 🔹 Pending saja (potensi profit yang belum cair)
+  const netPendingProfit =
+    totalPendingValue - pendingCost - monthlyExpenses * 0.1; // sisakan porsi kecil ops
+
+  const profit = grossProfit - totalAdSpend; // buat tampilan lama
+  const pendingProfit = totalPendingValue - pendingCost;
+
+  // 🔹 Metric tambahan
   const avgOrderValue =
     completed.length > 0 ? totalSales / completed.length : 0;
-  const avgCOGS = completed.length > 0 ? totalCost / completed.length : 0;
-  const adCostPerOrder =
-    completed.length > 0 ? totalAdSpend / completed.length : 0;
-  const cac = validLeads.length > 0 ? totalAdSpend / validLeads.length : 0;
+  const cac =
+    leads.length > 0 ? totalAdSpend / (completed.length + pending.length) : 0;
+  const ltgpToCac = cac > 0 ? Number((avgOrderValue / cac).toFixed(2)) : 0;
 
-  // 🔹 Persentase dibulatkan ke integer
+  // 🔹 Persentase
   const grossMargin =
     totalSales > 0 ? Math.round((grossProfit / totalSales) * 100) : 0;
   const profitMargin =
-    totalSales > 0 ? Math.round((profit / totalSales) * 100) : 0;
-  const VAT_RATE = 0.11;
-  const pmVatIncluded =
-    totalSales > 0
-      ? Math.round(((grossProfit - totalSales * VAT_RATE) / totalSales) * 100)
-      : 0;
-  const purchaseFrequency =
-    totalCustomers > 0 ? validLeadsForFrequency.length / totalCustomers : 0;
-  const clv = avgOrderValue * (grossMargin / 100) * purchaseFrequency;
-
-  const ltgpToCac = cac > 0 ? Number((clv / cac).toFixed(2)) : 0;
+    totalSales > 0 ? Math.round((netProfitReal / totalSales) * 100) : 0;
   const conversionRate =
-    leads.length > 0 ? Math.round((completed.length / leads.length) * 100) : 0;
-  return {
-    // Original fields
-    totalOrders: leads.length,
-    completedOrders: completed.length,
-    pendingOrders: pending.length,
-    totalReturnToSenderCost,
-    totalReturnToSender,
+    leads.length > 0
+      ? Math.round((completed.length / leads.length) * 100)
+      : 0;
+
+  console.log({
     totalSales,
     totalPendingValue,
     totalCost,
-    profit,
-    netProfit, 
     pendingCost,
-    totalAllTimeCost,
+    totalAdSpend,
+    netProfitReal,
+    netProfitProjected,
+  });
 
-    // New advanced metrics
+  return {
+    totalOrders: leads.length,
+    completedOrders: completed.length,
+    pendingOrders: pending.length,
+    totalSales,
+    totalPendingValue,
+    totalCost,
+    pendingCost,
+    totalAdSpend,
+    totalReturnToSenderCost,
     grossProfit,
-    avgOrderValue,
-    avgCOGS,
-    adCostPerOrder,
-    cac,
     grossMargin,
+    profit,
     profitMargin,
-    pmVatIncluded,
-    purchaseFrequency,
-    clv,
-    ltgpToCac, 
-    monthlyExpenses,
-    conversionRate, // %
+    netProfitReal, // ✅ baru: profit nyata
+    netProfitProjected, // ✅ baru: proyeksi
+    pendingProfit,
+    netPendingProfit,
+    avgOrderValue,
+    cac,
+    ltgpToCac,
+    conversionRate,
   };
 };
+
 
 // Buat data chart berdasarkan filter waktu (per jam, per hari, per bulan)
 export const generateChartData = (leads, selectedFilter, start, end) => {
