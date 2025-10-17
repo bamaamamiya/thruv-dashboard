@@ -7,6 +7,7 @@ import { db } from "@/lib/firebaseClient";
 import FilterBar from "@/app/components/analytics/FilterBar";
 import LeadsChart from "@/app/components/analytics/LeadsChart";
 import MetricCard from "@/app/components/analytics/MetricCard";
+import LeadsStatusChart from "./components/analytics/LeadsStatusChart";
 
 import { getDateRange } from "@/utils/dateFilters";
 import {
@@ -118,8 +119,9 @@ export default function DashboardPage() {
         />
 
         {/* Chart Section */}
-        <div className="mt-10">
+        <div className="mt-10 space-y-4">
           <LeadsChart data={chartData} />
+        <LeadsStatusChart data={chartData} />
         </div>
 
         {/* Metrics Grid */}

@@ -78,9 +78,12 @@ export const calculateSummary = (
     (sum, lead) => sum + Number(lead.rts || 0),
     0
   );
-	const validLeads = leads.filter(
-  (lead) => lead.status === "complete" || lead.status === "pending"
-);
+  const validLeads = leads.filter(
+    (lead) => lead.status === "complete" || lead.status === "pending"
+  );
+  const validLeadsForFrequency = leads.filter(
+    (lead) => lead.status === "complete" || lead.status === "pending"
+  );
 
   const totalReturnToSender = returns.length;
 
@@ -104,8 +107,7 @@ export const calculateSummary = (
   const avgCOGS = completed.length > 0 ? totalCost / completed.length : 0;
   const adCostPerOrder =
     completed.length > 0 ? totalAdSpend / completed.length : 0;
-		const cac = validLeads.length > 0 ? totalAdSpend / validLeads.length : 0;
-
+  const cac = validLeads.length > 0 ? totalAdSpend / validLeads.length : 0;
 
   // 🔹 Persentase dibulatkan ke integer
   const grossMargin =
@@ -118,7 +120,7 @@ export const calculateSummary = (
       ? Math.round(((grossProfit - totalSales * VAT_RATE) / totalSales) * 100)
       : 0;
   const purchaseFrequency =
-    totalCustomers > 0 ? completed.length / totalCustomers : 0;
+    totalCustomers > 0 ? validLeadsForFrequency.length / totalCustomers : 0;
   const clv = avgOrderValue * (grossMargin / 100) * purchaseFrequency;
 
   const ltgpToCac = cac > 0 ? Number((clv / cac).toFixed(2)) : 0;
@@ -135,7 +137,7 @@ export const calculateSummary = (
     totalPendingValue,
     totalCost,
     profit,
-    netProfit, // ✅ Added here
+    netProfit, 
     pendingCost,
     totalAllTimeCost,
 
@@ -150,7 +152,7 @@ export const calculateSummary = (
     pmVatIncluded,
     purchaseFrequency,
     clv,
-    ltgpToCac, // ✅ Tambahan baru
+    ltgpToCac, 
     monthlyExpenses,
     conversionRate, // %
   };

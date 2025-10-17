@@ -11,18 +11,13 @@ const MetricCard = ({ label, value, prefix = "", suffix = "" }) => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // 🔹 Format angka (desktop vs mobile)
+  // 🔹 Format angka → hapus semua, tampil apa adanya
   const formatValue = (val) => {
-    if (typeof val !== "number") return "-";
-    if (isMobile) {
-      if (val >= 1_000_000)
-        return `${prefix}${(val / 1_000_000).toFixed(1)}jt${suffix}`;
-      if (val >= 1_000)
-        return `${prefix}${(val / 1_000).toFixed(0)}rb${suffix}`;
-      return `${prefix}${val}${suffix}`;
-    }
-    return `${prefix}${val.toLocaleString()}${suffix}`;
-  };
+  if (typeof val !== "number") return "-";
+  // Gunakan format ribuan Indonesia
+  return `${prefix}${val.toLocaleString("id-ID")}${suffix}`;
+};
+
 
   const formatted = formatValue(value);
 
@@ -48,7 +43,7 @@ const MetricCard = ({ label, value, prefix = "", suffix = "" }) => {
   return (
     <div
       className="p-5 rounded-xl border border-gray-200 dark:border-gray-800
-			w-full sm:w-auto
+      w-full sm:w-auto
       bg-white dark:bg-[#000]
       shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_4px_rgba(0,0,0,0.04)]
       hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)]

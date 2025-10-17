@@ -42,37 +42,41 @@ const LeadsChart = ({ data }) => {
 
   const enhancedData = data.map((item) => ({
     ...item,
+    complete: item.complete || 0,
+    pending: item.pending || 0,
     total: (item.complete || 0) + (item.pending || 0),
   }));
 
-  const CustomTooltip = ({ active, payload }) => {
-    if (!active || !payload?.length) return null;
-    const getValue = (key) =>
-      payload.find((p) => p.dataKey === key)?.value || 0;
-    const complete = getValue("complete");
-    const pending = getValue("pending");
-    const total = complete + pending;
+  const CustomTooltip = ({ active, payload, label }) => {
+  if (!active) return null;
 
-    return (
-      <div
-        className={`px-3 py-2 rounded-md shadow-md border ${
-          isDark
-            ? "bg-gray-800 border-gray-700 text-gray-100"
-            : "bg-white border-gray-300 text-black"
-        }`}
-      >
-        <p className="text-sm text-emerald-500">
-          {`Complete: Rp${complete.toLocaleString("id-ID")}`}
-        </p>
-        <p className="text-sm text-yellow-500">
-          {`Pending: Rp${pending.toLocaleString("id-ID")}`}
-        </p>
-        <p className="text-sm font-semibold">
-          {`Total: Rp${total.toLocaleString("id-ID")}`}
-        </p>
-      </div>
-    );
-  };
+  // cari item asli di enhancedData
+  const item = enhancedData.find((d) => d.label === label) || {};
+  const complete = item.complete || 0;
+  const pending = item.pending || 0;
+  const total = item.total || 0;
+
+  return (
+    <div
+      className={`px-3 py-2 rounded-md shadow-md border ${
+        isDark
+          ? "bg-gray-800 border-gray-700 text-gray-100"
+          : "bg-white border-gray-300 text-black"
+      }`}
+    >
+      <p className="text-sm text-emerald-500">
+        {`Complete: Rp${complete.toLocaleString("id-ID")}`}
+      </p>
+      <p className="text-sm text-yellow-500">
+        {`Pending: Rp${pending.toLocaleString("id-ID")}`}
+      </p>
+      <p className="text-sm font-semibold">
+        {`Total: Rp${total.toLocaleString("id-ID")}`}
+      </p>
+    </div>
+  );
+};
+
 
   return (
     <div className="p-4 md:p-6 rounded-2xl shadow-md border border-gray-200 dark:border-gray-700 dark:bg-black">
@@ -95,7 +99,7 @@ const LeadsChart = ({ data }) => {
           <ComposedChart data={enhancedData} barCategoryGap="20%">
             <CartesianGrid
               strokeDasharray="2 6"
-              stroke={isDark ? "#374151" : "#e5e7eb"} // ✅ grid warna
+              stroke={isDark ? "#374151" : "#e5e7eb"}
             />
             <XAxis
               dataKey="label"
@@ -133,30 +137,22 @@ const LeadsChart = ({ data }) => {
               }}
             />
 
+            {/* 🔹 Hanya satu bar "Total Revenue" */}
             {chartType === "bar" && (
-              <>
-                <Bar
-                  dataKey="complete"
-                  fill="#10b981"
-                  radius={[6, 6, 0, 0]}
-                  barSize={barSize}
-                  name="Complete"
-                />
-                <Bar
-                  dataKey="pending"
-                  fill="#facc15"
-                  radius={[6, 6, 0, 0]}
-                  barSize={barSize}
-                  name="Pending"
-                />
-              </>
+              <Bar
+                dataKey="total"
+                fill="#10b981"
+                radius={[6, 6, 0, 0]}
+                barSize={barSize}
+                minPointSize={2}
+                name="Total Revenue"
+              />
             )}
-
             {chartType === "line" && (
               <Line
                 type="monotoneX"
                 dataKey="total"
-                stroke="#04a7aa"
+                stroke="#10b981"
                 strokeWidth={2}
                 dot={false}
                 name="Total Revenue"
