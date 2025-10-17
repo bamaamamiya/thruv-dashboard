@@ -104,9 +104,7 @@ export const calculateSummary = (
   const profitMargin =
     totalSales > 0 ? Math.round((netProfitReal / totalSales) * 100) : 0;
   const conversionRate =
-    leads.length > 0
-      ? Math.round((completed.length / leads.length) * 100)
-      : 0;
+    leads.length > 0 ? Math.round((completed.length / leads.length) * 100) : 0;
 
   return {
     totalOrders: leads.length,
@@ -132,7 +130,6 @@ export const calculateSummary = (
     conversionRate,
   };
 };
-
 
 // Buat data chart berdasarkan filter waktu (per jam, per hari, per bulan)
 export const generateChartData = (leads, selectedFilter, start, end) => {
@@ -219,60 +216,60 @@ export const generateChartData = (leads, selectedFilter, start, end) => {
     return Object.entries(map).map(([label, value]) => ({ label, ...value }));
   }
 
-  // MONTH / LAST MONTH (group per week)
+  // MONTH / LAST MONTH (group per day, biar mirip tampilan week)
   if (selectedFilter === "month" || selectedFilter === "lastMonth") {
-    const weekMap = {};
-    let current = startOfWeek(startOfMonth(start), { weekStartsOn: 1 });
-    const endMonth = endOfMonth(start);
-
-    let weekIndex = 1;
-    while (current <= endMonth) {
-      const weekStart = current;
-      const weekEnd = endOfWeek(current, { weekStartsOn: 1 });
-      const label = `Week ${weekIndex}`;
-
-      weekMap[label] = { complete: 0, pending: 0 };
-
-      leads.forEach((lead) => {
-        const time = getCreatedAtDate(lead);
-        if (
-          time &&
-          isWithinInterval(time, { start: weekStart, end: weekEnd })
-        ) {
-          if (lead.status === "complete")
-            weekMap[label].complete += getRevenue(lead);
-          else if (lead.status === "pending")
-            weekMap[label].pending += getRevenue(lead);
-        }
-      });
-
-      current = new Date(weekEnd);
-      current.setDate(current.getDate() + 1);
-      weekIndex++;
-    }
-
-    return Object.entries(weekMap)
-      .map(([label, value]) => ({ label, ...value }))
-      .filter((item) => item.complete > 0 || item.pending > 0);
-  }
-
-  // ALL TIME (group per month)
-  if (selectedFilter === "allTime") {
     const map = {};
+    const endDate = endOfMonth(start);
+
+    for (let d = new Date(start); d <= endDate; d.setDate(d.getDate() + 1)) {
+      const key = format(new Date(d), "dd MMM");
+      map[key] = { complete: 0, pending: 0 };
+    }
 
     leads.forEach((lead) => {
       const time = getCreatedAtDate(lead);
       if (!time) return;
-      const key = format(time, "MMM yyyy");
+      const key = format(time, "dd MMM");
 
-      if (!map[key]) map[key] = { complete: 0, pending: 0 };
-
-      if (lead.status === "complete") map[key].complete += getRevenue(lead);
-      else if (lead.status === "pending") map[key].pending += getRevenue(lead);
+      if (map[key]) {
+        if (lead.status === "complete") map[key].complete += getRevenue(lead);
+        else if (lead.status === "pending")
+          map[key].pending += getRevenue(lead);
+      }
     });
 
-    return Object.entries(map).map(([label, value]) => ({ label, ...value }));
+    return Object.entries(map).map(([label, value]) => ({
+      label,
+      ...value,
+    }));
   }
+
+  // ALL TIME (group per month)
+if (selectedFilter === "allTime") {
+  const map = {};
+
+  leads.forEach((lead) => {
+    const time = getCreatedAtDate(lead);
+    if (!time) return;
+    const key = format(time, "yyyy-MM"); // pakai format aman untuk sort
+
+    if (!map[key]) map[key] = { complete: 0, pending: 0 };
+    if (lead.status === "complete") map[key].complete += getRevenue(lead);
+    else if (lead.status === "pending") map[key].pending += getRevenue(lead);
+  });
+
+  // Urutkan berdasarkan tanggal
+  const sortedKeys = Object.keys(map).sort((a, b) => new Date(a) - new Date(b));
+
+  // (Opsional) tampilkan hanya 12 bulan terakhir biar nggak terlalu padat
+  const recentKeys = sortedKeys.slice(-12);
+
+  return recentKeys.map((key) => ({
+    label: format(new Date(key + "-01"), "MMM yyyy"), // tampilkan nama bulan
+    ...map[key],
+  }));
+}
+
 
   // CUSTOM
   if (selectedFilter === "custom") {

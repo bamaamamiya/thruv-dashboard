@@ -48,35 +48,34 @@ const LeadsChart = ({ data }) => {
   }));
 
   const CustomTooltip = ({ active, payload, label }) => {
-  if (!active) return null;
+    if (!active) return null;
 
-  // cari item asli di enhancedData
-  const item = enhancedData.find((d) => d.label === label) || {};
-  const complete = item.complete || 0;
-  const pending = item.pending || 0;
-  const total = item.total || 0;
+    // cari item asli di enhancedData
+    const item = enhancedData.find((d) => d.label === label) || {};
+    const complete = item.complete || 0;
+    const pending = item.pending || 0;
+    const total = item.total || 0;
 
-  return (
-    <div
-      className={`px-3 py-2 rounded-md shadow-md border ${
-        isDark
-          ? "bg-gray-800 border-gray-700 text-gray-100"
-          : "bg-white border-gray-300 text-black"
-      }`}
-    >
-      <p className="text-sm text-emerald-500">
-        {`Complete: Rp${complete.toLocaleString("id-ID")}`}
-      </p>
-      <p className="text-sm text-yellow-500">
-        {`Pending: Rp${pending.toLocaleString("id-ID")}`}
-      </p>
-      <p className="text-sm font-semibold">
-        {`Total: Rp${total.toLocaleString("id-ID")}`}
-      </p>
-    </div>
-  );
-};
-
+    return (
+      <div
+        className={`px-3 py-2 rounded-md shadow-md border ${
+          isDark
+            ? "bg-gray-800 border-gray-700 text-gray-100"
+            : "bg-white border-gray-300 text-black"
+        }`}
+      >
+        <p className="text-sm text-emerald-500">
+          {`Complete: Rp${complete.toLocaleString("id-ID")}`}
+        </p>
+        <p className="text-sm text-yellow-500">
+          {`Pending: Rp${pending.toLocaleString("id-ID")}`}
+        </p>
+        <p className="text-sm font-semibold">
+          {`Total: Rp${total.toLocaleString("id-ID")}`}
+        </p>
+      </div>
+    );
+  };
 
   return (
     <div className="p-4 md:p-6 rounded-2xl shadow-md border border-gray-200 dark:border-gray-700 dark:bg-black">
@@ -150,14 +149,28 @@ const LeadsChart = ({ data }) => {
             )}
             {chartType === "line" && (
               <Line
-                type="monotoneX"
+                type="basis" // 🔥 'basis' lebih halus dari 'monotoneX'
                 dataKey="total"
                 stroke="#10b981"
-                strokeWidth={2}
-                dot={false}
+                strokeWidth={3} // sedikit lebih tebal, biar lembut dan jelas
+                // dot={{
+                //   r: 2,
+                //   stroke: "#10b981",
+                //   strokeWidth: 1,
+                //   fill: "#10b981",
+                // }}
+                dot={false} // 👈 ini artinya titiknya disembunyikan
+                activeDot={{
+                  r: 5,
+                  stroke: "#34d399",
+                  strokeWidth: 2,
+                  fill: "#fff",
+                }} // efek hover manis
                 name="Total Revenue"
-                animationDuration={800}
+                animationDuration={1000}
+                animationEasing="ease-in-out" // 🔄 animasi halus
               />
+							
             )}
           </ComposedChart>
         </ResponsiveContainer>
