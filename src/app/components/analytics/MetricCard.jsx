@@ -34,7 +34,7 @@ const MetricCard = ({ label, value, prefix = "", suffix = "" }) => {
       lower.includes("clv"));
 
   const isRoas =
-    lower.includes("roas") || lower.includes("spend") || lower.includes("ad");
+    lower.includes("roas") || lower.includes("spend") || lower.includes("ad")|| lower.includes("cac");
   // 🔹 Warna angka sesuai konteks
   let valueColor = "text-gray-800 dark:text-gray-100";
 

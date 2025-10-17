@@ -108,16 +108,6 @@ export const calculateSummary = (
       ? Math.round((completed.length / leads.length) * 100)
       : 0;
 
-  console.log({
-    totalSales,
-    totalPendingValue,
-    totalCost,
-    pendingCost,
-    totalAdSpend,
-    netProfitReal,
-    netProfitProjected,
-  });
-
   return {
     totalOrders: leads.length,
     completedOrders: completed.length,

@@ -87,6 +87,11 @@ export default function DashboardPage() {
           prefix: "Rp",
         },
         { label: "Profit Margin", value: summary.profitMargin, suffix: "%" },
+        {
+          label: "Number of Orders (Complete)",
+          value: summary.completedOrders,
+        },
+				{ label: "Number of Orders (Pending)", value: summary.pendingOrders },
       ],
     },
     {
@@ -100,28 +105,20 @@ export default function DashboardPage() {
     {
       title: "🧾 Orders & Pending",
       items: [
-        { label: "Pending Profit", value: summary.pendingProfit, prefix: "Rp" },
-        {
-          label: "Net Pending Profit",
-          value: summary.netPendingProfit,
-          prefix: "Rp",
-        },
         {
           label: "Pending Value",
           value: summary.totalPendingValue,
           prefix: "Rp",
         },
-        { label: "Number of Orders (Pending)", value: summary.pendingOrders },
-        {
-          label: "Number of Orders (Complete)",
-          value: summary.completedOrders,
-        },
+        { label: "Pending Profit", value: summary.pendingProfit, prefix: "Rp" },
+        
       ],
     },
     {
       title: "🏭 Cost & Return",
       items: [
         { label: "Total Product Cost", value: summary.totalCost, prefix: "Rp" },
+        { label: "Total Product Pending Cost", value: summary.pendingCost, prefix: "Rp" },
         {
           label: "Return Cost (RTS)",
           value: summary.totalReturnToSenderCost,
