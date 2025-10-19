@@ -280,8 +280,8 @@ Alamat mentah: ${cleanAddressValue}`;
 
       {/* Modal full update */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm overflow-hidden">
-          <div className="bg-white dark:bg-gray-900 w-full max-w-3xl max-h-[85vh] overflow-y-auto rounded-2xl shadow-2xl p-6 relative text-gray-800 dark:text-gray-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+  <div className="bg-white dark:bg-gray-900 w-full max-w-lg h-[90vh] rounded-2xl shadow-2xl p-5 text-gray-800 dark:text-gray-200 overflow-y-auto">
             <button
               onClick={() => setShowModal(false)}
               className="absolute top-4 right-4 text-gray-400 dark:text-gray-500 hover:text-black dark:hover:text-white text-xl"
