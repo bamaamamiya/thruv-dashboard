@@ -7,6 +7,7 @@ export default function WhatsAppPage() {
   const [qr, setQr] = useState(null);
   const [status, setStatus] = useState("Loading...");
   const [loggedIn, setLoggedIn] = useState(false);
+  const [logs, setLogs] = useState([]); // <-- state untuk log
 
   const fetchStatusAndQr = async () => {
     try {
@@ -39,9 +40,24 @@ export default function WhatsAppPage() {
     }
   };
 
+  // ambil logs dari backend
+  const fetchLogs = async () => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_WA_API}/logs`);
+      const data = await res.json();
+      setLogs(data.logs || []);
+    } catch (err) {
+      console.error("Gagal fetch logs", err);
+    }
+  };
+
   useEffect(() => {
     fetchStatusAndQr();
-    const interval = setInterval(fetchStatusAndQr, 5000);
+    fetchLogs(); // fetch logs pertama kali
+    const interval = setInterval(() => {
+      fetchStatusAndQr();
+      fetchLogs(); // refresh setiap 5 detik
+    }, 5000);
     return () => clearInterval(interval);
   }, []);
 
@@ -59,12 +75,12 @@ export default function WhatsAppPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6">
+    <div className="min-h-screen flex flex-col items-center p-6 space-y-6">
       <div className="w-full max-w-lg space-y-6">
         <header className="flex justify-between items-center">
           <h1 className="text-3xl font-bold tracking-tight">WhatsApp Dashboard</h1>
           <button
-            onClick={fetchStatusAndQr}
+            onClick={() => { fetchStatusAndQr(); fetchLogs(); }}
             className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
             title="Refresh Status"
           >
@@ -93,6 +109,20 @@ export default function WhatsAppPage() {
               <span>Logout</span>
             </button>
           )}
+        </div>
+
+        {/* Logs */}
+        <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-4 h-64 overflow-y-auto w-full">
+          <h2 className="font-semibold mb-2">📋 Logs</h2>
+          {logs.length === 0 && <p className="text-gray-500 text-sm">Belum ada log</p>}
+          {logs.map((log, idx) => (
+            <p
+              key={idx}
+              className={`text-sm ${log.success ? "text-green-500" : "text-red-500"}`}
+            >
+              {log.time} - {log.message}
+            </p>
+          ))}
         </div>
 
         <footer className="text-center text-xs text-gray-400 dark:text-gray-500">

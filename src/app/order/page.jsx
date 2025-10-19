@@ -66,7 +66,7 @@ export default function LeadsDashboard() {
 
     return matchStatus && matchDate;
   });
-  const statusOptions = ["Semua", "pending", "complete", "cancel" , "rts"];
+  const statusOptions = ["Semua", "pending", "complete", "cancel", "rts"];
 
   const handleSelectLead = (lead, isChecked) => {
     setSelectedLeads((prev) => {
@@ -209,7 +209,11 @@ export default function LeadsDashboard() {
               }}
             >
               {FILTER_OPTIONS.map((opt) => (
-                <option key={opt.key} value={opt.key} className="dark:bg-gray-900">
+                <option
+                  key={opt.key}
+                  value={opt.key}
+                  className="dark:bg-gray-900"
+                >
                   {opt.label}
                 </option>
               ))}
@@ -308,7 +312,7 @@ export default function LeadsDashboard() {
           )}
 
           {!isMobile && (
-            <div className="grid grid-cols-8 border-b text-center border-gray-200 py-3 text-sm font-medium text-gray-500 px-2">
+            <div className="grid grid-cols-9 border-b text-center border-gray-200 py-3 text-sm font-medium text-gray-500 px-2">
               <span>Select</span>
               <span>Tanggal</span>
               <span>Nama</span>
@@ -316,6 +320,7 @@ export default function LeadsDashboard() {
               <span>Metode</span>
               <span>Produk</span>
               <span>Status</span>
+              <span>Konfirmasi</span>
               <span>Resi</span>
             </div>
           )}

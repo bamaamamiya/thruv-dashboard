@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { deleteDoc, doc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebaseClient";
+import { getOngkirNormal } from "@/utils/ongkir";
 
 const formatHargaSingkat = (harga) => {
   if (!harga) return "-";
@@ -24,6 +25,9 @@ const copyToClipboard = async (text, onCopied) => {
 
 export default function LeadRow({ lead, copiedId, setCopiedId, onSelect }) {
   const [showModal, setShowModal] = useState(false);
+  const [showAddressDetail, setShowAddressDetail] = useState(false);
+  const [nameValue, setNameValue] = useState(lead.name || "");
+  const [whatsappValue, setWhatsappValue] = useState(lead.whatsapp || "");
   const [priceValue, setPriceValue] = useState(lead.price || "");
   const [costProductValue, setCostProductValue] = useState(
     lead.costProduct || ""
@@ -38,6 +42,23 @@ export default function LeadRow({ lead, copiedId, setCopiedId, onSelect }) {
     lead.productTitle || ""
   );
   const [ongkirValue, setOngkirValue] = useState(lead.ongkir || "");
+  const [confirmationValue, setConfirmationValue] = useState(
+    lead.confirmation || "belum"
+  );
+
+  const [customerConfirmedValue, setCustomerConfirmedValue] = useState(
+    lead.customerConfirmed ?? false
+  );
+
+  // 🔒 Matikan scroll body saat modal terbuka
+  useEffect(() => {
+    if (showModal) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "auto";
+    }
+    return () => (document.body.style.overflow = "auto");
+  }, [showModal]);
 
   const handleCheckboxChange = (e) => {
     const checked = e.target.checked;
@@ -52,6 +73,8 @@ export default function LeadRow({ lead, copiedId, setCopiedId, onSelect }) {
     }
     try {
       await updateDoc(doc(db, "leads", lead.id), {
+        name: nameValue,
+        whatsapp: whatsappValue,
         price: Number(priceValue),
         costProduct: Number(costProductValue),
         address: addressValue,
@@ -83,6 +106,38 @@ export default function LeadRow({ lead, copiedId, setCopiedId, onSelect }) {
     [lead]
   );
 
+  const handleConfirmationChange = useCallback(
+    async (newConfirmation) => {
+      if (newConfirmation === lead.confirmation) return;
+      try {
+        await updateDoc(doc(db, "leads", lead.id), {
+          confirmation: newConfirmation,
+        });
+        lead.confirmation = newConfirmation;
+        setConfirmationValue(newConfirmation);
+      } catch (err) {
+        console.error("Gagal update konfirmasi:", err);
+        alert("Gagal update konfirmasi.");
+      }
+    },
+    [lead]
+  );
+  const handleCustomerConfirmedChange = useCallback(
+    async (newValue) => {
+      try {
+        await updateDoc(doc(db, "leads", lead.id), {
+          customerConfirmed: newValue,
+        });
+        lead.customerConfirmed = newValue; // update local object
+        setCustomerConfirmedValue(newValue); // update state UI
+      } catch (err) {
+        console.error("Gagal update customerConfirmed:", err);
+        alert("Gagal update konfirmasi customer.");
+      }
+    },
+    [lead]
+  );
+
   const handleResiCheckChange = useCallback(
     async (newResiCheck) => {
       if (newResiCheck === lead.resiCheck) return;
@@ -97,14 +152,16 @@ export default function LeadRow({ lead, copiedId, setCopiedId, onSelect }) {
   );
 
   const handleCopy = () => {
+    const ongkirNormal = getOngkirNormal(ongkirValue);
+    const totalPayment = priceValue + ongkirValue;
     const pesan = `
 Terima kasih sudah melakukan pemesanan 🙏  
 Berikut detail pesanan Kakak:
 
 Nama Produk: ${productTitleValue}  
 Harga Produk: ${formatHargaSingkat(priceValue)}   
-Ongkir: ~25rb~ 20rb
-Total Pembayaran: 
+Ongkir: ~${formatHargaSingkat(ongkirNormal)}~ ${formatHargaSingkat(ongkirValue)}
+Total Pembayaran: ${formatHargaSingkat(totalPayment)}
 
 Nama: ${lead.name}  
 Alamat Lengkap: ${lead.address}
@@ -156,11 +213,11 @@ Alamat mentah: ${cleanAddressValue}`;
     <>
       {/* Lead Row */}
       <div
-        className="grid text-sm grid-cols-8 items-center gap-2 cursor-pointer 
-                   hover:bg-gray-50 dark:hover:bg-gray-700 
-                   px-3 py-3 rounded-md transition 
-                   border border-gray-200 dark:border-gray-700
-                   bg-white dark:bg-black"
+        className="grid text-sm grid-cols-9 items-center gap-2 cursor-pointer 
+    hover:bg-gray-50 dark:hover:bg-gray-700 
+    px-3 py-3 rounded-md transition 
+    border border-gray-200 dark:border-gray-700
+    bg-white dark:bg-black"
         onClick={() => setShowModal(true)}
       >
         <input
@@ -207,21 +264,24 @@ Alamat mentah: ${cleanAddressValue}`;
         >
           {lead.status}
         </span>
-        <span
-          className={`text-xs text-center font-semibold px-2 py-0.5 rounded-full ${
-            lead.resiCheck === "done"
-              ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-              : "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400"
-          }`}
-        >
-          {lead.resiCheck === "done" ? "✅ Dicek" : "❌ Belum"}
+
+        <span className="text-lg text-center">
+          {lead.confirmation === "sudah" ? "🟢" : "🔴"}
         </span>
+
+        <span className="text-lg text-center">
+          {lead.resiCheck === "done" ? "✅" : "❌"}
+        </span>
+
+        {/* <span className="text-lg text-center">
+          {lead.confirmation === "sudah" ? "🟢" : "🔴"}
+        </span> */}
       </div>
 
       {/* Modal full update */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 bg-black/30 backdrop-blur-sm">
-          <div className="bg-white dark:bg-gray-900 w-full max-w-3xl h-[85vh] p-6 rounded-2xl shadow-xl relative overflow-y-auto space-y-4 text-gray-800 dark:text-gray-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm overflow-hidden">
+          <div className="bg-white dark:bg-gray-900 w-full max-w-3xl max-h-[85vh] overflow-y-auto rounded-2xl shadow-2xl p-6 relative text-gray-800 dark:text-gray-200">
             <button
               onClick={() => setShowModal(false)}
               className="absolute top-4 right-4 text-gray-400 dark:text-gray-500 hover:text-black dark:hover:text-white text-xl"
@@ -231,20 +291,25 @@ Alamat mentah: ${cleanAddressValue}`;
             <h2 className="text-xl font-bold mb-2">📄 Detail Lead</h2>
 
             <div className="space-y-3">
-              <p>
-                <span className="font-semibold">Nama:</span> {lead.name}
-              </p>
-              <p>
-                <span className="font-semibold">WA:</span>{" "}
-                <a
-                  href={`https://wa.me/${lead.whatsapp}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 dark:text-blue-400 hover:underline"
-                >
-                  {lead.whatsapp}
-                </a>
-              </p>
+              <div>
+                <label className="font-medium text-sm">Nama</label>
+                <input
+                  type="text"
+                  className="w-full border border-gray-300 dark:border-gray-700 rounded px-3 py-2 mt-1 text-sm bg-white dark:bg-gray-800"
+                  value={nameValue}
+                  onChange={(e) => setNameValue(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label className="font-medium text-sm">Nomor WhatsApp</label>
+                <input
+                  type="text"
+                  className="w-full border border-gray-300 dark:border-gray-700 rounded px-3 py-2 mt-1 text-sm bg-white dark:bg-gray-800"
+                  value={whatsappValue}
+                  onChange={(e) => setWhatsappValue(e.target.value)}
+                />
+              </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
@@ -291,7 +356,17 @@ Alamat mentah: ${cleanAddressValue}`;
                     value={cleanAddressValue}
                     onChange={(e) => setCleanAddressValue(e.target.value)}
                   />
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowAddressDetail(true);
+                    }}
+                    className="text-xs text-blue-600 dark:text-blue-400 hover:underline mt-1"
+                  >
+                    📍 Lihat detail wilayah
+                  </button>
                 </div>
+
                 {lead.status === "rts" && (
                   <div>
                     <label className="font-medium text-sm">Biaya Return</label>
@@ -304,6 +379,39 @@ Alamat mentah: ${cleanAddressValue}`;
                   </div>
                 )}
               </div>
+
+              {showAddressDetail && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black/30 z-50">
+                  <div className="bg-white dark:bg-gray-900 p-5 rounded-2xl shadow-xl w-[90%] max-w-sm text-sm">
+                    <h3 className="font-bold mb-2 text-lg">
+                      📍 Detail Wilayah
+                    </h3>
+                    <ul className="space-y-1">
+                      <li>
+                        <strong>Provinsi:</strong> {lead.province || "-"}
+                      </li>
+                      <li>
+                        <strong>Kabupaten/Kota:</strong> {lead.regency || "-"}
+                      </li>
+                      <li>
+                        <strong>Kecamatan:</strong> {lead.district || "-"}
+                      </li>
+                      <li>
+                        <strong>Desa/Kelurahan:</strong> {lead.village || "-"}
+                      </li>
+                      <li>
+                        <strong>Kode Pos:</strong> {lead.postalCode || "-"}
+                      </li>
+                    </ul>
+                    <button
+                      onClick={() => setShowAddressDetail(false)}
+                      className="mt-4 bg-black dark:bg-gray-700 text-white px-4 py-1.5 rounded-lg text-xs hover:bg-gray-800 dark:hover:bg-gray-600"
+                    >
+                      Tutup
+                    </button>
+                  </div>
+                </div>
+              )}
 
               <p className="text-xs text-gray-500 dark:text-gray-400">
                 Masuk:{" "}
@@ -350,6 +458,55 @@ Alamat mentah: ${cleanAddressValue}`;
                   {label}
                 </button>
               ))}
+            </div>
+            <div className="flex gap-2">
+              {/* Konfirmasi */}
+              <div className="flex flex-wrap gap-2 mt-4">
+                <button
+                  onClick={() => handleConfirmationChange("sudah")}
+                  className={`px-3 py-1 text-xs font-bold rounded-full transition border ${
+                    confirmationValue === "sudah"
+                      ? "bg-green-600 text-white border-green-600"
+                      : "border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-green-50 dark:hover:bg-gray-800"
+                  }`}
+                >
+                  ✅ Sudah
+                </button>
+                <button
+                  onClick={() => handleConfirmationChange("belum")}
+                  className={`px-3 py-1 text-xs font-bold rounded-full transition border ${
+                    confirmationValue === "belum"
+                      ? "bg-red-600 text-white border-red-600"
+                      : "border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-gray-800"
+                  }`}
+                >
+                  ❌ belum
+                </button>
+              </div>
+
+              {/* Konfirmasi Customer */}
+              {/* <div className="flex flex-wrap gap-2 mt-4">
+                <button
+                  onClick={() => handleCustomerConfirmedChange(true)}
+                  className={`px-3 py-1 text-xs font-bold rounded-full transition border ${
+                    customerConfirmedValue
+                      ? "bg-green-600 text-white border-green-600"
+                      : "border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-green-50 dark:hover:bg-gray-800"
+                  }`}
+                >
+                  ✅ Customer
+                </button>
+                <button
+                  onClick={() => handleCustomerConfirmedChange(false)}
+                  className={`px-3 py-1 text-xs font-bold rounded-full transition border ${
+                    !customerConfirmedValue
+                      ? "bg-red-600 text-white border-red-600"
+                      : "border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-gray-800"
+                  }`}
+                >
+                  ❌ Customer
+                </button>
+              </div> */}
             </div>
 
             {/* Footer */}
