@@ -1,11 +1,10 @@
-// app/dashboard/LeadRowMobile.jsx
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { deleteDoc, doc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebaseClient";
+import { getOngkirNormal } from "@/utils/ongkir";
 
-// 🔹 Format currency short
 const formatHargaSingkat = (harga) => {
   if (!harga) return "-";
   if (harga >= 1_000_000)
@@ -13,14 +12,13 @@ const formatHargaSingkat = (harga) => {
   return (harga / 1000).toFixed(0) + "rb";
 };
 
-// 🔹 Copy to clipboard
 const copyToClipboard = async (text, onCopied) => {
   if (typeof navigator === "undefined") return;
   try {
     await navigator.clipboard.writeText(text);
     onCopied?.();
   } catch (err) {
-    console.error("Clipboard error:", err);
+    console.error(err);
     alert("Gagal menyalin teks.");
   }
 };
@@ -33,8 +31,8 @@ export default function LeadRowMobile({
 }) {
   const [showModal, setShowModal] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
-  const [showUpdateFields, setShowUpdateFields] = useState(false);
-
+  const [nameValue, setNameValue] = useState(lead.name || "");
+  const [whatsappValue, setWhatsappValue] = useState(lead.whatsapp || "");
   const [priceValue, setPriceValue] = useState(lead.price || "");
   const [costProductValue, setCostProductValue] = useState(
     lead.costProduct || ""
@@ -48,19 +46,35 @@ export default function LeadRowMobile({
   );
   const [ongkirValue, setOngkirValue] = useState(lead.ongkir || "");
   const [returnValue, setReturnValue] = useState(lead.rts || "");
-  const [statusValue, setStatusValue] = useState(lead.status || "");
-  const [resiCheckValue, setResiCheckValue] = useState(lead.resiCheck || "not");
-
-  const handleCheckboxChange = useCallback(
-    (e) => {
-      const checked = e.target.checked;
-      setIsChecked(checked);
-      onSelect?.(lead, checked);
-    },
-    [lead, onSelect]
+  const [confirmationValue, setConfirmationValue] = useState(
+    lead.confirmation || "belum"
   );
+  const [showAddressDetail, setShowAddressDetail] = useState(false);
 
-  // 🔹 Simpan semua perubahan
+  const statusOptions = [
+    { value: "pending", label: "🕓 Pending" },
+    { value: "complete", label: "✅ Complete" },
+    { value: "cancel", label: "❌ Cancel" },
+    { value: "rts", label: "🚚 RTS" },
+  ];
+
+  const resiOptions = [
+    { value: "not", label: "🕓 Belum Dicek" },
+    { value: "done", label: "📦 Resi Dicek" },
+  ];
+
+  useEffect(() => {
+    if (showModal) document.body.style.overflow = "hidden";
+    else document.body.style.overflow = "auto";
+    return () => (document.body.style.overflow = "auto");
+  }, [showModal]);
+
+  const handleCheckboxChange = (e) => {
+    const checked = e.target.checked;
+    setIsChecked(checked);
+    onSelect?.(lead, checked);
+  };
+
   const handleSave = async () => {
     if (!priceValue || !costProductValue) {
       alert("Harga dan biaya produk tidak boleh kosong.");
@@ -68,15 +82,17 @@ export default function LeadRowMobile({
     }
     try {
       await updateDoc(doc(db, "leads", lead.id), {
+        name: nameValue,
+        whatsapp: whatsappValue,
         price: Number(priceValue),
         costProduct: Number(costProductValue),
         address: addressValue,
         addressClean: cleanAddressValue,
-        rts: Number(returnValue) || 0,
         productTitle: productTitleValue,
         ongkir: Number(ongkirValue) || 0,
-        status: statusValue,
-        resiCheck: resiCheckValue,
+        rts: Number(returnValue) || 0,
+        status: lead.status,
+        resiCheck: lead.resiCheck || "not",
       });
       setShowModal(false);
     } catch (err) {
@@ -85,11 +101,73 @@ export default function LeadRowMobile({
     }
   };
 
-  const handleDelete = async () => {
-    if (window.confirm(`Hapus data atas nama ${lead.name}?`)) {
-      await deleteDoc(doc(db, "leads", lead.id));
-      setShowModal(false);
-    }
+  const handleStatusChange = useCallback(
+    async (newStatus) => {
+      if (newStatus === lead.status) return;
+      try {
+        await updateDoc(doc(db, "leads", lead.id), { status: newStatus });
+        lead.status = newStatus;
+      } catch (err) {
+        console.error(err);
+        alert("Gagal update status.");
+      }
+    },
+    [lead]
+  );
+
+  const handleConfirmationChange = useCallback(
+    async (newConfirmation) => {
+      if (newConfirmation === lead.confirmation) return;
+      try {
+        await updateDoc(doc(db, "leads", lead.id), {
+          confirmation: newConfirmation,
+        });
+        lead.confirmation = newConfirmation;
+        setConfirmationValue(newConfirmation);
+      } catch (err) {
+        console.error(err);
+        alert("Gagal update konfirmasi.");
+      }
+    },
+    [lead]
+  );
+
+  const handleResiCheckChange = useCallback(
+    async (newResiCheck) => {
+      if (newResiCheck === lead.resiCheck) return;
+      try {
+        await updateDoc(doc(db, "leads", lead.id), { resiCheck: newResiCheck });
+      } catch (err) {
+        console.error(err);
+        alert("Gagal update resiCheck.");
+      }
+    },
+    [lead]
+  );
+
+  const handleCopy = () => {
+    const ongkirNormal = getOngkirNormal(ongkirValue);
+    const totalPayment = priceValue + ongkirValue;
+    const pesan = `
+Terima kasih sudah melakukan pemesanan 🙏  
+Berikut detail pesanan Kakak:
+
+Nama Produk: ${productTitleValue}  
+Harga Produk: ${formatHargaSingkat(priceValue)}   
+Ongkir: ~${formatHargaSingkat(ongkirNormal)}~ ${formatHargaSingkat(ongkirValue)}
+Total Pembayaran: ${formatHargaSingkat(totalPayment)}
+
+Nama: ${lead.name}  
+Alamat Lengkap: ${lead.address}
+
+Apakah alamat yang Kakak berikan sudah benar?  
+Kami akan segera proses pesanan Kakak jika alamatnya sudah sesuai ya.  
+Untuk ongkir, akan dihitung otomatis dan dianggap disetujui oleh sistem 🙏
+`;
+    copyToClipboard(pesan, () => {
+      setCopiedId(lead.id);
+      setTimeout(() => setCopiedId(null), 2000);
+    });
   };
 
   const handleCopyAddress = () => {
@@ -105,269 +183,217 @@ Contoh Output:
 - Kode Pos: ...
 - Alamat Lengkap: ...
 
-Alamat mentah: ${lead.address}`;
-
+Alamat mentah: ${cleanAddressValue}`;
     copyToClipboard(prompt, () => {
       setCopiedId(lead.id);
       setTimeout(() => setCopiedId(null), 2000);
     });
   };
 
-  const handleCopyOrder = () => {
-    const pesan = `
-Terima kasih sudah melakukan pemesanan 🙏  
-Berikut detail pesanan Kakak:
-
-Nama Produk: ${productTitleValue}  
-Harga Produk: ${formatHargaSingkat(priceValue)}   
-Ongkir: ~25rb~ 20rb
-Total Pembayaran: 
-
-Nama: ${lead.name}  
-Alamat Lengkap: ${lead.address}
-
-Apakah alamat yang Kakak berikan sudah benar?  
-Kami akan segera proses pesanan Kakak jika alamatnya sudah sesuai ya.  
-Untuk ongkir, akan dihitung otomatis dan dianggap disetujui oleh sistem 🙏
-`;
-
-    copyToClipboard(pesan, () => {
-      setCopiedId(lead.id);
-      setTimeout(() => setCopiedId(null), 2000);
-    });
-  };
-
-  const statusOptions = [
-    { value: "pending", label: "🕓 Pending" },
-    { value: "complete", label: "✅ Complete" },
-    { value: "cancel", label: "❌ Cancel" },
-    { value: "rts", label: "🚚 RTS" },
-  ];
-
-  const resiOptions = [
-    { value: "not", label: "🕓 Belum Dicek" },
-    { value: "done", label: "📦 Resi Dicek" },
-  ];
-
   return (
     <>
-      <input
-        type="checkbox"
-        checked={isChecked}
-        onChange={handleCheckboxChange}
-        className="scale-125"
-      />
+      {/* CARD STYLE MOBILE */}
       <div
+        className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-4 shadow-sm mb-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition"
         onClick={() => setShowModal(true)}
-        className="rounded-xl p-4 mb-4 shadow-sm hover:ring ring-gray-200 dark:hover:ring-gray-700 transition cursor-pointer bg-white dark:bg-gray-900"
       >
-        <div className="flex justify-between text-sm mb-2 text-gray-400 dark:text-gray-500">
-          <span>
-            {new Date(lead.createdAt.seconds * 1000).toLocaleDateString(
-              "id-ID",
-              { day: "2-digit", month: "short" }
-            )}
-          </span>
-          <span className="text-emerald-500 font-medium">
-            {lead.paymentMethod}
-          </span>
+        <div className="flex justify-between items-center">
+          <h3 className="font-bold text-gray-800 dark:text-gray-100 text-sm">
+            {lead.name}
+          </h3>
+          <input
+            type="checkbox"
+            checked={isChecked}
+            onClick={(e) => e.stopPropagation()}
+            onChange={handleCheckboxChange}
+            className="scale-125 accent-gray-700 dark:accent-gray-300"
+          />
         </div>
-        <div className="text-gray-800 dark:text-gray-100 font-semibold text-base">
-          {lead.name}
-        </div>
-        <div className="text-blue-600 dark:text-blue-400 text-sm mb-1">
-          {lead.whatsapp}
-        </div>
-        <span
-          className={`text-sm font-medium capitalize rounded px-2 py-0.5 inline-block mt-1 ${
-            statusValue === "complete"
-              ? "text-green-500"
-              : statusValue === "cancel"
-              ? "text-red-500"
-              : statusValue === "pending"
-              ? "text-yellow-500"
-              : "text-gray-700 dark:text-gray-300"
-          }`}
-        >
-          {statusValue}
-        </span>
-        <div className="text-sm text-gray-700 dark:text-gray-300 mt-1 truncate">
-          {productTitleValue}
-        </div>
-        <div className="flex justify-between text-sm mt-1">
-          <span className="text-gray-500 dark:text-gray-400">Resi:</span>
+        <p className="text-xs text-gray-500 mt-1">{lead.whatsapp}</p>
+        <p className="text-sm mt-2 text-gray-700 dark:text-gray-300">
+          {lead.productTitle}
+        </p>
+        <div className="flex justify-between text-xs mt-2">
           <span
-            className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-              resiCheckValue === "done"
-                ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
-                : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
+            className={`font-semibold ${
+              lead.status === "complete"
+                ? "text-green-600"
+                : lead.status === "cancel"
+                ? "text-red-600"
+                : lead.status === "pending"
+                ? "text-yellow-600"
+                : "text-gray-600"
             }`}
           >
-            {resiCheckValue === "done" ? "✅ Dicek" : "❌ Belum"}
+            {lead.status.toUpperCase()}
           </span>
+          <span>{lead.confirmation === "sudah" ? "🟢" : "🔴"}</span>
         </div>
       </div>
 
-      {/* Modal */}
+      {/* FULLSCREEN MOBILE MODAL */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4">
-          <div
-            className="bg-white dark:bg-gray-900 w-full max-w-md p-6 rounded-xl shadow-xl relative text-sm text-gray-800 dark:text-gray-100"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
-            <button
-              onClick={() => setShowModal(false)}
-              className="absolute top-3 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xl"
-            >
-              ❌
-            </button>
-            <h2 className="text-xl font-semibold mb-4">📄 Detail Lead</h2>
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex flex-col">
+          <div className="bg-white dark:bg-gray-900 rounded-t-2xl p-5 overflow-y-auto h-full">
+            <div className="flex justify-between items-center mb-3 ">
+              <h2 className="text-lg font-bold dark:text-white">📄 Detail Lead</h2>
+              <button
+                onClick={() => setShowModal(false)}
+                className="text-gray-500 text-xl"
+              >
+                ✖
+              </button>
+            </div>
 
-            {/* Body */}
-            <div className="space-y-2">
-              <p>
-                <strong>Nama:</strong> {lead.name}
-              </p>
-              <p>
-                <strong>WA:</strong> {lead.whatsapp}
-              </p>
+            <div className="space-y-3 text-sm dark:text-white">
               <div>
-                <label className="block text-xs mb-1">Produk:</label>
+                <label>Nama</label>
                 <input
-                  type="text"
+                  value={nameValue}
+                  onChange={(e) => setNameValue(e.target.value)}
+                  className="w-full border rounded px-3 py-2 mt-1 bg-gray-50 dark:bg-gray-800"
+                />
+              </div>
+              <div>
+                <label>No WhatsApp</label>
+                <input
+                  value={whatsappValue}
+                  onChange={(e) => setWhatsappValue(e.target.value)}
+                  className="w-full border rounded px-3 py-2 mt-1 bg-gray-50 dark:bg-gray-800"
+                />
+              </div>
+              <div>
+                <label>Produk</label>
+                <input
                   value={productTitleValue}
                   onChange={(e) => setProductTitleValue(e.target.value)}
-                  className="border rounded px-2 py-1 w-full bg-white dark:bg-gray-800 dark:text-gray-100"
+                  className="w-full border rounded px-3 py-2 mt-1 bg-gray-50 dark:bg-gray-800"
                 />
               </div>
-              <div>
-                <label className="block text-xs mb-1">Harga:</label>
-                <input
-                  type="number"
-                  value={priceValue}
-                  onChange={(e) => setPriceValue(e.target.value)}
-                  className="border rounded px-2 py-1 w-full bg-white dark:bg-gray-800 dark:text-gray-100"
-                />
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label>Harga</label>
+                  <input
+                    type="number"
+                    value={priceValue}
+                    onChange={(e) => setPriceValue(e.target.value)}
+                    className="w-full border rounded px-3 py-2 mt-1 bg-gray-50 dark:bg-gray-800"
+                  />
+                </div>
+                <div>
+                  <label>Cost Product</label>
+                  <input
+                    type="number"
+                    value={costProductValue}
+                    onChange={(e) => setCostProductValue(e.target.value)}
+                    className="w-full border rounded px-3 py-2 mt-1 bg-gray-50 dark:bg-gray-800"
+                  />
+                </div>
               </div>
               <div>
-                <label className="block text-xs mb-1">Alamat:</label>
+                <label>Alamat Rapi</label>
                 <textarea
-                  value={addressValue}
-                  onChange={(e) => setAddressValue(e.target.value)}
+                  value={cleanAddressValue}
+                  onChange={(e) => setCleanAddressValue(e.target.value)}
                   rows={3}
-                  className="border rounded px-2 py-1 w-full bg-white dark:bg-gray-800 dark:text-gray-100"
+                  className="w-full border rounded px-3 py-2 mt-1 bg-gray-50 dark:bg-gray-800"
                 />
+                <button
+                  onClick={() => setShowAddressDetail(true)}
+                  className="text-xs text-blue-600 mt-1"
+                >
+                  📍 Lihat Detail
+                </button>
               </div>
 
+              <div className="mt-4">
+                <button
+                  onClick={handleSave}
+                  className="w-full bg-black text-white py-2 rounded-lg"
+                >
+                  💾 Simpan
+                </button>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-2 mt-4 dark:text-white">
+              {statusOptions.map(({ value, label }) => (
+                <button
+                  key={value}
+                  onClick={() => handleStatusChange(value)}
+                  className={`px-3 py-1 text-xs rounded-full border ${
+                    lead.status === value
+                      ? "bg-black text-white"
+                      : "border-gray-400"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex flex-wrap gap-2 mt-3 dark:text-white">
+              {resiOptions.map(({ value, label }) => (
+                <button
+                  key={value}
+                  onClick={() => handleResiCheckChange(value)}
+                  className={`px-3 py-1 text-xs rounded-full border ${
+                    (lead.resiCheck || "not") === value
+                      ? "bg-black text-white"
+                      : "border-gray-400"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex gap-2 mt-4 dark:text-white">
               <button
-                onClick={() => setShowUpdateFields(!showUpdateFields)}
-                className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline mb-2"
+                onClick={() => handleConfirmationChange("sudah")}
+                className={`px-3 py-1 rounded-full text-xs ${
+                  confirmationValue === "sudah"
+                    ? "bg-green-600 text-white"
+                    : "border border-gray-400"
+                }`}
               >
-                {showUpdateFields ? "🔽 Tutup Update Data" : "🔼 Update Data"}
+                ✅ Sudah
               </button>
-
-              {showUpdateFields && (
-                <>
-                  <div>
-                    <label className="block text-xs mb-1">Cost Product:</label>
-                    <input
-                      type="number"
-                      value={costProductValue}
-                      onChange={(e) => setCostProductValue(e.target.value)}
-                      className="border rounded px-2 py-1 w-full bg-white dark:bg-gray-800 dark:text-gray-100"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs mb-1">Alamat Rapi:</label>
-                    <textarea
-                      value={cleanAddressValue}
-                      onChange={(e) => setCleanAddressValue(e.target.value)}
-                      rows={3}
-                      className="border rounded px-2 py-1 w-full bg-white dark:bg-gray-800 dark:text-gray-100"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs mb-1">Ongkir:</label>
-                    <input
-                      type="number"
-                      value={ongkirValue}
-                      onChange={(e) => setOngkirValue(e.target.value)}
-                      className="border rounded px-2 py-1 w-full bg-white dark:bg-gray-800 dark:text-gray-100"
-                    />
-                  </div>
-                  {statusValue === "rts" && (
-                    <div>
-                      <label className="block text-xs mb-1">Biaya RTS:</label>
-                      <input
-                        type="number"
-                        value={returnValue}
-                        onChange={(e) => setReturnValue(e.target.value)}
-                        className="border rounded px-2 py-1 w-full bg-white dark:bg-gray-800 dark:text-gray-100"
-                      />
-                    </div>
-                  )}
-                </>
-              )}
+              <button
+                onClick={() => handleConfirmationChange("belum")}
+                className={`px-3 py-1 rounded-full text-xs ${
+                  confirmationValue === "belum"
+                    ? "bg-red-600 text-white"
+                    : "border border-gray-400"
+                }`}
+              >
+                ❌ Belum
+              </button>
             </div>
 
-            {/* Status & Resi Buttons */}
-            <div className="flex flex-wrap gap-2 mt-3">
-              {statusOptions.map((s) => (
+            <div className="flex justify-between items-center mt-6">
+              <div className="flex gap-2">
                 <button
-                  key={s.value}
-                  onClick={() => setStatusValue(s.value)}
-                  className={`px-3 py-1 text-xs font-bold rounded-full border ${
-                    statusValue === s.value
-                      ? "bg-black text-white dark:bg-white dark:text-black"
-                      : "border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-                  }`}
-                >
-                  {s.label}
-                </button>
-              ))}
-            </div>
-            <div className="flex flex-wrap gap-2 mt-2">
-              {resiOptions.map((r) => (
-                <button
-                  key={r.value}
-                  onClick={() => setResiCheckValue(r.value)}
-                  className={`px-3 py-1 text-xs font-bold rounded-full border ${
-                    resiCheckValue === r.value
-                      ? "bg-black text-white dark:bg-white dark:text-black"
-                      : "border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-                  }`}
-                >
-                  {r.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Save & Copy Buttons */}
-            <button
-              onClick={handleSave}
-              className="w-full mt-4 bg-black dark:bg-white dark:text-black text-white text-xs font-semibold px-3 py-2 rounded-md hover:bg-gray-800 dark:hover:bg-gray-200"
-            >
-              💾 Simpan Perubahan
-            </button>
-            <div className="flex justify-between items-center mt-4">
-              <div className="space-x-2">
-                <button
-                  onClick={handleCopyOrder}
-                  className="bg-black dark:bg-white dark:text-black text-white text-xs font-semibold px-3 py-1 rounded-md hover:bg-gray-800 dark:hover:bg-gray-200"
+                  onClick={handleCopy}
+                  className="bg-black text-white text-xs px-3 py-1 rounded-lg"
                 >
                   {copiedId === lead.id ? "✅ Disalin!" : "📋 Salin Total"}
                 </button>
                 <button
                   onClick={handleCopyAddress}
-                  className="bg-black dark:bg-white dark:text-black text-white text-xs font-semibold px-3 py-1 rounded-md hover:bg-gray-800 dark:hover:bg-gray-200"
+                  className="bg-black text-white text-xs px-3 py-1 rounded-lg"
                 >
                   {copiedId === lead.id ? "✅ Disalin!" : "📋 Salin Alamat"}
                 </button>
               </div>
               <button
-                onClick={handleDelete}
-                className="text-red-500 hover:text-red-600 text-sm flex"
+                onClick={async () => {
+                  if (window.confirm(`Hapus data atas nama ${lead.name}?`)) {
+                    await deleteDoc(doc(db, "leads", lead.id));
+                    setShowModal(false);
+                  }
+                }}
+                className="text-red-600 text-sm"
               >
                 🗑️ Hapus
               </button>

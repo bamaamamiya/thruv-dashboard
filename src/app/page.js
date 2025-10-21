@@ -3,7 +3,8 @@
 import React, { useEffect, useState } from "react";
 import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebaseClient";
-
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
 import FilterBar from "@/app/components/analytics/FilterBar";
 import LeadsChart from "@/app/components/analytics/LeadsChart";
 import MetricCard from "@/app/components/analytics/MetricCard";
@@ -20,10 +21,41 @@ import {
 import Summary from "./components/analytics/Summary";
 
 export default function DashboardPage() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
   const [leads, setLeads] = useState([]);
   const [ads, setAds] = useState([]);
   const [selectedFilter, setSelectedFilter] = useState("month");
   const [customRange, setCustomRange] = useState([new Date(), new Date()]);
+
+   // 🔹 Redirect kalau belum login
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push("/login");
+    }
+  }, [user, loading, router]);
+
+  // 🔹 Listen to Firestore (jalankan setelah login)
+  useEffect(() => {
+    if (!user) return;
+
+    const unsubLeads = onSnapshot(collection(db, "leads"), (snapshot) =>
+      setLeads(snapshot.docs.map((d) => ({ id: d.id, ...d.data() })))
+    );
+
+    const unsubAds = onSnapshot(collection(db, "adSpends"), (snapshot) =>
+      setAds(snapshot.docs.map((d) => ({ id: d.id, ...d.data() })))
+    );
+
+    return () => {
+      unsubLeads();
+      unsubAds();
+    };
+  }, [user]);
+
+  // 🔹 Loading & redirect states
+  if (loading) return <p>Loading...</p>;
+  if (!user) return null;
 
   // 🔹 Listen to Firestore
   useEffect(() => {
@@ -91,7 +123,7 @@ export default function DashboardPage() {
           label: "Number of Orders (Complete)",
           value: summary.completedOrders,
         },
-				{ label: "Number of Orders (Pending)", value: summary.pendingOrders },
+        { label: "Number of Orders (Pending)", value: summary.pendingOrders },
       ],
     },
     {
@@ -111,14 +143,17 @@ export default function DashboardPage() {
           prefix: "Rp",
         },
         { label: "Pending Profit", value: summary.pendingProfit, prefix: "Rp" },
-        
       ],
     },
     {
       title: "🏭 Cost & Return",
       items: [
         { label: "Total Product Cost", value: summary.totalCost, prefix: "Rp" },
-        { label: "Total Product Pending Cost", value: summary.pendingCost, prefix: "Rp" },
+        {
+          label: "Total Product Pending Cost",
+          value: summary.pendingCost,
+          prefix: "Rp",
+        },
         {
           label: "Return Cost (RTS)",
           value: summary.totalReturnToSenderCost,

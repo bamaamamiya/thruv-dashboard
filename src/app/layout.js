@@ -1,6 +1,8 @@
 import { Inter } from "next/font/google";
 import Navbar from "./components/analytics/Navbar";
 import "./globals.css";
+import { AuthProvider } from "@/context/AuthContext";
+
 const inter = Inter({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
@@ -25,13 +27,15 @@ export default function RootLayout({ children }) {
         <meta name="theme-color" content="#000000" />
         <link rel="icon" sizes="192x192" href="/icons/192x192.png" />
         <link rel="icon" sizes="512x512" href="/icons/512x512.png" />
-        {/* tambahan meta PWA lain kalau perlu */}
       </head>
+
       <body
         className={`${inter.className} bg-white text-black dark:bg-black dark:text-white`}
       >
-        <Navbar />
-        <div className="container mx-auto ">{children}</div>
+        <AuthProvider>
+          <Navbar />
+          <div className="container mx-auto">{children}</div>
+        </AuthProvider>
       </body>
     </html>
   );
