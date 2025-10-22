@@ -57,22 +57,6 @@ export default function DashboardPage() {
   if (loading) return <p>Loading...</p>;
   if (!user) return null;
 
-  // 🔹 Listen to Firestore
-  useEffect(() => {
-    const unsubLeads = onSnapshot(collection(db, "leads"), (snapshot) =>
-      setLeads(snapshot.docs.map((d) => ({ id: d.id, ...d.data() })))
-    );
-
-    const unsubAds = onSnapshot(collection(db, "adSpends"), (snapshot) =>
-      setAds(snapshot.docs.map((d) => ({ id: d.id, ...d.data() })))
-    );
-
-    return () => {
-      unsubLeads();
-      unsubAds();
-    };
-  }, []);
-
   // 🔹 Date filters
   const [start, end] = getDateRange(selectedFilter, customRange);
   const filteredLeads = filterLeadsByDate(leads, start, end);
