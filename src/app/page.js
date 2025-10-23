@@ -28,7 +28,7 @@ export default function DashboardPage() {
   const [selectedFilter, setSelectedFilter] = useState("month");
   const [customRange, setCustomRange] = useState([new Date(), new Date()]);
 
-   // 🔹 Redirect kalau belum login
+  // 🔹 Redirect kalau belum login
   useEffect(() => {
     if (!loading && !user) {
       router.push("/login");
@@ -54,7 +54,12 @@ export default function DashboardPage() {
   }, [user]);
 
   // 🔹 Loading & redirect states
-  if (loading) return <p>Loading...</p>;
+  if (loading)
+    return (
+      <div className="text-center flex justify-center items-center">
+        <p>Welcome Back,BAMA...</p>
+      </div>
+    );
   if (!user) return null;
 
   // 🔹 Date filters
