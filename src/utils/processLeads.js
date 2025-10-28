@@ -43,6 +43,7 @@ export const filterLeadsByDate = (leads, start, end) => {
 };
 
 // 🧮 Hitung ringkasan data leads + metrik lanjutan
+// 🧮 Hitung ringkasan data leads + metrik lanjutan
 export const calculateSummary = (
   leads,
   totalAdSpend = 0,
@@ -52,6 +53,8 @@ export const calculateSummary = (
   const completed = leads.filter((l) => l.status === "complete");
   const pending = leads.filter((l) => l.status === "pending");
   const returns = leads.filter((l) => l.status === "rts");
+
+  const totalOrders = leads.length;
 
   // 🔹 Data dasar
   const totalSales = completed.reduce((s, l) => s + (l.price || 0), 0);
@@ -66,7 +69,7 @@ export const calculateSummary = (
   // 🔹 Gross Profit (tanpa ads)
   const grossProfit = totalSales - totalCost;
 
-  // 🔹 Profit real: semua biaya nyata dikurangi dari penjualan yang sudah complete
+  // 🔹 Profit real dan proyeksi
   const netProfitReal =
     totalSales -
     totalCost -
@@ -74,7 +77,6 @@ export const calculateSummary = (
     totalReturnToSenderCost -
     monthlyExpenses;
 
-  // 🔹 Projected: asumsikan semua pending sukses
   const netProfitProjected =
     totalSales +
     totalPendingValue -
@@ -84,11 +86,9 @@ export const calculateSummary = (
     totalReturnToSenderCost -
     monthlyExpenses;
 
-  // 🔹 Pending saja (potensi profit yang belum cair)
+  // 🔹 Pending profit
   const netPendingProfit =
-    totalPendingValue - pendingCost - monthlyExpenses * 0.1; // sisakan porsi kecil ops
-
-  const profit = grossProfit - totalAdSpend; // buat tampilan lama
+    totalPendingValue - pendingCost - monthlyExpenses * 0.1;
   const pendingProfit = totalPendingValue - pendingCost;
 
   // 🔹 Metric tambahan
@@ -97,6 +97,10 @@ export const calculateSummary = (
   const cac =
     leads.length > 0 ? totalAdSpend / (completed.length + pending.length) : 0;
   const ltgpToCac = cac > 0 ? Number((avgOrderValue / cac).toFixed(2)) : 0;
+
+  const rtsOrders = returns.length;
+  const rtsPercentage =
+    totalOrders > 0 ? Number(((rtsOrders / totalOrders) * 100).toFixed(2)) : 0;
 
   // 🔹 Persentase
   const grossMargin =
@@ -107,7 +111,7 @@ export const calculateSummary = (
     leads.length > 0 ? Math.round((completed.length / leads.length) * 100) : 0;
 
   return {
-    totalOrders: leads.length,
+    totalOrders,
     completedOrders: completed.length,
     pendingOrders: pending.length,
     totalSales,
@@ -118,16 +122,17 @@ export const calculateSummary = (
     totalReturnToSenderCost,
     grossProfit,
     grossMargin,
-    profit,
     profitMargin,
-    netProfitReal, // ✅ baru: profit nyata
-    netProfitProjected, // ✅ baru: proyeksi
+    netProfitReal,
+    netProfitProjected,
     pendingProfit,
     netPendingProfit,
     avgOrderValue,
     cac,
     ltgpToCac,
     conversionRate,
+    rtsOrders,
+    rtsPercentage,
   };
 };
 
@@ -245,31 +250,32 @@ export const generateChartData = (leads, selectedFilter, start, end) => {
   }
 
   // ALL TIME (group per month)
-if (selectedFilter === "allTime") {
-  const map = {};
+  if (selectedFilter === "allTime") {
+    const map = {};
 
-  leads.forEach((lead) => {
-    const time = getCreatedAtDate(lead);
-    if (!time) return;
-    const key = format(time, "yyyy-MM"); // pakai format aman untuk sort
+    leads.forEach((lead) => {
+      const time = getCreatedAtDate(lead);
+      if (!time) return;
+      const key = format(time, "yyyy-MM"); // pakai format aman untuk sort
 
-    if (!map[key]) map[key] = { complete: 0, pending: 0 };
-    if (lead.status === "complete") map[key].complete += getRevenue(lead);
-    else if (lead.status === "pending") map[key].pending += getRevenue(lead);
-  });
+      if (!map[key]) map[key] = { complete: 0, pending: 0 };
+      if (lead.status === "complete") map[key].complete += getRevenue(lead);
+      else if (lead.status === "pending") map[key].pending += getRevenue(lead);
+    });
 
-  // Urutkan berdasarkan tanggal
-  const sortedKeys = Object.keys(map).sort((a, b) => new Date(a) - new Date(b));
+    // Urutkan berdasarkan tanggal
+    const sortedKeys = Object.keys(map).sort(
+      (a, b) => new Date(a) - new Date(b)
+    );
 
-  // (Opsional) tampilkan hanya 12 bulan terakhir biar nggak terlalu padat
-  const recentKeys = sortedKeys.slice(-12);
+    // (Opsional) tampilkan hanya 12 bulan terakhir biar nggak terlalu padat
+    const recentKeys = sortedKeys.slice(-12);
 
-  return recentKeys.map((key) => ({
-    label: format(new Date(key + "-01"), "MMM yyyy"), // tampilkan nama bulan
-    ...map[key],
-  }));
-}
-
+    return recentKeys.map((key) => ({
+      label: format(new Date(key + "-01"), "MMM yyyy"), // tampilkan nama bulan
+      ...map[key],
+    }));
+  }
 
   // CUSTOM
   if (selectedFilter === "custom") {

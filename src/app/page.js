@@ -89,6 +89,9 @@ export default function DashboardPage() {
     totalAdSpend > 0
       ? Number((summary.totalSales / totalAdSpend).toFixed(2))
       : 0;
+  console.log("RTS Orders:", summary.rtsOrders);
+  console.log("RTS %:", summary.rtsPercentage);
+  
 
   // 🔹 Metric list
   const metricGroups = [
@@ -148,6 +151,8 @@ export default function DashboardPage() {
           value: summary.totalReturnToSenderCost,
           prefix: "Rp",
         },
+        { label: "Total RTS Orders", value: summary.rtsOrders },
+        { label: "RTS Percentage", value: summary.rtsPercentage, suffix: "%" },
       ],
     },
     {
@@ -191,6 +196,7 @@ export default function DashboardPage() {
           <LeadsChart data={chartData} />
           <LeadsStatusChart data={chartData} />
         </div>
+				
 
         {/* Metrics Grid */}
         {/* Metrics Section by Category */}
