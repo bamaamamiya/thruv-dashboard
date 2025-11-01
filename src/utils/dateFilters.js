@@ -8,6 +8,7 @@ import {
   startOfMonth,
   endOfMonth,
   subMonths,
+	isWithinInterval ,
   subWeeks, // <-- pastikan ini ada
 } from "date-fns";
 import { isValid } from "date-fns";
@@ -72,6 +73,10 @@ export const FILTER_OPTIONS = [
   },
 ];
 
+export const isDateInRange = (date, start, end) => {
+  if (!date || !start || !end) return false;
+  return isWithinInterval(new Date(date), { start, end });
+};
 export const getDateRange = (selectedFilter, customRange) => {
   const filter = FILTER_OPTIONS.find((f) => f.key === selectedFilter);
 

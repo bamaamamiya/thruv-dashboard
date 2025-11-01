@@ -15,18 +15,31 @@ import {
 import { db } from "@/lib/firebaseClient";
 import dayjs from "dayjs";
 import { Plus, Edit2, Trash2, Save, X } from "lucide-react";
+import FilterBar from "@/app/components/analytics/FilterBar";
+import { getDateRange, isDateInRange } from "@/utils/dateFilters";
+import { useMemo } from "react"; // tambahkan import di atas
 
 export default function AdsPage() {
   const [platform, setPlatform] = useState("Facebook Ads");
   const [date, setDate] = useState(dayjs().format("YYYY-MM-DD"));
   const [adSpend, setAdSpend] = useState("");
   const [ads, setAds] = useState([]);
+  const [filteredAds, setFilteredAds] = useState([]);
   const [ordersCount, setOrdersCount] = useState({});
   const [grossProfitMap, setGrossProfitMap] = useState({});
   const [editingId, setEditingId] = useState(null);
   const [editValue, setEditValue] = useState("");
+  const [selectedFilter, setSelectedFilter] = useState("month");
+  const [customRange, setCustomRange] = useState([new Date(), new Date()]);
 
-  // Listen to ads + order count + gross profit
+  // Dapatkan rentang tanggal dari filter bar
+  
+const [start, end] = useMemo(
+  () => getDateRange(selectedFilter, customRange),
+  [selectedFilter, customRange]
+);
+
+  // --- LISTEN FIRESTORE: adSpends + leads ---
   useEffect(() => {
     const unsub = onSnapshot(collection(db, "adSpends"), async (snapshot) => {
       const docs = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
@@ -34,14 +47,19 @@ export default function AdsPage() {
 
       const counts = {};
       const gpMap = {};
+
       for (let ad of docs) {
         if (!ad.date) continue;
-        const start = new Date(`${ad.date}T00:00:00.000Z`);
-        const end = new Date(`${ad.date}T23:59:59.999Z`);
+        const adDate = new Date(ad.date);
+        // Filter hanya data dalam range tanggal aktif
+        if (!isDateInRange(adDate, start, end)) continue;
+
+        const startOfDay = new Date(`${ad.date}T00:00:00.000Z`);
+        const endOfDay = new Date(`${ad.date}T23:59:59.999Z`);
         const q = query(
           collection(db, "leads"),
-          where("createdAt", ">=", start),
-          where("createdAt", "<=", end)
+          where("createdAt", ">=", startOfDay),
+          where("createdAt", "<=", endOfDay)
         );
         const snap = await getDocs(q);
 
@@ -59,9 +77,33 @@ export default function AdsPage() {
       setOrdersCount(counts);
       setGrossProfitMap(gpMap);
     });
-    return () => unsub();
-  }, []);
 
+    return () => unsub();
+  }, [start, end]);
+
+  // --- FILTER ADS BY DATE RANGE ---
+  useEffect(() => {
+    const filtered = ads.filter((ad) => {
+      if (!ad.date) return false;
+      const adDate = new Date(ad.date);
+      return isDateInRange(adDate, start, end);
+    });
+    setFilteredAds(filtered);
+  }, [ads, start, end]);
+
+  // --- COMPUTATIONS ---
+  const totalAdSpend = filteredAds.reduce(
+    (sum, a) => sum + (a.adSpend || 0),
+    0
+  );
+
+  const totalOrders = filteredAds.reduce((sum, a) => {
+    return sum + (ordersCount[a.date] || 0);
+  }, 0);
+
+  const avgCAC = totalOrders > 0 ? totalAdSpend / totalOrders : null;
+
+  // --- CRUD HANDLERS ---
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!adSpend) return;
@@ -85,12 +127,18 @@ export default function AdsPage() {
     await deleteDoc(ref);
   };
 
-  const totalAdSpend = ads.reduce((sum, a) => sum + (a.adSpend || 0), 0);
-
+  // --- UI ---
   return (
     <div className="min-h-screen px-4 py-6 bg-gray-100 dark:bg-black transition-colors">
       <div className="max-w-3xl mx-auto space-y-6">
-        {/* Header */}
+        {/* FilterBar */}
+        <FilterBar
+          selectedFilter={selectedFilter}
+          setSelectedFilter={setSelectedFilter}
+          customRange={customRange}
+          setCustomRange={setCustomRange}
+        />
+
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-extrabold text-gray-800 dark:text-gray-100">
             Ad Spend Tracker
@@ -138,7 +186,6 @@ export default function AdsPage() {
             Summary
           </h2>
 
-          {/* Total Ad Spend */}
           <p className="text-lg text-gray-700 dark:text-gray-300">
             Total Ad Spend:{" "}
             <span className="font-bold text-green-600 dark:text-green-400">
@@ -146,38 +193,26 @@ export default function AdsPage() {
             </span>
           </p>
 
-          {/* Total Orders & Average CAC */}
-          {(() => {
-            const totalOrders = Object.values(ordersCount).reduce(
-              (sum, v) => sum + v,
-              0
-            );
-            const avgCAC = totalOrders > 0 ? totalAdSpend / totalOrders : null;
+          <p className="text-lg text-gray-700 dark:text-gray-300 mt-2">
+            Total Orders:{" "}
+            <span className="font-bold text-blue-600 dark:text-blue-400">
+              {totalOrders}
+            </span>
+          </p>
 
-            return (
-              <>
-                <p className="text-lg text-gray-700 dark:text-gray-300 mt-2">
-                  Total Orders:{" "}
-                  <span className="font-bold text-blue-600 dark:text-blue-400">
-                    {totalOrders}
-                  </span>
-                </p>
-                <p className="text-lg text-gray-700 dark:text-gray-300 mt-2">
-                  Average CAC:{" "}
-                  {avgCAC !== null ? (
-                    <span className="font-bold text-indigo-600 dark:text-indigo-400">
-                      Rp{" "}
-                      {avgCAC.toLocaleString(undefined, {
-                        maximumFractionDigits: 0,
-                      })}
-                    </span>
-                  ) : (
-                    "-"
-                  )}
-                </p>
-              </>
-            );
-          })()}
+          <p className="text-lg text-gray-700 dark:text-gray-300 mt-2">
+            Average CAC:{" "}
+            {avgCAC !== null ? (
+              <span className="font-bold text-indigo-600 dark:text-indigo-400">
+                Rp{" "}
+                {avgCAC.toLocaleString(undefined, {
+                  maximumFractionDigits: 0,
+                })}
+              </span>
+            ) : (
+              "-"
+            )}
+          </p>
         </div>
 
         {/* Ads List */}
@@ -186,11 +221,14 @@ export default function AdsPage() {
             Entries
           </h2>
           <ul className="space-y-3">
-            {[...ads]
+            {[...filteredAds]
               .sort((a, b) => new Date(b.date) - new Date(a.date))
               .map((ad) => {
                 const orders = ordersCount[ad.date] ?? 0;
                 const cac = orders > 0 ? ad.adSpend / orders : null;
+                const gp = grossProfitMap[ad.date] ?? 0;
+                const ltgpCac =
+                  ad.adSpend > 0 && gp > 0 ? (gp / ad.adSpend).toFixed(2) : "-";
 
                 return (
                   <li
@@ -217,24 +255,14 @@ export default function AdsPage() {
                           "-"
                         )}
                       </div>
-
-                      {/* LTGP:CAC */}
                       <div className="text-sm text-gray-600 dark:text-gray-400">
                         LTGP:CAC:{" "}
-                        {(() => {
-                          const gp = grossProfitMap[ad.date] ?? 0;
-                          if (ad.adSpend > 0 && gp > 0) {
-                            const ratio = gp / ad.adSpend;
-                            return (
-                              <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                                {ratio.toFixed(2)}
-                              </span>
-                            );
-                          }
-                          return "-";
-                        })()}
+                        <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                          {ltgpCac}
+                        </span>
                       </div>
                     </div>
+
                     <div className="flex items-center space-x-2">
                       {editingId === ad.id ? (
                         <>

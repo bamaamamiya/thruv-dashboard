@@ -43,7 +43,6 @@ export const filterLeadsByDate = (leads, start, end) => {
 };
 
 // 🧮 Hitung ringkasan data leads + metrik lanjutan
-// 🧮 Hitung ringkasan data leads + metrik lanjutan
 export const calculateSummary = (
   leads,
   totalAdSpend = 0,
@@ -53,7 +52,7 @@ export const calculateSummary = (
   const completed = leads.filter((l) => l.status === "complete");
   const pending = leads.filter((l) => l.status === "pending");
   const returns = leads.filter((l) => l.status === "rts");
-
+	
   const totalOrders = leads.length;
 
   // 🔹 Data dasar

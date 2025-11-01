@@ -22,7 +22,7 @@ export default function LeadsDashboard() {
   const [leads, setLeads] = useState([]);
   const [copiedId, setCopiedId] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState("Semua");
+  const [selectedStatus, setSelectedStatus] = useState("pending");
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedLeads, setSelectedLeads] = useState([]);
   const [showExportModal, setShowExportModal] = useState(false);
