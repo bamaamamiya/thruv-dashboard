@@ -236,7 +236,9 @@ Alamat mentah: ${cleanAddressValue}`;
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex flex-col">
           <div className="bg-white dark:bg-gray-900 rounded-t-2xl p-5 overflow-y-auto h-full">
             <div className="flex justify-between items-center mb-3 ">
-              <h2 className="text-lg font-bold dark:text-white">📄 Detail Lead</h2>
+              <h2 className="text-lg font-bold dark:text-white">
+                📄 Detail Lead
+              </h2>
               <button
                 onClick={() => setShowModal(false)}
                 className="text-gray-500 text-xl"
@@ -261,6 +263,17 @@ Alamat mentah: ${cleanAddressValue}`;
                   onChange={(e) => setWhatsappValue(e.target.value)}
                   className="w-full border rounded px-3 py-2 mt-1 bg-gray-50 dark:bg-gray-800"
                 />
+                {/* Tombol direct ke WhatsApp */}
+                {whatsappValue && (
+                  <a
+                    href={`https://wa.me/${whatsappValue.replace(/\D/g, "")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block mt-2 text-xs text-green-600 underline"
+                  >
+                    💬 Chat WA
+                  </a>
+                )}
               </div>
               <div>
                 <label>Produk</label>
