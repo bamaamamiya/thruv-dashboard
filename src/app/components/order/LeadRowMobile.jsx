@@ -158,7 +158,7 @@ Ongkir: ~${formatHargaSingkat(ongkirNormal)}~ ${formatHargaSingkat(ongkirValue)}
 Total Pembayaran: ${formatHargaSingkat(totalPayment)}
 
 Nama: ${lead.name}  
-Alamat Lengkap: ${lead.address}
+Alamat Lengkap: ${lead.addressClean}
 
 Apakah alamat yang Kakak berikan sudah benar?  
 Kami akan segera proses pesanan Kakak jika alamatnya sudah sesuai ya.  
