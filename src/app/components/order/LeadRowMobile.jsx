@@ -160,9 +160,10 @@ Total Pembayaran: ${formatHargaSingkat(totalPayment)}
 Nama: ${lead.name}  
 Alamat Lengkap: ${lead.addressClean}
 
-Apakah alamat yang Kakak berikan sudah benar?  
-Kami akan segera proses pesanan Kakak jika alamatnya sudah sesuai ya.  
-Untuk ongkir, akan dihitung otomatis dan dianggap disetujui oleh sistem 🙏
+Mohon konfirmasi apakah pesanan ini siap kami proses hari ini dengan alamat di atas.
+Jika sudah sesuai dan siap diproses, kami akan segera lanjutkan pengiriman ya 🙏  
+
+Untuk ongkir, akan dihitung otomatis dan dianggap disetujui oleh sistem.
 `;
     copyToClipboard(pesan, () => {
       setCopiedId(lead.id);
