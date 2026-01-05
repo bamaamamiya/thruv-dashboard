@@ -96,6 +96,113 @@ export default function LeadsDashboard() {
     "Kode Pos",
   ];
 
+	const exportCompleteAndRTS = () => {
+  const filtered = leads.filter((l) => {
+    const leadTime = l.createdAt?.seconds
+      ? l.createdAt.seconds * 1000
+      : null;
+
+    if (!leadTime) return false;
+
+    // filter tanggal (reuse UI filter)
+    if (startDate && endDate) {
+      if (
+        leadTime < startDate.getTime() ||
+        leadTime > endDate.getTime()
+      )
+        return false;
+    }
+
+    return l.status === "complete" || l.status === "rts";
+  });
+
+  const completed = filtered.filter((l) => l.status === "complete");
+  const rts = filtered.filter((l) => l.status === "rts");
+
+  if (completed.length === 0 && rts.length === 0) {
+    alert("Tidak ada data COMPLETE atau RTS di rentang ini.");
+    return;
+  }
+
+  const headers = [
+    "Nama",
+    "No WhatsApp",
+    "Produk",
+    "Harga",
+    "Cost Produk",
+    "Ongkir",
+    "Biaya Return",
+    "Alamat",
+  ];
+
+  const mapRow = (l) => [
+    clean(l.name),
+    clean(l.whatsapp),
+    clean(l.productTitle),
+    l.price ?? 0,
+    l.costProduct ?? 0,
+    l.ongkir ?? 0,
+    l.rts ?? 0,
+    clean(l.addressClean || l.address),
+  ];
+
+  const workbook = XLSX.utils.book_new();
+
+  // ===== SHEET COMPLETE =====
+  if (completed.length > 0) {
+    const wsComplete = XLSX.utils.aoa_to_sheet([
+      headers,
+      ...completed.map(mapRow),
+    ]);
+    styleHeader(wsComplete);
+    XLSX.utils.book_append_sheet(workbook, wsComplete, "COMPLETE");
+  }
+
+  // ===== SHEET RTS =====
+  if (rts.length > 0) {
+    const wsRTS = XLSX.utils.aoa_to_sheet([
+      headers,
+      ...rts.map(mapRow),
+    ]);
+    styleHeader(wsRTS);
+    XLSX.utils.book_append_sheet(workbook, wsRTS, "RTS");
+  }
+
+  const label =
+    selectedFilter === "custom" && startDate && endDate
+      ? `${startDate.toISOString().slice(0, 10)}_to_${endDate
+          .toISOString()
+          .slice(0, 10)}`
+      : selectedFilter;
+
+  const buffer = XLSX.write(workbook, {
+    bookType: "xlsx",
+    type: "array",
+    cellStyles: true,
+  });
+
+  saveAs(
+    new Blob([buffer], { type: "application/octet-stream" }),
+    `orders-complete-rts-${label}.xlsx`
+  );
+};
+
+const styleHeader = (worksheet) => {
+  const range = XLSX.utils.decode_range(worksheet["!ref"]);
+  for (let C = range.s.c; C <= range.e.c; ++C) {
+    const cell = XLSX.utils.encode_cell({ r: 0, c: C });
+    if (worksheet[cell]) {
+      worksheet[cell].s = {
+        font: { bold: true },
+        alignment: { horizontal: "center" },
+      };
+    }
+  }
+};
+
+
+
+
   const exportToCSV = () => {
     if (selectedLeads.length === 0) {
       alert("Pilih minimal 1 lead untuk export!");
@@ -254,7 +361,16 @@ export default function LeadsDashboard() {
           focus:outline-none focus:ring-2 focus:ring-emerald-500 
           shadow-sm transition-all duration-200 font-medium dark:text-white "
             >
-              Export Data
+              Export Order
+            </button>
+
+            <button
+              onClick={exportCompleteAndRTS}
+              className="border border-gray-300 text-gray-800 px-5 py-2.5 rounded-md
+  focus:outline-none focus:ring-2 focus:ring-indigo-500
+  shadow-sm transition-all duration-200 font-medium dark:text-white"
+            >
+            Export Data
             </button>
           </div>
 
