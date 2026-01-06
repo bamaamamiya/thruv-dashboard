@@ -152,15 +152,18 @@ export default function LeadRow({ lead, copiedId, setCopiedId, onSelect }) {
   );
 
   const handleCopy = () => {
+    const price = Number(priceValue) || 0;
+    const ongkir = Number(ongkirValue) || 0;
+
     const ongkirNormal = getOngkirNormal(ongkirValue);
-    const totalPayment = priceValue + ongkirValue;
+    const totalPayment = price + ongkir;
     const pesan = `
 Terima kasih sudah melakukan pemesanan 🙏  
 Berikut detail pesanan Kakak:
 
 Nama Produk: ${productTitleValue}  
-Harga Produk: ${formatHargaSingkat(priceValue)}   
-Ongkir: ~${formatHargaSingkat(ongkirNormal)}~ ${formatHargaSingkat(ongkirValue)}
+Harga Produk: ${formatHargaSingkat(price)}   
+Ongkir: ~${formatHargaSingkat(ongkirNormal)}~ ${formatHargaSingkat(ongkir)}
 Total Pembayaran: ${formatHargaSingkat(totalPayment)}
 
 Nama: ${lead.name}  
@@ -328,7 +331,7 @@ Alamat mentah: ${cleanAddressValue}`;
                     type="number"
                     className="w-full border border-gray-300 dark:border-gray-700 rounded px-3 py-2 mt-1 text-sm bg-white dark:bg-gray-800"
                     value={priceValue}
-                    onChange={(e) => setPriceValue(e.target.value)}
+                    onChange={(e) => setPriceValue(Number(e.target.value))}
                   />
                 </div>
                 <div>
@@ -346,7 +349,7 @@ Alamat mentah: ${cleanAddressValue}`;
                     type="number"
                     className="w-full border border-gray-300 dark:border-gray-700 rounded px-3 py-2 mt-1 text-sm bg-white dark:bg-gray-800"
                     value={ongkirValue}
-                    onChange={(e) => setOngkirValue(e.target.value)}
+                    onChange={(e) => setOngkirValue(Number(e.target.value))}
                   />
                 </div>
                 <div className="md:col-span-2">
