@@ -1,7 +1,8 @@
+import "./globals.css";
 import { Inter } from "next/font/google";
 import Navbar from "./components/analytics/Navbar";
-import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
+import Sidebar from "./components/Sidebar";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -30,11 +31,22 @@ export default function RootLayout({ children }) {
       </head>
 
       <body
-        className={`${inter.className} bg-white text-black dark:bg-black dark:text-white`}
+        className={`${inter.className}  bg-gray-50 text-black dark:bg-black dark:text-white`}
       >
         <AuthProvider>
+          {/* 🔝 Navbar */}
           <Navbar />
-          <div className="container mx-auto">{children}</div>
+
+          {/* 🔽 Layout bawah */}
+          <div className="flex">
+            {/* Sidebar kiri */}
+            <div className="hidden md:block w-64 h-[calc(100vh-64px)] sticky top-16 border-r border-gray-200 dark:border-gray-800">
+              <Sidebar />
+            </div>
+
+            {/* Content kanan */}
+            <main className="flex-1 p-2 overflow-y-auto">{children}</main>
+          </div>
         </AuthProvider>
       </body>
     </html>

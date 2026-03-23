@@ -71,7 +71,7 @@ Khusus Kak aku kasih diskon 50% ya. Silakan tulis alamat lengkap kalau masih min
       {/* Card row */}
       <div
         onClick={() => setShowModal(true)}
-        className="rounded-xl p-4 mb-3 shadow-sm hover:ring ring-gray-200 dark:hover:ring-gray-600 transition cursor-pointer bg-white dark:bg-gray-900"
+        className="rounded-xl p-4 mb-3 shadow-sm hover:ring ring-gray-200 dark:hover:ring-gray-600 transition cursor-pointer  dark:bg-gray-900"
       >
         <div className="flex justify-between text-sm text-gray-400 dark:text-gray-500 mb-2">
           <span>
@@ -110,7 +110,7 @@ Khusus Kak aku kasih diskon 50% ya. Silakan tulis alamat lengkap kalau masih min
       {showModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4">
           <div
-            className="bg-white dark:bg-gray-900 w-full max-w-sm p-6 rounded-xl shadow-xl relative text-sm text-gray-900 dark:text-gray-200"
+            className="dark:bg-gray-900 w-full max-w-sm p-6 rounded-xl shadow-xl relative text-sm text-gray-900 dark:text-gray-200"
             onClick={(e) => e.stopPropagation()}
           >
             <button

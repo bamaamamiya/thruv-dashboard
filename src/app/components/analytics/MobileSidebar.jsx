@@ -3,10 +3,24 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Sun, Moon, Menu, X } from "lucide-react";
+import {
+  Home,
+  ShoppingCart,
+  BarChart3,
+  Package,
+  ChevronDown,
+  ChevronRight,
+} from "lucide-react";
 
-const MobileSidebar = ({ isDark, toggleDarkMode, isThruvShop, toggleStoreName }) => {
+const MobileSidebar = ({
+  isDark,
+  toggleDarkMode,
+  isThruvShop,
+  toggleStoreName,
+}) => {
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [openOrders, setOpenOrders] = useState(false);
 
   const handleNav = (path) => {
     router.push(path);
@@ -34,7 +48,7 @@ const MobileSidebar = ({ isDark, toggleDarkMode, isThruvShop, toggleStoreName })
       {/* Sidebar Panel */}
       <div
         className={`fixed top-0 left-0 h-full w-64 
-          bg-white dark:bg-black border-r border-gray-200 dark:border-gray-700
+          bg-gray-50 dark:bg-black border-r border-gray-200 dark:border-gray-700
           z-50 transform transition-transform duration-300 
           ${open ? "translate-x-0" : "-translate-x-full"}`}
       >
@@ -50,37 +64,68 @@ const MobileSidebar = ({ isDark, toggleDarkMode, isThruvShop, toggleStoreName })
           </button>
         </div>
 
-        {/* Navigation */}
-        <div className="flex flex-col p-4 gap-3">
+        <div className="flex flex-col p-4 gap-2 text-sm">
+          {/* Home */}
           <button
             onClick={() => handleNav("/")}
-            className="text-left px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-900"
+            className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-900"
           >
-            Dashboard
+            <Home size={18} />
+            Home
           </button>
+
+          {/* Orders */}
+          <div>
+            <button
+              onClick={() => setOpenOrders(!openOrders)}
+              className="w-full flex items-center justify-between px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-900"
+            >
+              <div className="flex items-center gap-3">
+                <ShoppingCart size={18} />
+                Orders
+              </div>
+              {openOrders ? (
+                <ChevronDown size={16} />
+              ) : (
+                <ChevronRight size={16} />
+              )}
+            </button>
+
+            {openOrders && (
+              <div className="ml-8 mt-1 flex flex-col gap-1">
+                <button
+                  onClick={() => handleNav("/order")}
+                  className="text-left px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-900"
+                >
+                  All Orders
+                </button>
+
+                <button
+                  onClick={() => handleNav("/abandoned")}
+                  className="text-left px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-900"
+                >
+                  Abandoned
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Products */}
           <button
-            onClick={() => handleNav("/order")}
-            className="text-left px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-900"
+            onClick={() => handleNav("/products")}
+            className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-900"
           >
-            Orders
+            <Package size={18} />
+            Products
           </button>
-          <button
-            onClick={() => handleNav("/heat")}
-            className="text-left px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-900"
-          >
-            Heat
-          </button>
+
+          {/* Ads */}
           <button
             onClick={() => handleNav("/ads")}
-            className="text-left px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-900"
+            className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-900"
           >
+            <BarChart3 size={18} />
             Ads
-          </button>
-          <button
-            onClick={() => handleNav("/abandoned")}
-            className="text-left px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-900"
-          >
-            Abandoned
           </button>
         </div>
 

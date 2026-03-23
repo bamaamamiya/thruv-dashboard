@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect } from "react";
 import { deleteDoc, doc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebaseClient";
 import { getOngkirNormal } from "@/utils/ongkir";
-
+import { resolveProduct } from "@/utils/productResolver";
 const formatHargaSingkat = (harga) => {
   if (!harga) return "-";
   if (harga >= 1_000_000)
@@ -23,32 +23,82 @@ const copyToClipboard = async (text, onCopied) => {
   }
 };
 
-export default function LeadRow({ lead, copiedId, setCopiedId, onSelect }) {
+export default function LeadRow({
+  lead,
+  copiedId,
+  setCopiedId,
+  onSelect,
+  selectedLeads,
+  products,
+}) {
   const [showModal, setShowModal] = useState(false);
   const [showAddressDetail, setShowAddressDetail] = useState(false);
   const [nameValue, setNameValue] = useState(lead.name || "");
   const [whatsappValue, setWhatsappValue] = useState(lead.whatsapp || "");
   const [priceValue, setPriceValue] = useState(lead.price || "");
   const [costProductValue, setCostProductValue] = useState(
-    lead.costProduct || ""
+    lead.costProduct || "",
   );
   const [addressValue, setAddressValue] = useState(lead.address || "");
   const [returnValue, setReturnValue] = useState(lead.rts || "");
-  const [isChecked, setIsChecked] = useState(false);
   const [cleanAddressValue, setCleanAddressValue] = useState(
-    lead.addressClean || ""
+    lead.addressClean || "",
   );
   const [productTitleValue, setProductTitleValue] = useState(
-    lead.productTitle || ""
+    lead.productTitle || "",
   );
   const [ongkirValue, setOngkirValue] = useState(lead.ongkir || "");
   const [confirmationValue, setConfirmationValue] = useState(
-    lead.confirmation || "belum"
+    lead.confirmation || "belum",
   );
+  const [messageSentValue, setMessageSentValue] = useState(
+    lead.messageSent ?? false,
+  );
+  const [selectedProductId, setSelectedProductId] = useState(
+    lead.productId || "",
+  );
+  const [openProductId, setOpenProductId] = useState(null);
 
-  const [customerConfirmedValue, setCustomerConfirmedValue] = useState(
-    lead.customerConfirmed ?? false
-  );
+  const [selectedUpsellId, setSelectedUpsellId] = useState(lead.upsellId || "");
+  const selectedProduct = products.find((p) => p.id === selectedProductId);
+  useEffect(() => {
+    if (!selectedProduct) return;
+
+    // default (tanpa upsell)
+    setProductTitleValue(selectedProduct.title);
+    setPriceValue(selectedProduct.pricing.price);
+    setCostProductValue(selectedProduct.pricing.cost);
+
+    // reset upsell kalau ganti product
+    setSelectedUpsellId("");
+  }, [selectedProductId]);
+  // upsell
+  useEffect(() => {
+    if (!selectedProduct) return;
+
+    let price = selectedProduct.pricing.price;
+    let costProduct = selectedProduct.pricing.cost;
+    let title = selectedProduct.title;
+
+    if (selectedUpsellId) {
+      const upsell = selectedProduct.upsells.find(
+        (u) => u.id === selectedUpsellId,
+      );
+
+      if (upsell) {
+        price += upsell.price;
+        costProduct += upsell.cost;
+        title = `${selectedProduct.title} + ${upsell.title}`;
+      }
+    }
+
+    setProductTitleValue(title);
+    setPriceValue(price);
+    setCostProductValue(costProduct);
+  }, [selectedProductId, selectedUpsellId]);
+
+  const isChecked = selectedLeads?.some((l) => l.id === lead.id);
+  const resolved = resolveProduct(lead, products);
 
   // 🔒 Matikan scroll body saat modal terbuka
   useEffect(() => {
@@ -62,7 +112,6 @@ export default function LeadRow({ lead, copiedId, setCopiedId, onSelect }) {
 
   const handleCheckboxChange = (e) => {
     const checked = e.target.checked;
-    setIsChecked(checked);
     onSelect?.(lead, checked);
   };
 
@@ -73,6 +122,9 @@ export default function LeadRow({ lead, copiedId, setCopiedId, onSelect }) {
     }
     try {
       await updateDoc(doc(db, "leads", lead.id), {
+        productId: selectedProductId,
+        upsellId: selectedUpsellId || null,
+
         name: nameValue,
         whatsapp: whatsappValue,
         price: Number(priceValue),
@@ -103,7 +155,7 @@ export default function LeadRow({ lead, copiedId, setCopiedId, onSelect }) {
         alert("Gagal update status.");
       }
     },
-    [lead]
+    [lead],
   );
 
   const handleConfirmationChange = useCallback(
@@ -120,22 +172,23 @@ export default function LeadRow({ lead, copiedId, setCopiedId, onSelect }) {
         alert("Gagal update konfirmasi.");
       }
     },
-    [lead]
+    [lead],
   );
-  const handleCustomerConfirmedChange = useCallback(
+
+  const handleMessageSentChange = useCallback(
     async (newValue) => {
       try {
         await updateDoc(doc(db, "leads", lead.id), {
-          customerConfirmed: newValue,
+          messageSent: newValue,
         });
-        lead.customerConfirmed = newValue; // update local object
-        setCustomerConfirmedValue(newValue); // update state UI
+        lead.messageSent = newValue;
+        setMessageSentValue(newValue);
       } catch (err) {
-        console.error("Gagal update customerConfirmed:", err);
-        alert("Gagal update konfirmasi customer.");
+        console.error("Gagal update messageSent:", err);
+        alert("Gagal update messageSent.");
       }
     },
-    [lead]
+    [lead],
   );
 
   const handleResiCheckChange = useCallback(
@@ -148,7 +201,7 @@ export default function LeadRow({ lead, copiedId, setCopiedId, onSelect }) {
         alert("Gagal update status resi.");
       }
     },
-    [lead]
+    [lead],
   );
 
   const handleCopy = () => {
@@ -217,11 +270,10 @@ Alamat mentah: ${cleanAddressValue}`;
     <>
       {/* Lead Row */}
       <div
-        className="grid text-sm grid-cols-9 items-center gap-2 cursor-pointer 
-    hover:bg-gray-50 dark:hover:bg-gray-700 
-    px-3 py-3 rounded-md transition 
-    border border-gray-200 dark:border-gray-700
-    bg-white dark:bg-black"
+        className="grid grid-cols-9 items-center gap-1 cursor-pointer 
+  hover:bg-gray-50 dark:hover:bg-gray-700 
+  px-2 py-1.5 rounded-md transition 
+  bg-gray-50 dark:bg-black text-xs"
         onClick={() => setShowModal(true)}
       >
         <input
@@ -229,7 +281,7 @@ Alamat mentah: ${cleanAddressValue}`;
           checked={isChecked}
           onChange={handleCheckboxChange}
           onClick={(e) => e.stopPropagation()}
-          className="scale-125 accent-gray-800 dark:accent-gray-200"
+          className="scale-100 accent-gray-800 dark:accent-gray-200"
         />
         <span className="text-xs text-gray-500 dark:text-gray-400">
           {new Date(lead.createdAt.seconds * 1000).toLocaleDateString("id-ID", {
@@ -237,7 +289,7 @@ Alamat mentah: ${cleanAddressValue}`;
             month: "short",
           })}
         </span>
-        <span className="font-medium text-gray-900 dark:text-gray-100">
+        <span className="font-medium text-gray-900 dark:text-gray-100 truncate">
           {lead.name}
         </span>
         <a
@@ -256,24 +308,24 @@ Alamat mentah: ${cleanAddressValue}`;
           {lead.productTitle}
         </span>
         <span
-          className={`uppercase font-semibold text-sm text-center ${
+          className={`uppercase font-semibold text-xs text-center ${
             lead.status === "complete"
               ? "text-green-600 dark:text-green-400"
               : lead.status === "cancel"
-              ? "text-red-600 dark:text-red-400"
-              : lead.status === "pending"
-              ? "text-yellow-600 dark:text-yellow-400"
-              : "text-gray-900 dark:text-gray-100"
+                ? "text-red-600 dark:text-red-400"
+                : lead.status === "pending"
+                  ? "text-yellow-600 dark:text-yellow-400"
+                  : "text-gray-900 dark:text-gray-100"
           }`}
         >
           {lead.status}
         </span>
 
-        <span className="text-lg text-center">
+        <span className="text-sm text-center">
           {lead.confirmation === "sudah" ? "🟢" : "🔴"}
         </span>
 
-        <span className="text-lg text-center">
+        <span className="text-sm text-center">
           {lead.resiCheck === "done" ? "✅" : "❌"}
         </span>
 
@@ -284,32 +336,32 @@ Alamat mentah: ${cleanAddressValue}`;
 
       {/* Modal full update */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div className="bg-white dark:bg-gray-900 w-full max-w-lg h-[90vh] rounded-2xl shadow-2xl p-5 text-gray-800 dark:text-gray-200 overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm ">
+          <div className="bg-gray-50 dark:bg-gray-900 w-full max-w-lg rounded-2xl shadow-2xl p-2 h-full text-gray-800 dark:text-gray-200 overflow-y-auto">
             <button
               onClick={() => setShowModal(false)}
               className="absolute top-4 right-4 text-gray-400 dark:text-gray-500 hover:text-black dark:hover:text-white text-xl"
             >
               ❌
             </button>
-            <h2 className="text-xl font-bold mb-2">📄 Detail Lead</h2>
 
-            <div className="space-y-3">
+            <div>
+              <h2 className="text-xl font-bold mb-2">📄 Detail Lead</h2>
               <div>
-                <label className="font-medium text-sm">Nama</label>
+                <label className="font-medium text-xs">Nama</label>
                 <input
                   type="text"
-                  className="w-full border border-gray-300 dark:border-gray-700 rounded px-3 py-2 mt-1 text-sm bg-white dark:bg-gray-800"
+                  className="w-full border border-gray-300 dark:border-gray-700 rounded px-1 py-2 text-xs bg-gray-50 dark:bg-gray-800"
                   value={nameValue}
                   onChange={(e) => setNameValue(e.target.value)}
                 />
               </div>
 
               <div>
-                <label className="font-medium text-sm">Nomor WhatsApp</label>
+                <label className="font-medium text-xs">Nomor WhatsApp</label>
                 <input
                   type="text"
-                  className="w-full border border-gray-300 dark:border-gray-700 rounded px-3 py-2 mt-1 text-sm bg-white dark:bg-gray-800"
+                  className="w-full border border-gray-300 dark:border-gray-700 rounded px-1 py-2 text-xs bg-gray-50 dark:bg-gray-800"
                   value={whatsappValue}
                   onChange={(e) => setWhatsappValue(e.target.value)}
                 />
@@ -317,66 +369,135 @@ Alamat mentah: ${cleanAddressValue}`;
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
-                  <label className="font-medium text-sm">Produk</label>
-                  <input
-                    type="text"
-                    className="w-full border border-gray-300 dark:border-gray-700 rounded px-3 py-2 mt-1 text-sm bg-white dark:bg-gray-800"
-                    value={productTitleValue}
-                    onChange={(e) => setProductTitleValue(e.target.value)}
-                  />
+                  <div className="space-y-4">
+                    {/* PRODUCT */}
+                    <div>
+                      <label className="text-xs font-medium text-gray-500 mb-2 block">
+                        Product
+                      </label>
+
+                      <div className="space-y-2">
+                        {products.map((p) => {
+                          const active = selectedProductId === p.id;
+
+                          return (
+                            <div
+                              key={p.id}
+                              onClick={() => setSelectedProductId(p.id)}
+                              className={`border rounded-lg px-3 py-2 cursor-pointer transition
+            ${
+              active
+                ? "border-black bg-gray-50"
+                : "border-gray-200 hover:bg-gray-50"
+            }
+            `}
+                            >
+                              <div className="flex justify-between items-center">
+                                <p className="text-sm font-medium">{p.title}</p>
+                                <p className="text-xs text-gray-500">
+                                  {formatHargaSingkat(p.pricing.price)}
+                                </p>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* UPSELL */}
+                    {selectedProduct?.upsells?.length > 0 && (
+                      <div>
+                        <label className="text-xs font-medium text-gray-500 mb-2 block">
+                          Add-ons (Optional)
+                        </label>
+
+                        <div className="space-y-2">
+                          {/* no upsell */}
+                          <div
+                            onClick={() => setSelectedUpsellId("")}
+                            className={`border rounded-lg px-3 py-2 cursor-pointer transition
+          ${
+            selectedUpsellId === ""
+              ? "border-black bg-gray-50"
+              : "border-gray-200 hover:bg-gray-50"
+          }
+          `}
+                          >
+                            <p className="text-sm">No add-on</p>
+                          </div>
+
+                          {selectedProduct.upsells.map((u) => {
+                            const active = selectedUpsellId === u.id;
+
+                            return (
+                              <div
+                                key={u.id}
+                                onClick={() => setSelectedUpsellId(u.id)}
+                                className={`border rounded-lg px-3 py-2 cursor-pointer transition
+              ${
+                active
+                  ? "border-black bg-gray-50"
+                  : "border-gray-200 hover:bg-gray-50"
+              }
+              `}
+                              >
+                                <div className="flex justify-between">
+                                  <p className="text-sm">{u.title}</p>
+                                  <p className="text-xs text-gray-500">
+                                    +{formatHargaSingkat(u.price)}
+                                  </p>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div>
-                  <label className="font-medium text-sm">Harga</label>
+                  <label className="font-medium text-xs">Harga</label>
                   <input
                     type="number"
-                    className="w-full border border-gray-300 dark:border-gray-700 rounded px-3 py-2 mt-1 text-sm bg-white dark:bg-gray-800"
+                    className="w-full border border-gray-300 dark:border-gray-700 rounded px-1 py-2 text-xs bg-gray-50 dark:bg-gray-800"
                     value={priceValue}
                     onChange={(e) => setPriceValue(Number(e.target.value))}
                   />
                 </div>
                 <div>
-                  <label className="font-medium text-sm">Cost Product</label>
+                  <label className="font-medium text-xs">Cost Product</label>
                   <input
                     type="number"
-                    className="w-full border border-gray-300 dark:border-gray-700 rounded px-3 py-2 mt-1 text-sm bg-white dark:bg-gray-800"
+                    className="w-full border border-gray-300 dark:border-gray-700 rounded px-1 py-2 text-xs bg-gray-50 dark:bg-gray-800"
                     value={costProductValue}
                     onChange={(e) => setCostProductValue(e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="font-medium text-sm">Biaya Ongkir</label>
+                  <label className="font-medium text-xs">Biaya Ongkir</label>
                   <input
                     type="number"
-                    className="w-full border border-gray-300 dark:border-gray-700 rounded px-3 py-2 mt-1 text-sm bg-white dark:bg-gray-800"
+                    className="w-full border border-gray-300 dark:border-gray-700 rounded px-1 py-2 text-xs bg-gray-50 dark:bg-gray-800"
                     value={ongkirValue}
                     onChange={(e) => setOngkirValue(Number(e.target.value))}
                   />
                 </div>
                 <div className="md:col-span-2">
-                  <label className="font-medium text-sm">Alamat Rapi</label>
+                  <label className="font-medium text-xs">Alamat Rapi</label>
                   <textarea
-                    className="w-full border border-gray-300 dark:border-gray-700 rounded px-3 py-2 mt-1 text-sm bg-white dark:bg-gray-800"
-                    rows={3}
+                    className="w-full border border-gray-300 dark:border-gray-700 rounded px-1 py-2 text-xs bg-gray-50 dark:bg-gray-800"
+                    rows={2}
                     value={cleanAddressValue}
                     onChange={(e) => setCleanAddressValue(e.target.value)}
                   />
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowAddressDetail(true);
-                    }}
-                    className="text-xs text-blue-600 dark:text-blue-400 hover:underline mt-1"
-                  >
-                    📍 Lihat detail wilayah
-                  </button>
                 </div>
 
                 {lead.status === "rts" && (
                   <div>
-                    <label className="font-medium text-sm">Biaya Return</label>
+                    <label className="font-medium text-xs">Biaya Return</label>
                     <input
                       type="number"
-                      className="w-full border border-gray-300 dark:border-gray-700 rounded px-3 py-2 mt-1 text-sm bg-white dark:bg-gray-800"
+                      className="w-full border border-gray-300 dark:border-gray-700 rounded px-1 py-2 text-xs bg-gray-50 dark:bg-gray-800"
                       value={returnValue}
                       onChange={(e) => setReturnValue(e.target.value)}
                     />
@@ -386,7 +507,7 @@ Alamat mentah: ${cleanAddressValue}`;
 
               {showAddressDetail && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black/30 z-50">
-                  <div className="bg-white dark:bg-gray-900 p-5 rounded-2xl shadow-xl w-[90%] max-w-sm text-sm">
+                  <div className="bg-gray-50 dark:bg-gray-900 p-5 rounded-2xl shadow-xl w-[90%] max-w-sm text-xs">
                     <h3 className="font-bold mb-2 text-lg">
                       📍 Detail Wilayah
                     </h3>
@@ -417,13 +538,6 @@ Alamat mentah: ${cleanAddressValue}`;
                 </div>
               )}
 
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                Masuk:{" "}
-                {new Date(lead.createdAt.seconds * 1000).toLocaleString(
-                  "id-ID"
-                )}
-              </p>
-
               <button
                 onClick={handleSave}
                 className="w-full bg-black dark:bg-gray-700 text-white py-2 px-4 rounded-lg font-semibold hover:bg-gray-800 dark:hover:bg-gray-600 transition"
@@ -433,84 +547,111 @@ Alamat mentah: ${cleanAddressValue}`;
             </div>
 
             {/* Status & Resi */}
-            <div className="flex flex-wrap gap-2 mt-4">
-              {statusOptions.map(({ value, label }) => (
-                <button
-                  key={value}
-                  onClick={() => handleStatusChange(value)}
-                  className={`px-3 py-1 text-xs font-bold rounded-full transition border ${
-                    lead.status === value
-                      ? "bg-black dark:bg-gray-700 text-white"
-                      : "border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
+            {/* STATUS ORDER */}
+            <div className="mt-4">
+              <label className="text-xs font-semibold text-gray-500">
+                📦 Order Status
+              </label>
+              <select
+                value={lead.status}
+                onChange={(e) => handleStatusChange(e.target.value)}
+                className="w-full mt-1 px-3 py-2 text-xs rounded-lg 
+    border border-gray-300 dark:border-gray-700 
+    bg-gray-50 dark:bg-gray-800"
+              >
+                {statusOptions.map(({ value, label }) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
             </div>
-            <div className="flex flex-wrap gap-2 mt-2">
-              {resiOptions.map(({ value, label }) => (
-                <button
-                  key={value}
-                  onClick={() => handleResiCheckChange(value)}
-                  className={`px-3 py-1 text-xs font-bold rounded-full transition border ${
-                    (lead.resiCheck || "not") === value
-                      ? "bg-black dark:bg-gray-700 text-white"
-                      : "border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-            <div className="flex gap-2">
-              {/* Konfirmasi */}
-              <div className="flex flex-wrap gap-2 mt-4">
-                <button
-                  onClick={() => handleConfirmationChange("sudah")}
-                  className={`px-3 py-1 text-xs font-bold rounded-full transition border ${
-                    confirmationValue === "sudah"
-                      ? "bg-green-600 text-white border-green-600"
-                      : "border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-green-50 dark:hover:bg-gray-800"
-                  }`}
-                >
-                  ✅ Sudah
-                </button>
-                <button
-                  onClick={() => handleConfirmationChange("belum")}
-                  className={`px-3 py-1 text-xs font-bold rounded-full transition border ${
-                    confirmationValue === "belum"
-                      ? "bg-red-600 text-white border-red-600"
-                      : "border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-gray-800"
-                  }`}
-                >
-                  ❌ belum
-                </button>
-              </div>
 
-              {/* Konfirmasi Customer */}
-              {/* <div className="flex flex-wrap gap-2 mt-4">
-                <button
-                  onClick={() => handleCustomerConfirmedChange(true)}
-                  className={`px-3 py-1 text-xs font-bold rounded-full transition border ${
-                    customerConfirmedValue
-                      ? "bg-green-600 text-white border-green-600"
-                      : "border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-green-50 dark:hover:bg-gray-800"
-                  }`}
-                >
-                  ✅ Customer
-                </button>
-                <button
-                  onClick={() => handleCustomerConfirmedChange(false)}
-                  className={`px-3 py-1 text-xs font-bold rounded-full transition border ${
-                    !customerConfirmedValue
-                      ? "bg-red-600 text-white border-red-600"
-                      : "border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-gray-800"
-                  }`}
-                >
-                  ❌ Customer
-                </button>
-              </div> */}
+            {/* RESI */}
+            <div className="mt-4">
+              <label className="text-xs font-semibold text-gray-500">
+                🚚 Resi Check
+              </label>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {resiOptions.map(({ value, label }) => (
+                  <button
+                    key={value}
+                    onClick={() => handleResiCheckChange(value)}
+                    className={`px-3 py-1 text-xs font-bold rounded-full transition border ${
+                      (lead.resiCheck || "not") === value
+                        ? "bg-black dark:bg-gray-700 text-white"
+                        : "border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* COMMUNICATION */}
+            <div className="mt-4">
+              <label className="text-xs font-semibold text-gray-500">
+                💬 Communication
+              </label>
+
+              <div className="flex flex-wrap gap-4 mt-2">
+                {/* Confirmation */}
+                <div>
+                  <p className="text-[10px] text-gray-400 mb-1">
+                    Customer Confirm
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleConfirmationChange("sudah")}
+                      className={`px-3 py-1 text-xs font-bold rounded-full border ${
+                        confirmationValue === "sudah"
+                          ? "bg-green-600 text-white"
+                          : "border-gray-300 hover:bg-green-50"
+                      }`}
+                    >
+                      ✅
+                    </button>
+                    <button
+                      onClick={() => handleConfirmationChange("belum")}
+                      className={`px-3 py-1 text-xs font-bold rounded-full border ${
+                        confirmationValue === "belum"
+                          ? "bg-red-600 text-white"
+                          : "border-gray-300 hover:bg-red-50"
+                      }`}
+                    >
+                      ❌
+                    </button>
+                  </div>
+                </div>
+
+                {/* Message Sent */}
+                <div>
+                  <p className="text-[10px] text-gray-400 mb-1">Bot Message</p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleMessageSentChange(true)}
+                      className={`px-3 py-1 text-xs font-bold rounded-full border ${
+                        messageSentValue
+                          ? "bg-green-600 text-white"
+                          : "border-gray-300 hover:bg-green-50"
+                      }`}
+                    >
+                      🟢
+                    </button>
+                    <button
+                      onClick={() => handleMessageSentChange(false)}
+                      className={`px-3 py-1 text-xs font-bold rounded-full border ${
+                        !messageSentValue
+                          ? "bg-red-600 text-white"
+                          : "border-gray-300 hover:bg-red-50"
+                      }`}
+                    >
+                      🔴
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Footer */}
@@ -537,7 +678,7 @@ Alamat mentah: ${cleanAddressValue}`;
                     setShowModal(false);
                   }
                 }}
-                className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 text-sm"
+                className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 text-xs"
               >
                 🗑️ Hapus
               </button>

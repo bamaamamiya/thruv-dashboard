@@ -28,6 +28,7 @@ export default function LeadRowMobile({
   copiedId,
   setCopiedId,
   onSelect,
+  products = [],
 }) {
   const [showModal, setShowModal] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
@@ -35,22 +36,83 @@ export default function LeadRowMobile({
   const [whatsappValue, setWhatsappValue] = useState(lead.whatsapp || "");
   const [priceValue, setPriceValue] = useState(lead.price || "");
   const [costProductValue, setCostProductValue] = useState(
-    lead.costProduct || ""
+    lead.costProduct || "",
   );
   const [addressValue, setAddressValue] = useState(lead.address || "");
   const [cleanAddressValue, setCleanAddressValue] = useState(
-    lead.addressClean || ""
+    lead.addressClean || "",
   );
   const [productTitleValue, setProductTitleValue] = useState(
-    lead.productTitle || ""
+    lead.productTitle || "",
   );
   const [ongkirValue, setOngkirValue] = useState(lead.ongkir || "");
   const [returnValue, setReturnValue] = useState(lead.rts || "");
   const [confirmationValue, setConfirmationValue] = useState(
-    lead.confirmation || "belum"
+    lead.confirmation || "belum",
   );
   const [showAddressDetail, setShowAddressDetail] = useState(false);
+  const [messageSentValue, setMessageSentValue] = useState(
+    lead.messageSent ?? false,
+  );
 
+  // 🔥 NEW: product system
+  const [selectedProductId, setSelectedProductId] = useState(
+    lead.productId || "",
+  );
+  const [selectedUpsellId, setSelectedUpsellId] = useState(lead.upsellId || "");
+
+  const selectedProduct = products.find((p) => p.id === selectedProductId);
+
+  // 🔥 update saat ganti product
+  useEffect(() => {
+    if (!selectedProduct) return;
+
+    setProductTitleValue(selectedProduct.title);
+    setPriceValue(selectedProduct.pricing.price);
+    setCostProductValue(selectedProduct.pricing.cost);
+
+    setSelectedUpsellId("");
+  }, [selectedProductId]);
+
+  // 🔥 update upsell
+  useEffect(() => {
+    if (!selectedProduct) return;
+
+    let price = selectedProduct.pricing.price;
+    let cost = selectedProduct.pricing.cost;
+    let title = selectedProduct.title;
+
+    if (selectedUpsellId) {
+      const upsell = selectedProduct.upsells.find(
+        (u) => u.id === selectedUpsellId,
+      );
+
+      if (upsell) {
+        price += upsell.price;
+        cost += upsell.cost;
+        title = `${selectedProduct.title} + ${upsell.title}`;
+      }
+    }
+
+    setPriceValue(price);
+    setCostProductValue(cost);
+    setProductTitleValue(title);
+  }, [selectedUpsellId, selectedProductId]);
+
+  const handleMessageSentChange = useCallback(
+    async (value) => {
+      try {
+        await updateDoc(doc(db, "leads", lead.id), {
+          messageSent: value,
+        });
+        setMessageSentValue(value);
+      } catch (err) {
+        console.error(err);
+        alert("Gagal update messageSent.");
+      }
+    },
+    [lead],
+  );
   const statusOptions = [
     { value: "pending", label: "🕓 Pending" },
     { value: "complete", label: "✅ Complete" },
@@ -82,6 +144,9 @@ export default function LeadRowMobile({
     }
     try {
       await updateDoc(doc(db, "leads", lead.id), {
+        productId: selectedProductId,
+        upsellId: selectedUpsellId || null,
+
         name: nameValue,
         whatsapp: whatsappValue,
         price: Number(priceValue),
@@ -112,7 +177,7 @@ export default function LeadRowMobile({
         alert("Gagal update status.");
       }
     },
-    [lead]
+    [lead],
   );
 
   const handleConfirmationChange = useCallback(
@@ -129,7 +194,7 @@ export default function LeadRowMobile({
         alert("Gagal update konfirmasi.");
       }
     },
-    [lead]
+    [lead],
   );
 
   const handleResiCheckChange = useCallback(
@@ -142,7 +207,7 @@ export default function LeadRowMobile({
         alert("Gagal update resiCheck.");
       }
     },
-    [lead]
+    [lead],
   );
 
   const handleCopy = () => {
@@ -195,11 +260,11 @@ Alamat mentah: ${cleanAddressValue}`;
     <>
       {/* CARD STYLE MOBILE */}
       <div
-        className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-4 shadow-sm mb-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+        className="bg-gray-50 dark:bg-gray-900  rounded-xl p-4 shadow-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition"
         onClick={() => setShowModal(true)}
       >
         <div className="flex justify-between items-center">
-          <h3 className="font-bold text-gray-800 dark:text-gray-100 text-sm">
+          <h3 className="font-bold text-gray-800 dark:text-gray-100 text-xs">
             {lead.name}
           </h3>
           <input
@@ -207,23 +272,23 @@ Alamat mentah: ${cleanAddressValue}`;
             checked={isChecked}
             onClick={(e) => e.stopPropagation()}
             onChange={handleCheckboxChange}
-            className="scale-125 accent-gray-700 dark:accent-gray-300"
+            className="scale-100 accent-gray-700 dark:accent-gray-300"
           />
         </div>
-        <p className="text-xs text-gray-500 mt-1">{lead.whatsapp}</p>
-        <p className="text-sm mt-2 text-gray-700 dark:text-gray-300">
+        <p className="text-xs text-gray-500 ">{lead.whatsapp}</p>
+        <p className="text-sm text-gray-700 dark:text-gray-300">
           {lead.productTitle}
         </p>
-        <div className="flex justify-between text-xs mt-2">
+        <div className="flex justify-between text-xs ">
           <span
             className={`font-semibold ${
               lead.status === "complete"
                 ? "text-green-600"
                 : lead.status === "cancel"
-                ? "text-red-600"
-                : lead.status === "pending"
-                ? "text-yellow-600"
-                : "text-gray-600"
+                  ? "text-red-600"
+                  : lead.status === "pending"
+                    ? "text-yellow-600"
+                    : "text-gray-600"
             }`}
           >
             {lead.status.toUpperCase()}
@@ -235,8 +300,8 @@ Alamat mentah: ${cleanAddressValue}`;
       {/* FULLSCREEN MOBILE MODAL */}
       {showModal && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex flex-col">
-          <div className="bg-white dark:bg-gray-900 rounded-t-2xl p-5 overflow-y-auto h-full">
-            <div className="flex justify-between items-center mb-3 ">
+          <div className="bg-gray-50 dark:bg-gray-900 rounded-t-2xl p-5 overflow-y-auto h-full">
+            <div className="flex justify-between items-center ">
               <h2 className="text-lg font-bold dark:text-white">
                 📄 Detail Lead
               </h2>
@@ -248,13 +313,13 @@ Alamat mentah: ${cleanAddressValue}`;
               </button>
             </div>
 
-            <div className="space-y-3 text-sm dark:text-white">
+            <div className="text-sm dark:text-white">
               <div>
                 <label>Nama</label>
                 <input
                   value={nameValue}
                   onChange={(e) => setNameValue(e.target.value)}
-                  className="w-full border rounded px-3 py-2 mt-1 bg-gray-50 dark:bg-gray-800"
+                  className="w-full border rounded px-1 py-2 bg-gray-50 dark:bg-gray-800"
                 />
               </div>
               <div>
@@ -262,7 +327,7 @@ Alamat mentah: ${cleanAddressValue}`;
                 <input
                   value={whatsappValue}
                   onChange={(e) => setWhatsappValue(e.target.value)}
-                  className="w-full border rounded px-3 py-2 mt-1 bg-gray-50 dark:bg-gray-800"
+                  className="w-full border rounded px-1 py-2  bg-gray-50 dark:bg-gray-800"
                 />
                 {/* Tombol direct ke WhatsApp */}
                 {whatsappValue && (
@@ -270,19 +335,43 @@ Alamat mentah: ${cleanAddressValue}`;
                     href={`https://wa.me/${whatsappValue.replace(/\D/g, "")}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-block mt-2 text-xs text-green-600 underline"
+                    className="inline-block text-xs text-green-600 underline"
                   >
                     💬 Chat WA
                   </a>
                 )}
               </div>
+              {/* PRODUCT */}
               <div>
-                <label>Produk</label>
-                <input
-                  value={productTitleValue}
-                  onChange={(e) => setProductTitleValue(e.target.value)}
-                  className="w-full border rounded px-3 py-2 mt-1 bg-gray-50 dark:bg-gray-800"
-                />
+                <h3 className="font-bold text-sm mb-2">Product</h3>
+
+                {products.map((p) => (
+                  <div
+                    key={p.id}
+                    onClick={() => setSelectedProductId(p.id)}
+                    className={`border p-2 mb-2 rounded ${
+                      selectedProductId === p.id ? "bg-gray-200" : ""
+                    }`}
+                  >
+                    {p.title}
+                  </div>
+                ))}
+                {/* UPSELL */}
+                {selectedProduct?.upsells?.length > 0 && (
+                  <div>
+                    <h3 className="font-bold text-sm mt-4">Upsell</h3>
+
+                    <div onClick={() => setSelectedUpsellId("")}>
+                      ❌ No Upsell
+                    </div>
+
+                    {selectedProduct.upsells.map((u) => (
+                      <div key={u.id} onClick={() => setSelectedUpsellId(u.id)}>
+                        {u.title} (+{formatHargaSingkat(u.price)})
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
@@ -291,7 +380,7 @@ Alamat mentah: ${cleanAddressValue}`;
                     type="number"
                     value={priceValue}
                     onChange={(e) => setPriceValue(e.target.value)}
-                    className="w-full border rounded px-3 py-2 mt-1 bg-gray-50 dark:bg-gray-800"
+                    className="w-full border rounded px-2 py-2  bg-gray-50 dark:bg-gray-800"
                   />
                 </div>
                 <div>
@@ -300,7 +389,7 @@ Alamat mentah: ${cleanAddressValue}`;
                     type="number"
                     value={costProductValue}
                     onChange={(e) => setCostProductValue(e.target.value)}
-                    className="w-full border rounded px-3 py-2 mt-1 bg-gray-50 dark:bg-gray-800"
+                    className="w-full border rounded px-2 py-2  bg-gray-50 dark:bg-gray-800"
                   />
                 </div>
               </div>
@@ -310,17 +399,11 @@ Alamat mentah: ${cleanAddressValue}`;
                   value={cleanAddressValue}
                   onChange={(e) => setCleanAddressValue(e.target.value)}
                   rows={3}
-                  className="w-full border rounded px-3 py-2 mt-1 bg-gray-50 dark:bg-gray-800"
+                  className="w-full border rounded px-2 py-2  bg-gray-50 dark:bg-gray-800"
                 />
-                <button
-                  onClick={() => setShowAddressDetail(true)}
-                  className="text-xs text-blue-600 mt-1"
-                >
-                  📍 Lihat Detail
-                </button>
               </div>
 
-              <div className="mt-4">
+              <div>
                 <button
                   onClick={handleSave}
                   className="w-full bg-black text-white py-2 rounded-lg"
@@ -330,20 +413,23 @@ Alamat mentah: ${cleanAddressValue}`;
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-2 mt-4 dark:text-white">
-              {statusOptions.map(({ value, label }) => (
-                <button
-                  key={value}
-                  onClick={() => handleStatusChange(value)}
-                  className={`px-3 py-1 text-xs rounded-full border ${
-                    lead.status === value
-                      ? "bg-black text-white"
-                      : "border-gray-400"
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
+            <div className="mt-3">
+              <label className="text-xs font-semibold text-gray-500">
+                📦 Status
+              </label>
+              <select
+                value={lead.status}
+                onChange={(e) => handleStatusChange(e.target.value)}
+                className="w-full mt-1 px-3 py-2 text-xs rounded-lg 
+    border border-gray-300 dark:border-gray-700 
+    bg-gray-50 dark:bg-gray-800"
+              >
+                {statusOptions.map(({ value, label }) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="flex flex-wrap gap-2 mt-3 dark:text-white">
@@ -383,6 +469,34 @@ Alamat mentah: ${cleanAddressValue}`;
               >
                 ❌ Belum
               </button>
+            </div>
+
+            <div className="flex gap-2 mt-3 dark:text-white">
+              <div>
+                <p className="text-[10px] text-gray-400 mb-1">Bot Message</p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleMessageSentChange(true)}
+                    className={`px-3 py-1 text-xs font-bold rounded-full border ${
+                      messageSentValue
+                        ? "bg-green-600 text-white"
+                        : "border-gray-300 hover:bg-green-50"
+                    }`}
+                  >
+                    🟢
+                  </button>
+                  <button
+                    onClick={() => handleMessageSentChange(false)}
+                    className={`px-3 py-1 text-xs font-bold rounded-full border ${
+                      !messageSentValue
+                        ? "bg-red-600 text-white"
+                        : "border-gray-300 hover:bg-red-50"
+                    }`}
+                  >
+                    🔴
+                  </button>
+                </div>
+              </div>
             </div>
 
             <div className="flex justify-between items-center mt-6">

@@ -66,7 +66,7 @@ Khusus Kak aku kasih diskon 50% ya. Silakan tulis alamat lengkap kalau masih min
           hover:bg-gray-100 dark:hover:bg-gray-800 
           px-3 py-2 rounded-md transition 
           border border-gray-200 dark:border-gray-700
-          bg-white dark:bg-gray-900"
+          bg-gray-50 dark:bg-gray-900"
         onClick={() => setShowModal(true)}
       >
         <span className="text-xs text-gray-500 dark:text-gray-400">
@@ -106,7 +106,7 @@ Khusus Kak aku kasih diskon 50% ya. Silakan tulis alamat lengkap kalau masih min
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-900 w-full max-w-sm p-6 rounded-xl shadow-xl relative text-sm text-gray-900 dark:text-gray-200">
+          <div className="bg-gray-50 dark:bg-gray-900 w-full max-w-sm p-6 rounded-xl shadow-xl relative text-sm text-gray-900 dark:text-gray-200">
             <button
               onClick={() => setShowModal(false)}
               className="absolute top-3 right-4 text-gray-400 dark:text-gray-500 hover:text-gray-900 dark:hover:text-white text-xl transition"

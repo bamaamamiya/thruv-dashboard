@@ -148,7 +148,7 @@ const [start, end] = useMemo(
         {/* Input Form */}
         <form
           onSubmit={handleSubmit}
-          className="p-5 bg-white dark:bg-gray-800 shadow-lg rounded-2xl space-y-4"
+          className="p-5 bg-gray-50 dark:bg-gray-800 shadow-lg rounded-2xl space-y-4"
         >
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <input
@@ -181,7 +181,7 @@ const [start, end] = useMemo(
         </form>
 
         {/* Summary */}
-        <div className="p-5 bg-white dark:bg-gray-800 shadow-lg rounded-2xl">
+        <div className="p-5 bg-gray-50 dark:bg-gray-800 shadow-lg rounded-2xl">
           <h2 className="font-semibold text-xl text-gray-800 dark:text-gray-100 mb-3">
             Summary
           </h2>
@@ -216,7 +216,7 @@ const [start, end] = useMemo(
         </div>
 
         {/* Ads List */}
-        <div className="p-5 bg-white dark:bg-gray-800 shadow-lg rounded-2xl">
+        <div className="p-5 bg-gray-50 dark:bg-gray-800 shadow-lg rounded-2xl">
           <h2 className="font-semibold text-xl text-gray-800 dark:text-gray-100 mb-3">
             Entries
           </h2>
@@ -270,7 +270,7 @@ const [start, end] = useMemo(
                             type="number"
                             value={editValue}
                             onChange={(e) => setEditValue(e.target.value)}
-                            className="border dark:border-gray-600 p-1 rounded-lg w-24 bg-white dark:bg-gray-600 dark:text-white"
+                            className="border dark:border-gray-600 p-1 rounded-lg w-24 bg-gray-50 dark:bg-gray-600 dark:text-white"
                           />
                           <button
                             onClick={() => handleUpdate(ad.id)}

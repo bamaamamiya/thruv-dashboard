@@ -1,18 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { Sun, Moon } from "lucide-react";
+import { Sun, Moon, Search } from "lucide-react";
 import MobileSidebar from "./MobileSidebar";
 
 const Navbar = () => {
-  const router = useRouter();
   const [isThruvShop, setIsThruvShop] = useState(true);
-
-  // Dark mode state
   const [isDark, setIsDark] = useState(false);
+  const [search, setSearch] = useState("");
 
-  // Init dark mode from localStorage / system
   useEffect(() => {
     const saved = localStorage.getItem("theme");
     if (saved === "dark") {
@@ -50,86 +46,45 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="sticky top-0 z-30 bg-white dark:bg-black border-b border-gray-200 dark:border-gray-800 px-4 py-3 flex justify-between items-center shadow-sm">
-      {/* Left Nav */}
-      <div className="hidden md:flex">
-        <button
-          onClick={() => router.push("/")}
-          className="px-3 py-1.5 text-sm font-medium 
-          text-gray-700 dark:text-gray-200 
-          hover:text-black dark:hover:text-white 
-          hover:bg-gray-100 dark:hover:bg-gray-900 
-          rounded-md transition"
-        >
-          Dashboard
-        </button>
-        <button
-          onClick={() => router.push("/order")}
-          className="px-3 py-1.5 text-sm font-medium 
-          text-gray-700 dark:text-gray-200 
-          hover:text-black dark:hover:text-white 
-          hover:bg-gray-100 dark:hover:bg-gray-900 
-          rounded-md transition"
-        >
-          Orders
-        </button>
-        <button
-          onClick={() => router.push("/heat")}
-          className="px-3 py-1.5 text-sm font-medium 
-          text-gray-700 dark:text-gray-200 
-          hover:text-black dark:hover:text-white 
-          hover:bg-gray-100 dark:hover:bg-gray-900 
-          rounded-md transition"
-        >
-          Heat
-        </button>
-        <button
-          onClick={() => router.push("/ads")}
-          className="px-3 py-1.5 text-sm font-medium 
-          text-gray-700 dark:text-gray-200 
-          hover:text-black dark:hover:text-white 
-          hover:bg-gray-100 dark:hover:bg-gray-900 
-          rounded-md transition"
-        >
-          Ads
-        </button>
-        <button
-          onClick={() => router.push("/abandoned")}
-          className="px-3 py-1.5 text-sm font-medium 
-          text-gray-700 dark:text-gray-200 
-          hover:text-black dark:hover:text-white 
-          hover:bg-gray-100 dark:hover:bg-gray-900 
-          rounded-md transition"
-        >
-          Abandoned
-        </button>
-        {/* <button
-          onClick={() => router.push("/wa")}
-          className="px-3 py-1.5 text-sm font-medium 
-          text-gray-700 dark:text-gray-200 
-          hover:text-black dark:hover:text-white 
-          hover:bg-gray-100 dark:hover:bg-gray-900 
-          rounded-md transition"
-        >
-          WA
-        </button> */}
+    <nav className="sticky top-0 z-30 bg-gray-50 dark:bg-black border-b border-gray-200 dark:border-gray-800 px-4 py-3 flex items-center justify-between shadow-sm">
+
+      {/* LEFT: Search + Mobile Sidebar */}
+      <div className="flex items-center gap-3 w-full md:w-auto">
+
+        {/* Mobile Sidebar */}
+        <div className="md:hidden">
+          <MobileSidebar
+            isDark={isDark}
+            toggleDarkMode={toggleDarkMode}
+            isThruvShop={isThruvShop}
+            toggleStoreName={toggleStoreName}
+          />
+        </div>
+
+        {/* Search Bar */}
+        <div className="relative w-full md:w-80">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+
+          <input
+            type="text"
+            placeholder="Search order, name, phone..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-9 pr-3 py-2 text-sm rounded-md 
+            bg-gray-100 dark:bg-gray-900 
+            text-gray-800 dark:text-gray-200
+            border border-gray-200 dark:border-gray-700
+            focus:outline-none focus:ring-2 focus:ring-gray-400"
+          />
+        </div>
       </div>
 
-      {/* Mobile Sidebar Trigger */}
-      <MobileSidebar
-        isDark={isDark}
-        toggleDarkMode={toggleDarkMode}
-        isThruvShop={isThruvShop}
-        toggleStoreName={toggleStoreName}
-      />
-
-      {/* Right - Store Brand + Dark Mode Toggle */}
+      {/* RIGHT */}
       <div className="hidden md:flex items-center gap-2">
-        {/* Store brand toggle */}
+
         <div
           className="flex items-center gap-3 cursor-pointer select-none"
           onClick={toggleStoreName}
-          title="Toggle Store Name"
         >
           <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">
             {isThruvShop ? "Thruv" : "Store"}
@@ -142,13 +97,10 @@ const Navbar = () => {
           />
         </div>
 
-        {/* Dark Mode Toggle */}
         <button
           onClick={toggleDarkMode}
           className="p-1 rounded-md border border-gray-200 dark:border-gray-500 
-          hover:bg-gray-100 dark:hover:bg-gray-900 
-          transition"
-          title="Toggle Dark Mode"
+          hover:bg-gray-100 dark:hover:bg-gray-900 transition"
         >
           {isDark ? (
             <Sun className="w-5 h-5 text-white" />

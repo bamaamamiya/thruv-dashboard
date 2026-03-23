@@ -33,3 +33,15 @@ html {
 .react-calendar-heatmap .color-scale-4 {
   fill: #059669; /* hijau tua */
 }
+
+.react-datepicker__day--in-range {
+  background-color: #000 !important;
+  color: white !important;
+}
+
+.react-datepicker__day--range-start,
+.react-datepicker__day--range-end {
+  background-color: #111 !important;
+  color: white !important;
+  border-radius: 50% !important;
+}
