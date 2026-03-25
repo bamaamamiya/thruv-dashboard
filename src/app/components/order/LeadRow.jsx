@@ -51,9 +51,6 @@ export default function LeadRow({
   const [confirmationValue, setConfirmationValue] = useState(
     lead.confirmation || "belum",
   );
-  const [messageSentValue, setMessageSentValue] = useState(
-    lead.messageSent ?? false,
-  );
   const [selectedProductId, setSelectedProductId] = useState(
     lead.productId || "",
   );
@@ -265,7 +262,8 @@ Alamat mentah: ${cleanAddressValue}`;
     { value: "not", label: "🕓 Belum Dicek" },
     { value: "done", label: "📦 Resi Dicek" },
   ];
-
+  const isMessageSynced = lead.lastMessageState === lead.state;
+	const isMessageState = lead.state
   return (
     <>
       {/* Lead Row */}
@@ -546,7 +544,6 @@ Alamat mentah: ${cleanAddressValue}`;
               </button>
             </div>
 
-            {/* Status & Resi */}
             {/* STATUS ORDER */}
             <div className="mt-4">
               <label className="text-xs font-semibold text-gray-500">
@@ -626,7 +623,7 @@ Alamat mentah: ${cleanAddressValue}`;
                 </div>
 
                 {/* Message Sent */}
-                <div>
+                {/* <div>
                   <p className="text-[10px] text-gray-400 mb-1">Bot Message</p>
                   <div className="flex gap-2">
                     <button
@@ -650,6 +647,44 @@ Alamat mentah: ${cleanAddressValue}`;
                       🔴
                     </button>
                   </div>
+                </div> */}
+                <div>
+                  <p className="text-[10px] text-gray-400 mb-1">Bot Status</p>
+
+                  <div className="flex gap-2">
+                    <div
+                      className={`px-3 py-1 text-xs font-bold rounded-full border ${
+                        isMessageState
+                          ? "bg-green-600 text-white"
+                          : "bg-yellow-500 text-white"
+                      }`}
+                    >
+                      {isMessageState ? "✅ Sent" : "⏳ Pending"}
+                    </div>
+                  </div>
+
+                  <p className="text-[10px] text-gray-400 mt-1">
+                    state: {lead.state || "-"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-gray-400 mb-1">Bot state</p>
+
+                  <div className="flex gap-2">
+                    <div
+                      className={`px-3 py-1 text-xs font-bold rounded-full border ${
+                        isMessageSynced
+                          ? "bg-green-600 text-white"
+                          : "bg-yellow-500 text-white"
+                      }`}
+                    >
+                      {isMessageSynced ? "✅ Sent" : "⏳ Pending"}
+                    </div>
+                  </div>
+
+                  <p className="text-[10px] text-gray-400 mt-1">
+                    Last state: {lead.lastMessageState || "-"}
+                  </p>
                 </div>
               </div>
             </div>
