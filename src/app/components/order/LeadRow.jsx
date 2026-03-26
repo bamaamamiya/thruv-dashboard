@@ -32,70 +32,82 @@ export default function LeadRow({
   products,
 }) {
   const [showModal, setShowModal] = useState(false);
-  const [showAddressDetail, setShowAddressDetail] = useState(false);
+
+  // ----- LEAD FIELDS -----
   const [nameValue, setNameValue] = useState(lead.name || "");
   const [whatsappValue, setWhatsappValue] = useState(lead.whatsapp || "");
-  const [priceValue, setPriceValue] = useState(lead.price || "");
+  const [priceValue, setPriceValue] = useState(lead.price || 0);
   const [costProductValue, setCostProductValue] = useState(
-    lead.costProduct || "",
+    lead.costProduct || 0,
   );
   const [addressValue, setAddressValue] = useState(lead.address || "");
-  const [returnValue, setReturnValue] = useState(lead.rts || "");
   const [cleanAddressValue, setCleanAddressValue] = useState(
     lead.addressClean || "",
   );
   const [productTitleValue, setProductTitleValue] = useState(
     lead.productTitle || "",
   );
-  const [ongkirValue, setOngkirValue] = useState(lead.ongkir || "");
+  const [ongkirValue, setOngkirValue] = useState(lead.ongkir || 0);
+  const [returnValue, setReturnValue] = useState(lead.rts || 0);
   const [confirmationValue, setConfirmationValue] = useState(
     lead.confirmation || "belum",
   );
+
   const [selectedProductId, setSelectedProductId] = useState(
     lead.productId || "",
   );
+  const [selectedUpsellId, setSelectedUpsellId] = useState(lead.upsellId || "");
+  const [selectedUpsellSnapshot, setSelectedUpsellSnapshot] = useState(
+    lead.selectedUpsell || null,
+  );
+
+  const selectedProduct = products.find((p) => p.id === selectedProductId);
+
+  const [showAddressDetail, setShowAddressDetail] = useState(false);
   const [openProductId, setOpenProductId] = useState(null);
 
-  const [selectedUpsellId, setSelectedUpsellId] = useState(lead.upsellId || "");
-  const selectedProduct = products.find((p) => p.id === selectedProductId);
-  useEffect(() => {
-    if (!selectedProduct) return;
+  const [selectedUpsell, setSelectedUpsell] = useState(
+    lead.selectedUpsell || null,
+  );
 
-    // default (tanpa upsell)
-    setProductTitleValue(selectedProduct.title);
-    setPriceValue(selectedProduct.pricing.price);
-    setCostProductValue(selectedProduct.pricing.cost);
-
-    // reset upsell kalau ganti product
-    setSelectedUpsellId("");
-  }, [selectedProductId]);
-  // upsell
+  // ---- UPDATE PRODUCT & UPSSELL SNAPSHOT ----
   useEffect(() => {
     if (!selectedProduct) return;
 
     let price = selectedProduct.pricing.price;
-    let costProduct = selectedProduct.pricing.cost;
+    let cost = selectedProduct.pricing.cost;
     let title = selectedProduct.title;
+    let snapshot = null;
 
     if (selectedUpsellId) {
       const upsell = selectedProduct.upsells.find(
         (u) => u.id === selectedUpsellId,
       );
-
       if (upsell) {
         price += upsell.price;
-        costProduct += upsell.cost;
+        cost += upsell.cost;
         title = `${selectedProduct.title} + ${upsell.title}`;
+        snapshot = { ...upsell }; // snapshot add-on
       }
     }
 
     setProductTitleValue(title);
     setPriceValue(price);
-    setCostProductValue(costProduct);
+    setCostProductValue(cost);
+    setSelectedUpsellSnapshot(snapshot);
   }, [selectedProductId, selectedUpsellId]);
 
+  // ----- MODAL SCROLL LOCK -----
+  useEffect(() => {
+    document.body.style.overflow = showModal ? "hidden" : "auto";
+    return () => (document.body.style.overflow = "auto");
+  }, [showModal]);
+
   const isChecked = selectedLeads?.some((l) => l.id === lead.id);
-  const resolved = resolveProduct(lead, products);
+
+  const handleCheckboxChange = (e) => {
+    onSelect?.(lead, e.target.checked);
+  };
 
   // 🔒 Matikan scroll body saat modal terbuka
   useEffect(() => {
@@ -107,21 +119,17 @@ export default function LeadRow({
     return () => (document.body.style.overflow = "auto");
   }, [showModal]);
 
-  const handleCheckboxChange = (e) => {
-    const checked = e.target.checked;
-    onSelect?.(lead, checked);
-  };
-
   const handleSave = async () => {
     if (!priceValue || !costProductValue) {
       alert("Harga dan biaya produk tidak boleh kosong.");
       return;
     }
+
     try {
       await updateDoc(doc(db, "leads", lead.id), {
         productId: selectedProductId,
         upsellId: selectedUpsellId || null,
-
+        selectedUpsell: selectedUpsellSnapshot || null, // snapshot for history
         name: nameValue,
         whatsapp: whatsappValue,
         price: Number(priceValue),
@@ -131,12 +139,11 @@ export default function LeadRow({
         productTitle: productTitleValue,
         ongkir: Number(ongkirValue) || 0,
         rts: Number(returnValue) || 0,
-        status: lead.status,
-        resiCheck: lead.resiCheck || "not",
+        confirmation: confirmationValue,
       });
       setShowModal(false);
     } catch (err) {
-      console.error("Gagal update:", err);
+      console.error("Gagal update lead:", err);
       alert("Gagal menyimpan data.");
     }
   };
@@ -155,38 +162,22 @@ export default function LeadRow({
     [lead],
   );
 
-  const handleConfirmationChange = useCallback(
-    async (newConfirmation) => {
-      if (newConfirmation === lead.confirmation) return;
-      try {
-        await updateDoc(doc(db, "leads", lead.id), {
-          confirmation: newConfirmation,
-        });
-        lead.confirmation = newConfirmation;
-        setConfirmationValue(newConfirmation);
-      } catch (err) {
-        console.error("Gagal update konfirmasi:", err);
-        alert("Gagal update konfirmasi.");
-      }
-    },
-    [lead],
-  );
-
-  const handleMessageSentChange = useCallback(
-    async (newValue) => {
-      try {
-        await updateDoc(doc(db, "leads", lead.id), {
-          messageSent: newValue,
-        });
-        lead.messageSent = newValue;
-        setMessageSentValue(newValue);
-      } catch (err) {
-        console.error("Gagal update messageSent:", err);
-        alert("Gagal update messageSent.");
-      }
-    },
-    [lead],
-  );
+  // const handleConfirmationChange = useCallback(
+  //   async (newConfirmation) => {
+  //     if (newConfirmation === lead.confirmation) return;
+  //     try {
+  //       await updateDoc(doc(db, "leads", lead.id), {
+  //         confirmation: newConfirmation,
+  //       });
+  //       lead.confirmation = newConfirmation;
+  //       setConfirmationValue(newConfirmation);
+  //     } catch (err) {
+  //       console.error("Gagal update konfirmasi:", err);
+  //       alert("Gagal update konfirmasi.");
+  //     }
+  //   },
+  //   [lead],
+  // );
 
   const handleResiCheckChange = useCallback(
     async (newResiCheck) => {
@@ -263,7 +254,7 @@ Alamat mentah: ${cleanAddressValue}`;
     { value: "done", label: "📦 Resi Dicek" },
   ];
   const isMessageSynced = lead.lastMessageState === lead.state;
-	const isMessageState = lead.state
+  const isMessageState = lead.state;
   return (
     <>
       {/* Lead Row */}
