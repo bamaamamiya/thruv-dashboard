@@ -60,15 +60,9 @@ export default function LeadRow({
   const [selectedUpsellSnapshot, setSelectedUpsellSnapshot] = useState(
     lead.selectedUpsell || null,
   );
+  const [showAddressDetail, setShowAddressDetail] = useState(false);
 
   const selectedProduct = products.find((p) => p.id === selectedProductId);
-
-  const [showAddressDetail, setShowAddressDetail] = useState(false);
-  const [openProductId, setOpenProductId] = useState(null);
-
-  const [selectedUpsell, setSelectedUpsell] = useState(
-    lead.selectedUpsell || null,
-  );
 
   // ---- UPDATE PRODUCT & UPSSELL SNAPSHOT ----
   useEffect(() => {
@@ -95,7 +89,7 @@ export default function LeadRow({
     setPriceValue(price);
     setCostProductValue(cost);
     setSelectedUpsellSnapshot(snapshot);
-  }, [selectedProductId, selectedUpsellId]);
+  }, [selectedProductId, selectedUpsellId, selectedProduct]);
 
   // ----- MODAL SCROLL LOCK -----
   useEffect(() => {
@@ -134,7 +128,6 @@ export default function LeadRow({
         whatsapp: whatsappValue,
         price: Number(priceValue),
         costProduct: Number(costProductValue),
-        address: addressValue,
         addressClean: cleanAddressValue,
         productTitle: productTitleValue,
         ongkir: Number(ongkirValue) || 0,
@@ -162,22 +155,66 @@ export default function LeadRow({
     [lead],
   );
 
-  // const handleConfirmationChange = useCallback(
-  //   async (newConfirmation) => {
-  //     if (newConfirmation === lead.confirmation) return;
-  //     try {
-  //       await updateDoc(doc(db, "leads", lead.id), {
-  //         confirmation: newConfirmation,
-  //       });
-  //       lead.confirmation = newConfirmation;
-  //       setConfirmationValue(newConfirmation);
-  //     } catch (err) {
-  //       console.error("Gagal update konfirmasi:", err);
-  //       alert("Gagal update konfirmasi.");
-  //     }
-  //   },
-  //   [lead],
-  // );
+	const handleStateChange = useCallback(
+  async (newState) => {
+    if (newState === lead.state) return;
+
+    let queued = false;
+
+    // 🔥 hanya trigger kalau state butuh kirim message
+    if (["WAITING_CONFIRMATION", "WAITING_UPSELL"].includes(newState)) {
+      queued = true;
+    }
+
+    try {
+      await updateDoc(doc(db, "leads", lead.id), {
+        state: newState,
+        queuedForMessage: queued,
+        nextSendAt: new Date(),
+      });
+    } catch (err) {
+      console.error("Gagal update state:", err);
+      alert("Gagal update state.");
+    }
+  },
+  [lead],
+);
+
+  const handleConfirmationChange = useCallback(
+    async (newConfirmation) => {
+      if (newConfirmation === confirmationValue) return;
+
+      let newState = lead.state;
+
+      // 🔥 mapping logic
+      if (newConfirmation === "sudah") {
+        newState = "WAITING_UPSELL";
+      } else if (newConfirmation === "belum") {
+        newState = "WAITING_CONFIRMATION";
+      }
+
+      try {
+        await updateDoc(doc(db, "leads", lead.id), {
+          confirmation: newConfirmation,
+          state: newState,
+
+          // 🔥 trigger ulang worker
+          queuedForMessage: true,
+          nextSendAt: new Date(),
+        });
+
+        setConfirmationValue(newConfirmation);
+      } catch (err) {
+        console.error("Gagal update konfirmasi:", err);
+        alert("Gagal update konfirmasi.");
+      }
+    },
+    [lead, confirmationValue],
+  );
+
+  useEffect(() => {
+    setConfirmationValue(lead.confirmation || "belum");
+  }, [lead.confirmation]);
 
   const handleResiCheckChange = useCallback(
     async (newResiCheck) => {
@@ -255,6 +292,8 @@ Alamat mentah: ${cleanAddressValue}`;
   ];
   const isMessageSynced = lead.lastMessageState === lead.state;
   const isMessageState = lead.state;
+  const isMessagePending = lead.queuedForMessage;
+	
   return (
     <>
       {/* Lead Row */}
@@ -589,26 +628,28 @@ Alamat mentah: ${cleanAddressValue}`;
                   <p className="text-[10px] text-gray-400 mb-1">
                     Customer Confirm
                   </p>
+
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleConfirmationChange("sudah")}
-                      className={`px-3 py-1 text-xs font-bold rounded-full border ${
+                      className={`px-3 py-1 text-xs font-bold rounded-full border transition ${
                         confirmationValue === "sudah"
-                          ? "bg-green-600 text-white"
+                          ? "bg-green-600 text-white border-green-600"
                           : "border-gray-300 hover:bg-green-50"
                       }`}
                     >
-                      ✅
+                      ✅ Sudah
                     </button>
+
                     <button
                       onClick={() => handleConfirmationChange("belum")}
-                      className={`px-3 py-1 text-xs font-bold rounded-full border ${
+                      className={`px-3 py-1 text-xs font-bold rounded-full border transition ${
                         confirmationValue === "belum"
-                          ? "bg-red-600 text-white"
+                          ? "bg-red-600 text-white border-red-600"
                           : "border-gray-300 hover:bg-red-50"
                       }`}
                     >
-                      ❌
+                      ❌ Belum
                     </button>
                   </div>
                 </div>
@@ -645,12 +686,12 @@ Alamat mentah: ${cleanAddressValue}`;
                   <div className="flex gap-2">
                     <div
                       className={`px-3 py-1 text-xs font-bold rounded-full border ${
-                        isMessageState
-                          ? "bg-green-600 text-white"
-                          : "bg-yellow-500 text-white"
+                        isMessagePending
+                          ? "bg-yellow-500 text-white"
+                          : "bg-green-600 text-white"
                       }`}
                     >
-                      {isMessageState ? "✅ Sent" : "⏳ Pending"}
+                      {isMessagePending ? "⏳ Pending" : "✅ Idle"}
                     </div>
                   </div>
 
