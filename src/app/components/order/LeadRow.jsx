@@ -133,6 +133,7 @@ export default function LeadRow({
         ongkir: Number(ongkirValue) || 0,
         rts: Number(returnValue) || 0,
         confirmation: confirmationValue,
+        queuedForMessage: false, // 🚫 jangan auto kirim ulang
       });
       setShowModal(false);
     } catch (err) {
@@ -155,30 +156,30 @@ export default function LeadRow({
     [lead],
   );
 
-	const handleStateChange = useCallback(
-  async (newState) => {
-    if (newState === lead.state) return;
+  const handleStateChange = useCallback(
+    async (newState) => {
+      if (newState === lead.state) return;
 
-    let queued = false;
+      let queued = false;
 
-    // 🔥 hanya trigger kalau state butuh kirim message
-    if (["WAITING_CONFIRMATION", "WAITING_UPSELL"].includes(newState)) {
-      queued = true;
-    }
+      // 🔥 hanya trigger kalau state butuh kirim message
+      if (["WAITING_CONFIRMATION", "WAITING_UPSELL"].includes(newState)) {
+        queued = true;
+      }
 
-    try {
-      await updateDoc(doc(db, "leads", lead.id), {
-        state: newState,
-        queuedForMessage: queued,
-        nextSendAt: new Date(),
-      });
-    } catch (err) {
-      console.error("Gagal update state:", err);
-      alert("Gagal update state.");
-    }
-  },
-  [lead],
-);
+      try {
+        await updateDoc(doc(db, "leads", lead.id), {
+          state: newState,
+          queuedForMessage: queued,
+          nextSendAt: new Date(),
+        });
+      } catch (err) {
+        console.error("Gagal update state:", err);
+        alert("Gagal update state.");
+      }
+    },
+    [lead],
+  );
 
   const handleConfirmationChange = useCallback(
     async (newConfirmation) => {
@@ -290,10 +291,15 @@ Alamat mentah: ${cleanAddressValue}`;
     { value: "not", label: "🕓 Belum Dicek" },
     { value: "done", label: "📦 Resi Dicek" },
   ];
+  const stateOptions = [
+    { value: "WAITING_CONFIRMATION", label: "🟡 Waiting Confirmation" },
+    { value: "WAITING_UPSELL", label: "🟠 Waiting Upsell" },
+    { value: "DONE", label: "✅ Done" },
+  ];
   const isMessageSynced = lead.lastMessageState === lead.state;
   const isMessageState = lead.state;
   const isMessagePending = lead.queuedForMessage;
-	
+
   return (
     <>
       {/* Lead Row */}
@@ -617,107 +623,70 @@ Alamat mentah: ${cleanAddressValue}`;
             </div>
 
             {/* COMMUNICATION */}
-            <div className="mt-4">
-              <label className="text-xs font-semibold text-gray-500">
-                💬 Communication
-              </label>
+            <div className="mt-4 space-y-3">
+              {/* Customer Confirm */}
+              <div>
+                <p className="text-xs text-gray-500 mb-1">Customer Confirm</p>
 
-              <div className="flex flex-wrap gap-4 mt-2">
-                {/* Confirmation */}
-                <div>
-                  <p className="text-[10px] text-gray-400 mb-1">
-                    Customer Confirm
-                  </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleConfirmationChange("sudah")}
+                    className={`px-3 py-1 text-xs rounded-md border ${
+                      confirmationValue === "sudah"
+                        ? "bg-green-600 text-white border-green-600"
+                        : "border-gray-300 hover:bg-gray-100"
+                    }`}
+                  >
+                    ✅ Sudah
+                  </button>
 
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleConfirmationChange("sudah")}
-                      className={`px-3 py-1 text-xs font-bold rounded-full border transition ${
-                        confirmationValue === "sudah"
-                          ? "bg-green-600 text-white border-green-600"
-                          : "border-gray-300 hover:bg-green-50"
-                      }`}
-                    >
-                      ✅ Sudah
-                    </button>
+                  <button
+                    onClick={() => handleConfirmationChange("belum")}
+                    className={`px-3 py-1 text-xs rounded-md border ${
+                      confirmationValue === "belum"
+                        ? "bg-red-600 text-white border-red-600"
+                        : "border-gray-300 hover:bg-gray-100"
+                    }`}
+                  >
+                    ❌ Belum
+                  </button>
+                </div>
+              </div>
 
-                    <button
-                      onClick={() => handleConfirmationChange("belum")}
-                      className={`px-3 py-1 text-xs font-bold rounded-full border transition ${
-                        confirmationValue === "belum"
-                          ? "bg-red-600 text-white border-red-600"
-                          : "border-gray-300 hover:bg-red-50"
-                      }`}
-                    >
-                      ❌ Belum
-                    </button>
-                  </div>
+              {/* Bot State */}
+              <div>
+                <p className="text-xs text-gray-500 mb-1">Bot State</p>
+
+                <select
+                  value={lead.state || ""}
+                  onChange={(e) => handleStateChange(e.target.value)}
+                  className="w-full px-2 py-1 text-xs rounded-md border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800"
+                >
+                  {stateOptions.map(({ value, label }) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Message Sync */}
+              <div>
+                <p className="text-xs text-gray-500 mb-1">Message Sync</p>
+
+                <div
+                  className={`inline-block px-3 py-1 text-xs rounded-md ${
+                    isMessageSynced
+                      ? "bg-green-600 text-white"
+                      : "bg-yellow-500 text-white"
+                  }`}
+                >
+                  {isMessageSynced ? "✅ Sent" : "⏳ Pending"}
                 </div>
 
-                {/* Message Sent */}
-                {/* <div>
-                  <p className="text-[10px] text-gray-400 mb-1">Bot Message</p>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleMessageSentChange(true)}
-                      className={`px-3 py-1 text-xs font-bold rounded-full border ${
-                        messageSentValue
-                          ? "bg-green-600 text-white"
-                          : "border-gray-300 hover:bg-green-50"
-                      }`}
-                    >
-                      🟢
-                    </button>
-                    <button
-                      onClick={() => handleMessageSentChange(false)}
-                      className={`px-3 py-1 text-xs font-bold rounded-full border ${
-                        !messageSentValue
-                          ? "bg-red-600 text-white"
-                          : "border-gray-300 hover:bg-red-50"
-                      }`}
-                    >
-                      🔴
-                    </button>
-                  </div>
-                </div> */}
-                <div>
-                  <p className="text-[10px] text-gray-400 mb-1">Bot Status</p>
-
-                  <div className="flex gap-2">
-                    <div
-                      className={`px-3 py-1 text-xs font-bold rounded-full border ${
-                        isMessagePending
-                          ? "bg-yellow-500 text-white"
-                          : "bg-green-600 text-white"
-                      }`}
-                    >
-                      {isMessagePending ? "⏳ Pending" : "✅ Idle"}
-                    </div>
-                  </div>
-
-                  <p className="text-[10px] text-gray-400 mt-1">
-                    state: {lead.state || "-"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-[10px] text-gray-400 mb-1">Bot state</p>
-
-                  <div className="flex gap-2">
-                    <div
-                      className={`px-3 py-1 text-xs font-bold rounded-full border ${
-                        isMessageSynced
-                          ? "bg-green-600 text-white"
-                          : "bg-yellow-500 text-white"
-                      }`}
-                    >
-                      {isMessageSynced ? "✅ Sent" : "⏳ Pending"}
-                    </div>
-                  </div>
-
-                  <p className="text-[10px] text-gray-400 mt-1">
-                    Last state: {lead.lastMessageState || "-"}
-                  </p>
-                </div>
+                <p className="text-[10px] text-gray-400 mt-1">
+                  Last: {lead.lastMessageState || "-"}
+                </p>
               </div>
             </div>
 
