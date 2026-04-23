@@ -40,11 +40,11 @@ export default function DashboardPage() {
     if (!user) return;
 
     const unsubLeads = onSnapshot(collection(db, "leads"), (snapshot) =>
-      setLeads(snapshot.docs.map((d) => ({ id: d.id, ...d.data() })))
+      setLeads(snapshot.docs.map((d) => ({ id: d.id, ...d.data() }))),
     );
 
     const unsubAds = onSnapshot(collection(db, "adSpends"), (snapshot) =>
-      setAds(snapshot.docs.map((d) => ({ id: d.id, ...d.data() })))
+      setAds(snapshot.docs.map((d) => ({ id: d.id, ...d.data() }))),
     );
 
     return () => {
@@ -67,31 +67,36 @@ export default function DashboardPage() {
   const filteredLeads = filterLeadsByDate(leads, start, end);
   const filteredAds = filterAdsByDate(ads, start, end);
   const previousSummary = {};
+  const allLeads = filteredLeads;
+  const confirmedLeads = filteredLeads.filter(
+    (l) => l.confirmation === "sudah",
+  );
+  const pendingLeads = filteredLeads.filter((l) => l.confirmation !== "sudah");
 
   // 🔹 Summaries
   const totalAdSpend = calculateTotalAdSpend(filteredAds);
   const uniqueCustomers = new Set(filteredLeads.map((l) => l.phone || l.email))
     .size;
+
+  // ❗ kirim SEMUA leads (bukan confirmed doang)
+
   const summary = calculateSummary(
     filteredLeads,
     totalAdSpend,
     uniqueCustomers,
-    0
+    0,
   );
 
   const chartData = generateChartData(
     filteredLeads,
     selectedFilter,
     start,
-    end
+    end,
   );
   const roas =
     totalAdSpend > 0
       ? Number((summary.totalSales / totalAdSpend).toFixed(2))
       : 0;
-  console.log("RTS Orders:", summary.rtsOrders);
-  console.log("RTS %:", summary.rtsPercentage);
-  
 
   // 🔹 Metric list
   const metricGroups = [
@@ -196,7 +201,6 @@ export default function DashboardPage() {
           <LeadsChart data={chartData} />
           <LeadsStatusChart data={chartData} />
         </div>
-				
 
         {/* Metrics Grid */}
         {/* Metrics Section by Category */}

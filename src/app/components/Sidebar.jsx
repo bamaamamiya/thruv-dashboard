@@ -7,7 +7,8 @@ import {
   Home,
   ShoppingCart,
   BarChart3,
-	Package,
+  Package,
+  Wallet,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -77,6 +78,14 @@ export default function Sidebar() {
         >
           <BarChart3 size={18} />
           Ads
+        </Link>
+
+        <Link
+          href="/cashflow"
+          className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition text-gray-700 dark:text-gray-300"
+        >
+          <Wallet size={18} />
+          Cashflow
         </Link>
       </nav>
     </div>

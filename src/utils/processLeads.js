@@ -49,26 +49,37 @@ export const calculateSummary = (
   totalCustomers = 0,
   monthlyExpenses = 0
 ) => {
+  // 🔹 STATUS GROUPING (single source of truth)
   const completed = leads.filter((l) => l.status === "complete");
   const pending = leads.filter((l) => l.status === "pending");
   const returns = leads.filter((l) => l.status === "rts");
-	
+
   const totalOrders = leads.length;
 
-  // 🔹 Data dasar
-  const totalSales = completed.reduce((s, l) => s + (l.price || 0), 0);
-  const totalPendingValue = pending.reduce((s, l) => s + (l.price || 0), 0);
-  const totalCost = completed.reduce((s, l) => s + (l.costProduct || 0), 0);
-  const pendingCost = pending.reduce((s, l) => s + (l.costProduct || 0), 0);
-  const totalReturnToSenderCost = returns.reduce(
-    (s, l) => s + Number(l.rts || 0),
+  // 🔹 SAFE NUMBER HELPER
+  const safe = (num) => Number(num || 0);
+
+  // 🔹 DATA DASAR
+  const totalSales = completed.reduce((s, l) => s + safe(l.price), 0);
+  const totalPendingValue = pending.reduce((s, l) => s + safe(l.price), 0);
+
+  const totalCost = completed.reduce(
+    (s, l) => s + safe(l.costProduct),
+    0
+  );
+  const pendingCost = pending.reduce(
+    (s, l) => s + safe(l.costProduct),
     0
   );
 
-  // 🔹 Gross Profit (tanpa ads)
+  const totalReturnToSenderCost = returns.reduce(
+    (s, l) => s + safe(l.rts),
+    0
+  );
+
+  // 🔹 PROFIT
   const grossProfit = totalSales - totalCost;
 
-  // 🔹 Profit real dan proyeksi
   const netProfitReal =
     totalSales -
     totalCost -
@@ -85,51 +96,76 @@ export const calculateSummary = (
     totalReturnToSenderCost -
     monthlyExpenses;
 
-  // 🔹 Pending profit
-  const netPendingProfit =
-    totalPendingValue - pendingCost - monthlyExpenses * 0.1;
+  // 🔹 PENDING PROFIT
   const pendingProfit = totalPendingValue - pendingCost;
+  const netPendingProfit =
+    pendingProfit - monthlyExpenses * 0.1;
 
-  // 🔹 Metric tambahan
+  // 🔹 METRICS
   const avgOrderValue =
     completed.length > 0 ? totalSales / completed.length : 0;
+
+  // ❗ CAC harus pakai COMPLETE (biar realistis)
   const cac =
-    leads.length > 0 ? totalAdSpend / (completed.length + pending.length) : 0;
-  const ltgpToCac = cac > 0 ? Number((avgOrderValue / cac).toFixed(2)) : 0;
+    completed.length > 0
+      ? totalAdSpend / completed.length
+      : 0;
+
+  const ltgpToCac =
+    cac > 0 ? Number((avgOrderValue / cac).toFixed(2)) : 0;
 
   const rtsOrders = returns.length;
-  const rtsPercentage =
-    totalOrders > 0 ? Number(((rtsOrders / totalOrders) * 100).toFixed(2)) : 0;
 
-  // 🔹 Persentase
+  const rtsPercentage =
+    totalOrders > 0
+      ? Number(((rtsOrders / totalOrders) * 100).toFixed(2))
+      : 0;
+
+  // 🔹 RATIOS
   const grossMargin =
-    totalSales > 0 ? Math.round((grossProfit / totalSales) * 100) : 0;
+    totalSales > 0
+      ? Math.round((grossProfit / totalSales) * 100)
+      : 0;
+
   const profitMargin =
-    totalSales > 0 ? Math.round((netProfitReal / totalSales) * 100) : 0;
+    totalSales > 0
+      ? Math.round((netProfitReal / totalSales) * 100)
+      : 0;
+
   const conversionRate =
-    leads.length > 0 ? Math.round((completed.length / leads.length) * 100) : 0;
+    totalOrders > 0
+      ? Math.round((completed.length / totalOrders) * 100)
+      : 0;
 
   return {
     totalOrders,
     completedOrders: completed.length,
     pendingOrders: pending.length,
+
     totalSales,
     totalPendingValue,
+
     totalCost,
     pendingCost,
+
     totalAdSpend,
     totalReturnToSenderCost,
+
     grossProfit,
-    grossMargin,
-    profitMargin,
     netProfitReal,
     netProfitProjected,
+
     pendingProfit,
     netPendingProfit,
+
     avgOrderValue,
     cac,
     ltgpToCac,
+
+    grossMargin,
+    profitMargin,
     conversionRate,
+
     rtsOrders,
     rtsPercentage,
   };
