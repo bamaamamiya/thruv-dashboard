@@ -1,7 +1,13 @@
 "use client";
+import React, { useEffect, useState, useMemo } from "react";
+import {
+  collection,
+  onSnapshot,
+  query,
+  orderBy,
+  getDocs,
+} from "firebase/firestore";
 
-import { useEffect, useState } from "react";
-import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
 import { db } from "@/lib/firebaseClient";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFileCsv, faFileExcel } from "@fortawesome/free-solid-svg-icons";
@@ -11,34 +17,28 @@ import LeadRowMobile from "@/app/components/order/LeadRowMobile";
 
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { startOfDay, endOfDay } from "date-fns";
-
-import * as XLSX from "xlsx";
-import { saveAs } from "file-saver";
-
-import { FILTER_OPTIONS, getDateRange } from "@/utils/dateFilters"; // sesuaikan path
-import {
-  filterLeadsByDate,
-  calculateSummary,
-  generateChartData,
-  filterAdsByDate,
-  calculateTotalAdSpend,
-} from "@/utils/processLeads";
-
+import { getDateRange, FILTER_OPTIONS } from "@/utils/dateFilters";
+import { calculateSummary } from "@/utils/processLeads";
 export default function LeadsDashboard() {
   const [leads, setLeads] = useState([]);
-  const [copiedId, setCopiedId] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
+
+  const [copiedId, setCopiedId] = useState(null);
+
   const [selectedStatus, setSelectedStatus] = useState("pending");
-  const [selectedDate, setSelectedDate] = useState(null);
-  const [selectedLeads, setSelectedLeads] = useState([]);
-  const [showExportModal, setShowExportModal] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState("week");
   const [customRange, setCustomRange] = useState([null, null]);
 
-  const [startDate, endDate] = getDateRange(selectedFilter, customRange);
+  const [selectedLeads, setSelectedLeads] = useState([]);
+  const [showExportModal, setShowExportModal] = useState(false);
+
+  const [startDate, endDate] = useMemo(
+    () => getDateRange(selectedFilter, customRange),
+    [selectedFilter, customRange],
+  );
 
   const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const q = query(collection(db, "products"));
@@ -55,18 +55,32 @@ export default function LeadsDashboard() {
     return () => unsubscribe();
   }, []);
 
+  // 📦 FETCH ON FILTER CHANGE (GETDOCS ONLY)
   useEffect(() => {
-    const q = query(collection(db, "leads"), orderBy("createdAt", "desc"));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setLeads(data);
-    });
-    return () => unsubscribe();
-  }, []);
+    const fetchLeads = async () => {
+      setLoading(true);
 
+      try {
+        const q = query(collection(db, "leads"));
+        const snap = await getDocs(q);
+
+        const data = snap.docs.map((d) => ({
+          id: d.id,
+          ...d.data(),
+        }));
+
+        setLeads(data);
+      } catch (err) {
+        console.error(err);
+      }
+
+      setLoading(false);
+    };
+
+    fetchLeads();
+  }, [selectedFilter, customRange]);
+
+  // 📱 mobile detect
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 640);
     handleResize();
@@ -74,25 +88,38 @@ export default function LeadsDashboard() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const filteredLeads = leads.filter((lead) => {
-    const matchStatus =
-      selectedStatus === "Semua" || lead.status === selectedStatus;
+  // 🧠 FILTER LOGIC
+  const filteredLeads = useMemo(() => {
+    return leads.filter((lead) => {
+      const matchStatus =
+        selectedStatus === "Semua" || lead.status === selectedStatus;
 
-    const leadTime = lead.createdAt?.seconds
-      ? lead.createdAt.seconds * 1000
-      : null;
+      const time = lead.createdAt?.seconds
+        ? lead.createdAt.seconds * 1000
+        : null;
 
-    const matchDate =
-      (!startDate && !endDate) ||
-      (leadTime &&
-        leadTime >= startDate.getTime() &&
-        leadTime <= endDate.getTime());
+      const matchDate =
+        (!startDate && !endDate) ||
+        (time && time >= startDate?.getTime() && time <= endDate?.getTime());
 
-    return matchStatus && matchDate;
-  });
+      return matchStatus && matchDate;
+    });
+  }, [leads, selectedStatus, startDate, endDate]);
+
   const statusOptions = ["Semua", "pending", "complete", "cancel", "rts"];
 
-  const summary = calculateSummary(filteredLeads, 0);
+  // 📊 SUMMARY (FIXED)
+  const summary = useMemo(() => {
+    return calculateSummary(filteredLeads, 0); // masih 0 kalau belum ada adSpend source
+  }, [filteredLeads]);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        Loading leads...
+      </div>
+    );
+  }
 
   const handleSelectLead = (lead, isChecked) => {
     setSelectedLeads((prev) => {
