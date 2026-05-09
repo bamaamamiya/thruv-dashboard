@@ -18,7 +18,7 @@ import { Plus, Edit2, Trash2, Save, X } from "lucide-react";
 import FilterBar from "@/app/components/analytics/FilterBar";
 import { getDateRange, isDateInRange } from "@/utils/dateFilters";
 import { useMemo } from "react"; // tambahkan import di atas
-
+import { Timestamp } from "firebase/firestore";
 export default function AdsPage() {
   const [platform, setPlatform] = useState("Facebook Ads");
   const [date, setDate] = useState(dayjs().format("YYYY-MM-DD"));
@@ -33,11 +33,11 @@ export default function AdsPage() {
   const [customRange, setCustomRange] = useState([new Date(), new Date()]);
 
   // Dapatkan rentang tanggal dari filter bar
-  
-const [start, end] = useMemo(
-  () => getDateRange(selectedFilter, customRange),
-  [selectedFilter, customRange]
-);
+
+  const [start, end] = useMemo(
+    () => getDateRange(selectedFilter, customRange),
+    [selectedFilter, customRange],
+  );
 
   // --- LISTEN FIRESTORE: adSpends + leads ---
   useEffect(() => {
@@ -59,7 +59,7 @@ const [start, end] = useMemo(
         const q = query(
           collection(db, "leads"),
           where("createdAt", ">=", startOfDay),
-          where("createdAt", "<=", endOfDay)
+          where("createdAt", "<=", endOfDay),
         );
         const snap = await getDocs(q);
 
@@ -94,7 +94,7 @@ const [start, end] = useMemo(
   // --- COMPUTATIONS ---
   const totalAdSpend = filteredAds.reduce(
     (sum, a) => sum + (a.adSpend || 0),
-    0
+    0,
   );
 
   const totalOrders = filteredAds.reduce((sum, a) => {
@@ -111,6 +111,7 @@ const [start, end] = useMemo(
       platform,
       date,
       adSpend: Number(adSpend),
+      createdAt: Timestamp.fromDate(new Date(date)),
     });
     setAdSpend("");
   };

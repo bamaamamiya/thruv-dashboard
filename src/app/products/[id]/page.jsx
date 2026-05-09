@@ -10,7 +10,7 @@ import {
   Timestamp,
 } from "firebase/firestore";
 import { useParams } from "next/navigation";
-import { X } from "lucide-react";
+import { X, CheckCircle2, XCircle } from "lucide-react";
 
 export default function EditProductPage() {
   const { id } = useParams();
@@ -25,6 +25,7 @@ export default function EditProductPage() {
     price: "",
     cost: "",
     upsells: [],
+    upsellEnabled: false,
   });
 
   const productRef = doc(db, "products", id);
@@ -47,6 +48,7 @@ export default function EditProductPage() {
           price: u.price || "",
           cost: u.cost || "",
         })),
+        upsellEnabled: data.upsellEnabled ?? false,
       });
 
       setImages(data.images || []);
@@ -62,6 +64,8 @@ export default function EditProductPage() {
   };
 
   const handleAddUpsell = () => {
+    if (!form.upsellEnabled) return;
+
     setForm({
       ...form,
       upsells: [
@@ -72,6 +76,8 @@ export default function EditProductPage() {
   };
 
   const handleUpsellChange = (index, field, value) => {
+    if (!form.upsellEnabled) return;
+
     const updated = [...form.upsells];
     updated[index][field] = value;
     setForm({ ...form, upsells: updated });
@@ -101,8 +107,6 @@ export default function EditProductPage() {
 
     setLoading(true);
 
-		
-
     try {
       const newId = form.id;
 
@@ -120,6 +124,7 @@ export default function EditProductPage() {
           price: Number(u.price),
           cost: Number(u.cost),
         })),
+        upsellEnabled: form.upsellEnabled || false,
         images: images,
         updatedAt: Timestamp.now(),
       };
@@ -145,17 +150,19 @@ export default function EditProductPage() {
     <div className="p-6 max-w-xl mx-auto">
       <h1 className="text-xl font-semibold mb-6">Edit Product</h1>
 
-      <div className="bg-white p-6 rounded-2xl shadow grid gap-4">
-        
+      <div className="bg-white p-6 rounded-2xl shadow grid gap-6">
         {/* IMAGES */}
         <div>
           <label className="text-xs text-gray-500">
-            Gambar produk (untuk tampilan ke customer)
+            Gambar produk
           </label>
 
           <div className="flex gap-3 mt-2 flex-wrap">
             {images.map((img, index) => (
-              <div key={index} className="w-20 h-20 relative border rounded-xl overflow-hidden">
+              <div
+                key={index}
+                className="w-20 h-20 relative border rounded-xl overflow-hidden"
+              >
                 <img src={img} className="w-full h-full object-cover" />
                 <button
                   onClick={() => handleRemoveImage(index)}
@@ -175,122 +182,193 @@ export default function EditProductPage() {
               onChange={(e) => setImageUrlInput(e.target.value)}
               className="border p-2 rounded w-full"
             />
-            <button onClick={handleAddImage} className="bg-black text-white px-3 rounded">
+            <button
+              onClick={handleAddImage}
+              className="bg-black text-white px-3 rounded"
+            >
               Add
             </button>
           </div>
         </div>
 
-        {/* ID */}
+        {/* BASIC INFO */}
         <div>
-          <label className="text-xs text-gray-500">
-            Product ID (unik, dipakai untuk database & automation)
-          </label>
           <input
             name="id"
-            placeholder="Contoh: cctv-01"
+            placeholder="Product ID"
             value={form.id}
             onChange={handleChange}
-            className="border p-2 rounded w-full"
+            className="border p-2 rounded w-full mb-2"
           />
-        </div>
 
-        {/* TITLE */}
-        <div>
-          <label className="text-xs text-gray-500">
-            Nama produk (yang dilihat customer)
-          </label>
           <input
             name="title"
-            placeholder="Contoh: CCTV Wireless HD"
+            placeholder="Product Title"
             value={form.title}
             onChange={handleChange}
-            className="border p-2 rounded w-full"
+            className="border p-2 rounded w-full mb-2"
           />
-        </div>
 
-        {/* PRICE */}
-        <div>
-          <label className="text-xs text-gray-500">
-            Harga jual ke customer
-          </label>
           <input
             name="price"
             type="number"
-            placeholder="Contoh: 150000"
+            placeholder="Price"
             value={form.price}
             onChange={handleChange}
-            className="border p-2 rounded w-full"
+            className="border p-2 rounded w-full mb-2"
           />
-        </div>
 
-        {/* COST */}
-        <div>
-          <label className="text-xs text-gray-500">
-            Modal / harga dari supplier
-          </label>
           <input
             name="cost"
             type="number"
-            placeholder="Contoh: 80000"
+            placeholder="Cost"
             value={form.cost}
             onChange={handleChange}
             className="border p-2 rounded w-full"
           />
         </div>
 
-        {/* UPSELL */}
-        <div>
-          <h2 className="text-sm font-semibold">Upsells</h2>
+        {/* 🔥 UPSSELL SETTINGS */}
+        <div className="border rounded-2xl p-4 bg-gray-50">
+          <h2 className="text-sm font-semibold mb-3">
+            Upsell Settings
+          </h2>
+
+          {/* TOGGLE */}
+          <div className="flex items-center justify-between border rounded-xl p-4 bg-white">
+            <div>
+              <p className="text-sm font-medium">Upsell Feature</p>
+              <p className="text-xs text-gray-500">
+                Aktifkan untuk menawarkan produk tambahan
+              </p>
+            </div>
+
+            <button
+              onClick={() =>
+                setForm({
+                  ...form,
+                  upsellEnabled: !form.upsellEnabled,
+                })
+              }
+              className={`w-14 h-8 flex items-center rounded-full p-1 transition ${
+                form.upsellEnabled
+                  ? "bg-green-500"
+                  : "bg-gray-300"
+              }`}
+            >
+              <div
+                className={`bg-white w-6 h-6 rounded-full shadow-md transform transition ${
+                  form.upsellEnabled
+                    ? "translate-x-6"
+                    : "translate-x-0"
+                }`}
+              />
+            </button>
+          </div>
+
+          {/* STATUS */}
+          <div className="flex items-center gap-2 mt-2">
+            {form.upsellEnabled ? (
+              <>
+                <CheckCircle2
+                  className="text-green-500"
+                  size={16}
+                />
+                <span className="text-xs text-green-600 font-medium">
+                  Upsell Active
+                </span>
+              </>
+            ) : (
+              <>
+                <XCircle
+                  className="text-gray-400"
+                  size={16}
+                />
+                <span className="text-xs text-gray-500">
+                  Upsell Disabled
+                </span>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* UPSSELL LIST */}
+        <div
+          className={`transition ${
+            !form.upsellEnabled
+              ? "opacity-50 pointer-events-none"
+              : ""
+          }`}
+        >
+          <h2 className="text-sm font-semibold mb-2">
+            Upsell Products
+          </h2>
 
           {form.upsells.map((u, index) => (
-            <div key={index} className="border p-3 rounded mt-2 relative">
-              <button onClick={() => handleRemoveUpsell(index)} className="absolute top-2 right-2">
+            <div
+              key={index}
+              className="border p-3 rounded mt-2 relative bg-white"
+            >
+              <button
+                onClick={() => handleRemoveUpsell(index)}
+                className="absolute top-2 right-2"
+              >
                 <X size={14} className="text-red-500" />
               </button>
 
-              <label className="text-xs text-gray-500">Upsell ID</label>
               <input
-                value={u.id || ""}
-                onChange={(e) => handleUpsellChange(index, "id", e.target.value)}
+                placeholder="Upsell ID"
+                value={u.id}
+                onChange={(e) =>
+                  handleUpsellChange(index, "id", e.target.value)
+                }
                 className="border p-2 rounded w-full mb-2"
               />
 
-              <label className="text-xs text-gray-500">Nama upsell</label>
               <input
-                value={u.title || ""}
-                onChange={(e) => handleUpsellChange(index, "title", e.target.value)}
+                placeholder="Title"
+                value={u.title}
+                onChange={(e) =>
+                  handleUpsellChange(index, "title", e.target.value)
+                }
                 className="border p-2 rounded w-full mb-2"
               />
 
-              <label className="text-xs text-gray-500">
-                Code (dipakai untuk trigger automation/bot)
-              </label>
               <input
-                value={u.code || ""}
-                onChange={(e) => handleUpsellChange(index, "code", e.target.value)}
+                placeholder="Code"
+                value={u.code}
+                onChange={(e) =>
+                  handleUpsellChange(index, "code", e.target.value)
+                }
                 className="border p-2 rounded w-full mb-2"
               />
 
-              <label className="text-xs text-gray-500">Harga jual upsell</label>
               <input
                 type="number"
-                value={u.price || ""}
-                onChange={(e) => handleUpsellChange(index, "price", e.target.value)}
+                placeholder="Price"
+                value={u.price}
+                onChange={(e) =>
+                  handleUpsellChange(index, "price", e.target.value)
+                }
                 className="border p-2 rounded w-full mb-2"
               />
 
-              <label className="text-xs text-gray-500">Modal upsell</label>
               <input
                 type="number"
-                value={u.cost || ""}
-                onChange={(e) => handleUpsellChange(index, "cost", e.target.value)}
+                placeholder="Cost"
+                value={u.cost}
+                onChange={(e) =>
+                  handleUpsellChange(index, "cost", e.target.value)
+                }
                 className="border p-2 rounded w-full"
               />
             </div>
           ))}
 
-          <button onClick={handleAddUpsell} className="text-blue-600 mt-2">
+          <button
+            onClick={handleAddUpsell}
+            className="text-blue-600 mt-2"
+          >
             + Add Upsell
           </button>
         </div>

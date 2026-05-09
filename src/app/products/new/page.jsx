@@ -6,7 +6,7 @@ import { doc, setDoc } from "firebase/firestore";
 import { collection, addDoc, Timestamp } from "firebase/firestore";
 import { storage } from "@/lib/firebaseClient";
 import { CATEGORY_OPTIONS } from "@/lib/categories";
-import { X } from "lucide-react";
+import { X, CheckCircle2, XCircle } from "lucide-react";
 
 export default function NewProductPage() {
   const [loading, setLoading] = useState(false);
@@ -22,6 +22,7 @@ export default function NewProductPage() {
     category: "",
     stock: "",
     upsells: [],
+    upsellEnabled: false,
   });
 
   const productsRef = collection(db, "products");
@@ -72,7 +73,7 @@ export default function NewProductPage() {
         category: form.category,
 
         images: images, // ✅ langsung pakai array
-
+        upsellEnabled: form.upsellEnabled || false,
         pricing: {
           price: Number(form.price),
           cost: Number(form.cost) || 0,
@@ -259,6 +260,47 @@ export default function NewProductPage() {
             </option>
           ))}
         </select>
+        <div className="flex items-center justify-between border rounded-xl p-4 bg-gray-50">
+          <div>
+            <p className="text-sm font-medium">Upsell Feature</p>
+            <p className="text-xs text-gray-500">
+              Tawarkan produk tambahan setelah customer order
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3">
+            {/* STATUS */}
+            <div className="flex items-center gap-1 text-xs font-medium">
+              {form.upsellEnabled ? (
+                <>
+                  <CheckCircle2 size={16} className="text-green-500" />
+                  <span className="text-green-600">Active</span>
+                </>
+              ) : (
+                <>
+                  <XCircle size={16} className="text-gray-400" />
+                  <span className="text-gray-500">Off</span>
+                </>
+              )}
+            </div>
+
+            {/* TOGGLE */}
+            <button
+              onClick={() =>
+                setForm({ ...form, upsellEnabled: !form.upsellEnabled })
+              }
+              className={`w-14 h-8 flex items-center rounded-full p-1 transition ${
+                form.upsellEnabled ? "bg-green-500" : "bg-gray-300"
+              }`}
+            >
+              <div
+                className={`bg-white w-6 h-6 rounded-full shadow-md transform transition ${
+                  form.upsellEnabled ? "translate-x-6" : "translate-x-0"
+                }`}
+              />
+            </button>
+          </div>
+        </div>
 
         {/* BUTTON */}
         <button

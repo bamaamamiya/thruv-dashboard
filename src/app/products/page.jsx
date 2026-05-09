@@ -3,8 +3,7 @@ import { useEffect, useState } from "react";
 import { db } from "@/lib/firebaseClient";
 import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
 import Link from "next/link";
-import { Pencil, Trash2 } from "lucide-react";
-
+import { Pencil, Trash2, CheckCircle2, XCircle } from "lucide-react";
 export default function ProductsPage() {
   const [products, setProducts] = useState([]);
 
@@ -102,15 +101,33 @@ export default function ProductsPage() {
               <span className="text-sm font-medium">Rp {price}</span>
 
               {/* STATUS */}
-              <span
-                className={`text-xs px-2 py-1 rounded-full w-fit ${
-                  p.isActive
-                    ? "bg-green-100 text-green-600"
-                    : "bg-gray-200 text-gray-500"
-                }`}
-              >
-                {p.isActive ? "Active" : "Draft"}
-              </span>
+              <div className="flex flex-col gap-1">
+                {/* PRODUCT STATUS */}
+                <span
+                  className={`text-xs px-2 py-1 rounded-full w-fit ${
+                    p.isActive
+                      ? "bg-green-100 text-green-600"
+                      : "bg-gray-200 text-gray-500"
+                  }`}
+                >
+                  {p.isActive ? "Active" : "Draft"}
+                </span>
+
+                {/* UPSELL STATUS */}
+                <div className="flex items-center gap-1 text-xs">
+                  {p.upsellEnabled ? (
+                    <>
+                      <CheckCircle2 size={14} className="text-green-500" />
+                      <span className="text-green-600">Upsell</span>
+                    </>
+                  ) : (
+                    <>
+                      <XCircle size={14} className="text-gray-400" />
+                      <span className="text-gray-500">No Upsell</span>
+                    </>
+                  )}
+                </div>
+              </div>
 
               {/* ACTION */}
               <div className="flex justify-end gap-3 items-center">
