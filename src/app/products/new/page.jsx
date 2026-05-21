@@ -2,9 +2,7 @@
 "use client";
 import { useState } from "react";
 import { db } from "@/lib/firebaseClient";
-import { doc, setDoc } from "firebase/firestore";
-import { collection, addDoc, Timestamp } from "firebase/firestore";
-import { storage } from "@/lib/firebaseClient";
+import { doc, setDoc, Timestamp } from "firebase/firestore";
 import { CATEGORY_OPTIONS } from "@/lib/categories";
 import { X, CheckCircle2, XCircle } from "lucide-react";
 
@@ -12,6 +10,10 @@ export default function NewProductPage() {
   const [loading, setLoading] = useState(false);
   const [images, setImages] = useState([]);
   const [imageUrlInput, setImageUrlInput] = useState("");
+  const [inputMode, setInputMode] = useState("form");
+  const [jsonInput, setJsonInput] = useState("");
+  const [jsonError, setJsonError] = useState("");
+  const [jsonProductData, setJsonProductData] = useState(null);
   const [form, setForm] = useState({
     id: "",
     slug: "",
@@ -24,8 +26,6 @@ export default function NewProductPage() {
     upsells: [],
     upsellEnabled: false,
   });
-
-  const productsRef = collection(db, "products");
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -42,14 +42,77 @@ export default function NewProductPage() {
   };
 
   const generateSlug = (text) => {
-    return text
+    return String(text || "")
       .toLowerCase()
       .replace(/[^a-z0-9 ]/g, "")
       .replace(/\s+/g, "-");
   };
 
+  const mapJsonToForm = (productData) => {
+    const productId = productData.product_id || productData.id || "";
+    const identity = productData.identity || {};
+    const pricing = productData.pricing || {};
+    const title = identity.name || productData.title || "";
+
+    return {
+      id: productId,
+      slug: generateSlug(title || productId),
+      title,
+      description:
+        identity.description_long ||
+        identity.description_short ||
+        productData.description ||
+        "",
+      price: pricing.base_price?.toString() || "",
+      cost: pricing.cost?.toString() || "",
+      category: identity.category || "",
+      stock: productData.stock?.toString() || "",
+      upsells: (pricing.upsell || []).map((item, index) => ({
+        id: `${productId || "upsell"}-${index + 1}`,
+        title: item.variant || "",
+        code: generateSlug(item.variant || `variant-${index + 1}`),
+        price: Number(pricing.base_price || 0) + Number(item.extra || 0),
+        cost: 0,
+      })),
+      upsellEnabled: Boolean(pricing.upsell?.length),
+    };
+  };
+
+  const parseJsonProduct = () => {
+    try {
+      const parsed = JSON.parse(jsonInput);
+      const nextForm = mapJsonToForm(parsed);
+
+      if (!nextForm.id || !nextForm.title || !nextForm.price) {
+        setJsonError(
+          "JSON harus punya product_id, identity.name, dan pricing.base_price.",
+        );
+        return null;
+      }
+
+      setForm(nextForm);
+      setJsonProductData(parsed);
+      setJsonError("");
+      return { parsed, nextForm };
+    } catch {
+      setJsonError("Format JSON belum valid. Cek koma, kutip, atau kurungnya.");
+      return null;
+    }
+  };
+
   const handleSubmit = async () => {
-    if (!form.id || !form.title || !form.price) {
+    let importedJson = jsonProductData;
+    let submitForm = form;
+
+    if (inputMode === "json") {
+      const result = parseJsonProduct();
+      if (!result) return;
+
+      importedJson = result.parsed;
+      submitForm = result.nextForm;
+    }
+
+    if (!submitForm.id || !submitForm.title || !submitForm.price) {
       alert("ID, Title & price wajib");
       return;
     }
@@ -62,33 +125,48 @@ export default function NewProductPage() {
     setLoading(true);
 
     try {
-      const productRef = doc(db, "products", form.id);
+      const productRef = doc(db, "products", submitForm.id);
+      const identity = importedJson?.identity || {};
 
       await setDoc(productRef, {
-        id: form.id,
-        slug: form.slug || "",
+        id: submitForm.id,
+        slug: submitForm.slug || "",
 
-        title: form.title,
-        description: form.description,
-        category: form.category,
+        title: submitForm.title,
+        description: submitForm.description,
+        category: submitForm.category,
+        brand: identity.brand || "",
+        status: identity.status || "active",
 
         images: images, // ✅ langsung pakai array
-        upsellEnabled: form.upsellEnabled || false,
+        upsellEnabled: submitForm.upsellEnabled || false,
         pricing: {
-          price: Number(form.price),
-          cost: Number(form.cost) || 0,
+          price: Number(submitForm.price),
+          cost: Number(submitForm.cost) || 0,
+          ...(importedJson?.pricing || {}),
         },
 
-        stock: Number(form.stock) || 0,
+        stock: Number(submitForm.stock) || 0,
 
-        upsells: [],
+        upsells: submitForm.upsells || [],
         scripts: {
           opening: "",
           closing: "",
           upsell: "",
         },
 
-        isActive: true,
+        productData: importedJson || null,
+        identity: importedJson?.identity || null,
+        specification: importedJson?.specification || null,
+        features: importedJson?.features || [],
+        usage: importedJson?.usage || null,
+        constraints: importedJson?.constraints || [],
+        shipping: importedJson?.shipping || null,
+        objections: importedJson?.objections || [],
+        scenarios: importedJson?.scenarios || [],
+        faq: importedJson?.faq || [],
+
+        isActive: identity.status ? identity.status === "active" : true,
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now(),
       });
@@ -116,6 +194,58 @@ export default function NewProductPage() {
       <h1 className="text-2xl font-bold mb-6">Create Product</h1>
 
       <div className="bg-white p-6 rounded-2xl shadow grid gap-4">
+        <div className="grid grid-cols-2 gap-2 rounded-xl bg-gray-100 p-1">
+          <button
+            onClick={() => setInputMode("form")}
+            className={`rounded-lg p-2 text-sm ${
+              inputMode === "form"
+                ? "bg-white shadow font-medium"
+                : "text-gray-500"
+            }`}
+          >
+            Form
+          </button>
+          <button
+            onClick={() => setInputMode("json")}
+            className={`rounded-lg p-2 text-sm ${
+              inputMode === "json"
+                ? "bg-white shadow font-medium"
+                : "text-gray-500"
+            }`}
+          >
+            JSON
+          </button>
+        </div>
+
+        {inputMode === "json" && (
+          <div>
+            <label className="text-xs text-gray-500">Product JSON</label>
+            <textarea
+              value={jsonInput}
+              onChange={(e) => {
+                setJsonInput(e.target.value);
+                setJsonError("");
+              }}
+              placeholder="Paste JSON produk di sini..."
+              className="border p-3 rounded w-full min-h-72 font-mono text-xs"
+            />
+            {jsonError && (
+              <p className="mt-2 text-xs text-red-500">{jsonError}</p>
+            )}
+            {jsonProductData && !jsonError && (
+              <p className="mt-2 text-xs text-green-600">
+                JSON sudah masuk ke form. Detail lengkap akan ikut tersimpan.
+              </p>
+            )}
+            <button
+              onClick={parseJsonProduct}
+              className="mt-2 border border-black px-3 py-2 rounded text-sm"
+            >
+              Import JSON ke Form
+            </button>
+          </div>
+        )}
+
         {/* IMAGE SECTION */}
         <div>
           <label className="text-xs text-gray-500">Product Images</label>
