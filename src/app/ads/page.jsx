@@ -19,6 +19,8 @@ import FilterBar from "@/app/components/analytics/FilterBar";
 import { getDateRange, isDateInRange } from "@/utils/dateFilters";
 import { useMemo } from "react"; // tambahkan import di atas
 import { Timestamp } from "firebase/firestore";
+import MetaSyncButton from "@/app/components/analytics/MetaSyncButton";
+
 export default function AdsPage() {
   const [platform, setPlatform] = useState("Facebook Ads");
   const [date, setDate] = useState(dayjs().format("YYYY-MM-DD"));
@@ -144,6 +146,7 @@ export default function AdsPage() {
           <h1 className="text-3xl font-extrabold text-gray-800 dark:text-gray-100">
             Ad Spend Tracker
           </h1>
+          <MetaSyncButton /> {/* ← tambah ini */}
         </div>
 
         {/* Input Form */}
