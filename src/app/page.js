@@ -216,8 +216,7 @@ export default function DashboardPage() {
     );
   if (!user) return null;
 
-
-	console.log("ADS:", ads);
+  console.log("ADS:", ads);
   return (
     <div className="min-h-screen px-4 py-6">
       <div className="max-w-6xl mx-auto space-y-6">
@@ -236,9 +235,12 @@ export default function DashboardPage() {
           pendingOrders={summary.pendingOrders}
           totalPendingValue={summary.totalPendingValue}
           totalCost={summary.totalCost}
+          totalAdSpend={totalAdSpend} // ← tambah
+          netProfitReal={summary.netProfitReal} // ← tambah
+          grossProfit={summary.grossProfit} // ← tambah
+          rtsOrders={summary.rtsOrders} // ← tambah
           start={start}
           end={end}
-          pendingOrdersPrevious={previousSummary?.pendingOrders || 0}
         />
 
         {/* Chart Section */}
