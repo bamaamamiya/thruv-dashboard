@@ -304,7 +304,7 @@ Alamat mentah: ${cleanAddressValue}`;
     <>
       {/* Lead Row */}
       <div
-        className="grid grid-cols-9 items-center gap-1 cursor-pointer 
+        className="grid grid-cols-10 items-center gap-1 cursor-pointer 
   hover:bg-gray-50 dark:hover:bg-gray-700 
   px-2 py-1.5 rounded-md transition 
   bg-gray-50 dark:bg-black text-xs"
@@ -361,6 +361,10 @@ Alamat mentah: ${cleanAddressValue}`;
 
         <span className="text-sm text-center">
           {lead.resiCheck === "done" ? "✅" : "❌"}
+        </span>
+
+        <span className="text-sm text-center">
+          {lead.aiMode === "human" ? "🔴" : "🤖"}
         </span>
 
         {/* <span className="text-lg text-center">
@@ -651,6 +655,51 @@ Alamat mentah: ${cleanAddressValue}`;
                     ❌ Belum
                   </button>
                 </div>
+              </div>
+
+              {/* AI MODE */}
+              <div>
+                <p className="text-xs text-gray-500 mb-1">AI Mode</p>
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={async () => {
+                      await updateDoc(doc(db, "leads", lead.id), {
+                        aiMode: "human",
+                        aiFallbackCount: 0,
+                      });
+                    }}
+                    className={`px-3 py-1 text-xs rounded-md border ${
+                      lead.aiMode === "human"
+                        ? "bg-red-600 text-white border-red-600"
+                        : "border-gray-300 hover:bg-gray-100"
+                    }`}
+                  >
+                    🙋 Ambil Alih
+                  </button>
+
+                  <button
+                    onClick={async () => {
+                      await updateDoc(doc(db, "leads", lead.id), {
+                        aiMode: "auto",
+                        aiFallbackCount: 0,
+                      });
+                    }}
+                    className={`px-3 py-1 text-xs rounded-md border ${
+                      lead.aiMode === "auto" || !lead.aiMode
+                        ? "bg-green-600 text-white border-green-600"
+                        : "border-gray-300 hover:bg-gray-100"
+                    }`}
+                  >
+                    🤖 Kembalikan ke AI
+                  </button>
+                </div>
+
+                {lead.aiMode === "human" && (
+                  <p className="text-[10px] text-red-500 mt-1">
+                    AI diam — CS sedang handle
+                  </p>
+                )}
               </div>
 
               {/* Bot State */}

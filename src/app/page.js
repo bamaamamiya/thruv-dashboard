@@ -25,6 +25,8 @@ export default function DashboardPage() {
   const [selectedFilter, setSelectedFilter] = useState("month");
   const [customRange, setCustomRange] = useState([new Date(), new Date()]);
   const [fetching, setFetching] = useState(true);
+  const [activeTab, setActiveTab] = useState("profit");
+
   // 🔹 Redirect kalau belum login
   useEffect(() => {
     if (!loading && !user) {
@@ -61,94 +63,6 @@ export default function DashboardPage() {
       ? Number((summary.totalSales / totalAdSpend).toFixed(2))
       : 0;
 
-  // 🔹 Metric list
-  const metricGroups = useMemo(() => {
-    return [
-      {
-        title: "📊 Sales & Profit",
-        items: [
-          { label: "Total Sales", value: summary.totalSales, prefix: "Rp" },
-          { label: "Gross Profit", value: summary.grossProfit, prefix: "Rp" },
-          {
-            label: "Net Profit (Real)",
-            value: summary.netProfitReal,
-            prefix: "Rp",
-          },
-          {
-            label: "Net Profit (Projected)",
-            value: summary.netProfitProjected,
-            prefix: "Rp",
-          },
-          { label: "Profit Margin", value: summary.profitMargin, suffix: "%" },
-          {
-            label: "Number of Orders (Complete)",
-            value: summary.completedOrders,
-          },
-          { label: "Number of Orders (Pending)", value: summary.pendingOrders },
-        ],
-      },
-      {
-        title: "💸 Ad Performance",
-        items: [
-          { label: "Total Ad Spend", value: totalAdSpend, prefix: "Rp" },
-          { label: "CAC", value: summary.cac, prefix: "Rp" },
-          { label: "ROAS", value: roas, suffix: "x" },
-        ],
-      },
-      {
-        title: "🧾 Orders & Pending",
-        items: [
-          {
-            label: "Pending Value",
-            value: summary.totalPendingValue,
-            prefix: "Rp",
-          },
-          {
-            label: "Pending Profit",
-            value: summary.pendingProfit,
-            prefix: "Rp",
-          },
-        ],
-      },
-      {
-        title: "🏭 Cost & Return",
-        items: [
-          {
-            label: "Total Product Cost",
-            value: summary.totalCost,
-            prefix: "Rp",
-          },
-          {
-            label: "Total Product Pending Cost",
-            value: summary.pendingCost,
-            prefix: "Rp",
-          },
-          {
-            label: "Return Cost (RTS)",
-            value: summary.totalReturnToSenderCost,
-            prefix: "Rp",
-          },
-          { label: "Total RTS Orders", value: summary.rtsOrders },
-          {
-            label: "RTS Percentage",
-            value: summary.rtsPercentage,
-            suffix: "%",
-          },
-        ],
-      },
-      {
-        title: "📈 Ratios & Metrics",
-        items: [
-          { label: "LTGP : CAC", value: summary.ltgpToCac, suffix: "x" },
-          {
-            label: "Conversion Rate",
-            value: summary.conversionRate,
-            suffix: "%",
-          },
-        ],
-      },
-    ];
-  }, [summary, totalAdSpend, roas]);
 
   // 🔹 Listen to Firestore (jalankan setelah login)
   useEffect(() => {
@@ -216,7 +130,6 @@ export default function DashboardPage() {
     );
   if (!user) return null;
 
-  console.log("ADS:", ads);
   return (
     <div className="min-h-screen px-4 py-6">
       <div className="max-w-6xl mx-auto space-y-6">
@@ -250,26 +163,180 @@ export default function DashboardPage() {
         </div>
 
         {/* Metrics Grid */}
-        {/* Metrics Section by Category */}
-        <div className="space-y-8 mt-10">
-          {metricGroups.map((group) => (
-            <div key={group.title}>
-              <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">
-                {group.title}
-              </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                {group.items.map((m) => (
-                  <MetricCard
-                    key={m.label}
-                    label={m.label}
-                    value={m.value}
-                    prefix={m.prefix}
-                    suffix={m.suffix}
-                  />
-                ))}
-              </div>
-            </div>
-          ))}
+        {/* ── METRIC TABS ── */}
+        <div className="space-y-4 mt-6">
+          {/* TAB BUTTONS */}
+          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+            {[
+              { key: "profit", label: "💰 Profit" },
+              { key: "ads", label: "📣 Ads" },
+              { key: "orders", label: "📦 Orders" },
+              { key: "cost", label: "🏭 Cost" },
+              { key: "ratios", label: "📈 Ratios" },
+            ].map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition
+          ${
+            activeTab === tab.key
+              ? "bg-black text-white dark:bg-white dark:text-black"
+              : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800"
+          }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* TAB CONTENT */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {/* 💰 PROFIT TAB */}
+            {activeTab === "profit" && (
+              <>
+                <MetricCard
+                  label="Total Sales"
+                  value={summary.totalSales}
+                  prefix="Rp"
+                />
+                <MetricCard
+                  label="Gross Profit"
+                  value={summary.grossProfit}
+                  prefix="Rp"
+                />
+                <MetricCard
+                  label="Net Profit (Real)"
+                  value={summary.netProfitReal}
+                  prefix="Rp"
+                />
+                <MetricCard
+                  label="Net Profit (Projected)"
+                  value={summary.netProfitProjected}
+                  prefix="Rp"
+                />
+                <MetricCard
+                  label="Profit Margin"
+                  value={summary.profitMargin}
+                  suffix="%"
+                />
+                <MetricCard
+                  label="Gross Margin"
+                  value={summary.grossMargin}
+                  suffix="%"
+                />
+              </>
+            )}
+
+            {/* 📣 ADS TAB */}
+            {activeTab === "ads" && (
+              <>
+                <MetricCard
+                  label="Total Ad Spend"
+                  value={totalAdSpend}
+                  prefix="Rp"
+                />
+                <MetricCard label="CAC" value={summary.cac} prefix="Rp" />
+                <MetricCard label="ROAS" value={roas} suffix="x" />
+                <MetricCard
+                  label="LTGP : CAC"
+                  value={summary.ltgpToCac}
+                  suffix="x"
+                />
+              </>
+            )}
+
+            {/* 📦 ORDERS TAB */}
+            {activeTab === "orders" && (
+              <>
+                <MetricCard label="Total Orders" value={summary.totalOrders} />
+                <MetricCard
+                  label="Complete Orders"
+                  value={summary.completedOrders}
+                />
+                <MetricCard
+                  label="Pending Orders"
+                  value={summary.pendingOrders}
+                />
+                <MetricCard
+                  label="Pending Value"
+                  value={summary.totalPendingValue}
+                  prefix="Rp"
+                />
+                <MetricCard
+                  label="Pending Profit"
+                  value={summary.pendingProfit}
+                  prefix="Rp"
+                />
+                <MetricCard
+                  label="Avg Order Value"
+                  value={summary.avgOrderValue}
+                  prefix="Rp"
+                />
+              </>
+            )}
+
+            {/* 🏭 COST TAB */}
+            {activeTab === "cost" && (
+              <>
+                <MetricCard
+                  label="Total Product Cost"
+                  value={summary.totalCost}
+                  prefix="Rp"
+                />
+                <MetricCard
+                  label="Pending Product Cost"
+                  value={summary.pendingCost}
+                  prefix="Rp"
+                />
+                <MetricCard
+                  label="Return Cost (RTS)"
+                  value={summary.totalReturnToSenderCost}
+                  prefix="Rp"
+                />
+                <MetricCard
+                  label="Total RTS Orders"
+                  value={summary.rtsOrders}
+                />
+                <MetricCard
+                  label="RTS Percentage"
+                  value={summary.rtsPercentage}
+                  suffix="%"
+                />
+              </>
+            )}
+
+            {/* 📈 RATIOS TAB */}
+            {activeTab === "ratios" && (
+              <>
+                <MetricCard
+                  label="Conversion Rate"
+                  value={summary.conversionRate}
+                  suffix="%"
+                />
+                <MetricCard label="ROAS" value={roas} suffix="x" />
+                <MetricCard
+                  label="LTGP : CAC"
+                  value={summary.ltgpToCac}
+                  suffix="x"
+                />
+                <MetricCard
+                  label="Gross Margin"
+                  value={summary.grossMargin}
+                  suffix="%"
+                />
+                <MetricCard
+                  label="Profit Margin"
+                  value={summary.profitMargin}
+                  suffix="%"
+                />
+                <MetricCard
+                  label="RTS Percentage"
+                  value={summary.rtsPercentage}
+                  suffix="%"
+                />
+              </>
+            )}
+          </div>
         </div>
       </div>
     </div>

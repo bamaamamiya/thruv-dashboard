@@ -498,7 +498,7 @@ export default function LeadsDashboard() {
 
           {!isMobile && (
             <div className="px-2">
-              <div className="grid grid-cols-9 items-center text-center py-2 text-xs font-medium text-gray-500">
+              <div className="grid grid-cols-10 items-center text-center py-2 text-xs font-medium text-gray-500">
                 <div></div>
                 <span>Tanggal</span>
                 <span>Nama</span>
@@ -508,6 +508,7 @@ export default function LeadsDashboard() {
                 <span>Status</span>
                 <span>Konfirmasi</span>
                 <span>Resi</span>
+                <span>AI</span>
               </div>
             </div>
           )}
