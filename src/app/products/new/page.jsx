@@ -5,10 +5,12 @@ import { db } from "@/lib/firebaseClient";
 import { doc, setDoc, Timestamp } from "firebase/firestore";
 import { CATEGORY_OPTIONS } from "@/lib/categories";
 import { X, CheckCircle2, XCircle } from "lucide-react";
+import FeatureToggle from "@/app/products/components/FeatureToggle";
 
 export default function NewProductPage() {
   const [loading, setLoading] = useState(false);
   const [images, setImages] = useState([]);
+  const [bundles, setBundles] = useState([]);
   const [imageUrlInput, setImageUrlInput] = useState("");
   const [inputMode, setInputMode] = useState("form");
   const [jsonInput, setJsonInput] = useState("");
@@ -23,9 +25,71 @@ export default function NewProductPage() {
     cost: "",
     category: "",
     stock: "",
+
     upsells: [],
-    upsellEnabled: false,
+
+    settings: {
+      bundle: true,
+      upsell: false,
+      cod: true,
+      bankTransfer: true,
+      ongkir: true,
+      comparePrice: true,
+      aiAgent: false,
+
+      countdown: false,
+      countdownMinute: 15,
+
+      showStock: true,
+
+      maxOrder: 3,
+
+      saveLead: true,
+    },
   });
+
+  const SETTING_LIST = [
+    {
+      key: "bundle",
+      title: "Bundle",
+      description: "Aktifkan pilihan paket",
+    },
+    {
+      key: "upsell",
+      title: "Upsell",
+      description: "Tampilkan halaman upsell setelah checkout",
+    },
+    {
+      key: "comparePrice",
+      title: "Compare Price",
+      description: "Menampilkan harga coret",
+    },
+    {
+      key: "cod",
+      title: "COD",
+      description: "Bayar di tempat",
+    },
+    {
+      key: "bankTransfer",
+      title: "Bank Transfer",
+      description: "Transfer bank",
+    },
+    {
+      key: "ongkir",
+      title: "Shipping",
+      description: "Hitung ongkir otomatis",
+    },
+    {
+      key: "abandonedLead",
+      title: "Abandoned Lead",
+      description: "Simpan lead yang belum checkout",
+    },
+    {
+      key: "aiAgent",
+      title: "AI Agent",
+      description: "Aktifkan AI untuk produk ini",
+    },
+  ];
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -133,13 +197,13 @@ export default function NewProductPage() {
         slug: submitForm.slug || "",
 
         title: submitForm.title,
+        settings: submitForm.settings,
         description: submitForm.description,
         category: submitForm.category,
         brand: identity.brand || "",
         status: identity.status || "active",
 
         images: images, // ✅ langsung pakai array
-        upsellEnabled: submitForm.upsellEnabled || false,
         pricing: {
           price: Number(submitForm.price),
           cost: Number(submitForm.cost) || 0,
@@ -158,7 +222,6 @@ export default function NewProductPage() {
         productData: importedJson || null,
         identity: importedJson?.identity || null,
         specification: importedJson?.specification || null,
-        features: importedJson?.features || [],
         usage: importedJson?.usage || null,
         constraints: importedJson?.constraints || [],
         shipping: importedJson?.shipping || null,
@@ -390,45 +453,34 @@ export default function NewProductPage() {
             </option>
           ))}
         </select>
-        <div className="flex items-center justify-between border rounded-xl p-4 bg-gray-50">
+
+        <div className="border rounded-2xl p-5 space-y-4">
           <div>
-            <p className="text-sm font-medium">Upsell Feature</p>
-            <p className="text-xs text-gray-500">
-              Tawarkan produk tambahan setelah customer order
+            <h2 className="font-semibold text-lg">⚙ Product Setting</h2>
+
+            <p className="text-sm text-gray-500">
+              Aktifkan atau nonaktifkan fitur produk.
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
-            {/* STATUS */}
-            <div className="flex items-center gap-1 text-xs font-medium">
-              {form.upsellEnabled ? (
-                <>
-                  <CheckCircle2 size={16} className="text-green-500" />
-                  <span className="text-green-600">Active</span>
-                </>
-              ) : (
-                <>
-                  <XCircle size={16} className="text-gray-400" />
-                  <span className="text-gray-500">Off</span>
-                </>
-              )}
-            </div>
-
-            {/* TOGGLE */}
-            <button
-              onClick={() =>
-                setForm({ ...form, upsellEnabled: !form.upsellEnabled })
-              }
-              className={`w-14 h-8 flex items-center rounded-full p-1 transition ${
-                form.upsellEnabled ? "bg-green-500" : "bg-gray-300"
-              }`}
-            >
-              <div
-                className={`bg-white w-6 h-6 rounded-full shadow-md transform transition ${
-                  form.upsellEnabled ? "translate-x-6" : "translate-x-0"
-                }`}
+          <div className="space-y-3">
+            {SETTING_LIST.map((feature) => (
+              <FeatureToggle
+                key={feature.key}
+                title={feature.title}
+                description={feature.description}
+                value={form.settings[feature.key]}
+                onChange={(value) =>
+                  setForm({
+                    ...form,
+                    settings: {
+                      ...form.settings,
+                      [feature.key]: value,
+                    },
+                  })
+                }
               />
-            </button>
+            ))}
           </div>
         </div>
 

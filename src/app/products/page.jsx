@@ -1,3 +1,4 @@
+// products/page.jsx
 "use client";
 import { useEffect, useState } from "react";
 import { db } from "@/lib/firebaseClient";
@@ -71,6 +72,10 @@ export default function ProductsPage() {
           const cost = p.pricing?.cost || 0;
           const profit = price - cost;
 
+          const features = p.features || {};
+          const bundleEnabled = features.bundle ?? false;
+          const upsellEnabled = features.upsell ?? false;
+
           return (
             <div
               key={p.id}
@@ -102,7 +107,6 @@ export default function ProductsPage() {
 
               {/* STATUS */}
               <div className="flex flex-col gap-1">
-                {/* PRODUCT STATUS */}
                 <span
                   className={`text-xs px-2 py-1 rounded-full w-fit ${
                     p.isActive
@@ -113,9 +117,8 @@ export default function ProductsPage() {
                   {p.isActive ? "Active" : "Draft"}
                 </span>
 
-                {/* UPSELL STATUS */}
                 <div className="flex items-center gap-1 text-xs">
-                  {p.upsellEnabled ? (
+                  {upsellEnabled ? (
                     <>
                       <CheckCircle2 size={14} className="text-green-500" />
                       <span className="text-green-600">Upsell</span>
@@ -124,6 +127,20 @@ export default function ProductsPage() {
                     <>
                       <XCircle size={14} className="text-gray-400" />
                       <span className="text-gray-500">No Upsell</span>
+                    </>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-1 text-xs">
+                  {bundleEnabled ? (
+                    <>
+                      <CheckCircle2 size={14} className="text-blue-500" />
+                      <span className="text-blue-600">Bundle</span>
+                    </>
+                  ) : (
+                    <>
+                      <XCircle size={14} className="text-gray-400" />
+                      <span className="text-gray-500">No Bundle</span>
                     </>
                   )}
                 </div>
