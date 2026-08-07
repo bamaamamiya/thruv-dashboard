@@ -6,6 +6,8 @@ import {
   query,
   orderBy,
   getDocs,
+  deleteDoc,
+  doc,
 } from "firebase/firestore";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
@@ -37,7 +39,6 @@ export default function LeadsDashboard() {
     () => getDateRange(selectedFilter, customRange),
     [selectedFilter, customRange],
   );
-
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -107,6 +108,47 @@ export default function LeadsDashboard() {
     });
   }, [leads, selectedStatus, startDate, endDate]);
 
+  const allFilteredSelected =
+    filteredLeads.length > 0 &&
+    filteredLeads.every((lead) =>
+      selectedLeads.some((selected) => selected.id === lead.id),
+    );
+
+  const handleSelectAll = (checked) => {
+    if (checked) {
+      setSelectedLeads((prev) => {
+        const existingIds = new Set(prev.map((lead) => lead.id));
+
+        const newLeads = filteredLeads.filter(
+          (lead) => !existingIds.has(lead.id),
+        );
+
+        return [...prev, ...newLeads];
+      });
+    } else {
+      const filteredIds = new Set(filteredLeads.map((lead) => lead.id));
+
+      setSelectedLeads((prev) =>
+        prev.filter((lead) => !filteredIds.has(lead.id)),
+      );
+    }
+  };
+
+  const handleSelectLead = (lead, isChecked) => {
+    setSelectedLeads((prev) => {
+      if (isChecked) {
+        // Jangan masukkan dua kali
+        if (prev.some((selected) => selected.id === lead.id)) {
+          return prev;
+        }
+
+        return [...prev, lead];
+      }
+
+      // Uncheck → hapus dari selection
+      return prev.filter((selected) => selected.id !== lead.id);
+    });
+  };
   const statusOptions = ["Semua", "pending", "complete", "cancel", "rts"];
 
   // 📊 SUMMARY (FIXED)
@@ -122,14 +164,33 @@ export default function LeadsDashboard() {
     );
   }
 
-  const handleSelectLead = (lead, isChecked) => {
-    setSelectedLeads((prev) => {
-      if (isChecked) {
-        return [...prev, lead];
-      } else {
-        return prev.filter((l) => l.id !== lead.id);
-      }
-    });
+  const handleDeleteSelected = async () => {
+    if (selectedLeads.length === 0) {
+      alert("Pilih minimal 1 order.");
+      return;
+    }
+
+    const selectedCount = selectedLeads.length;
+
+    const confirmed = window.confirm(
+      `Hapus ${selectedCount} order yang dipilih?`,
+    );
+
+    if (!confirmed) return;
+
+    try {
+      await Promise.all(
+        selectedLeads.map((lead) => deleteDoc(doc(db, "leads", lead.id))),
+      );
+
+      setSelectedLeads([]);
+
+      alert(`${selectedCount} order berhasil dihapus.`);
+    } catch (error) {
+      console.error("Gagal menghapus order:", error);
+
+      alert("Gagal menghapus order.");
+    }
   };
 
   const clean = (val) =>
@@ -261,13 +322,13 @@ export default function LeadsDashboard() {
 
       return [
         clean(l.name),
-        `"${clean(l.address)}"`,
+        clean(l.addressClean || l.address),
+        clean(l.province),
         clean(l.whatsapp),
         paymentMethod === "non-cod" ? (l.price ?? "") : "",
-        paymentMethod === "cod" ? (l.price + l.ongkir ?? "") : "",
+        paymentMethod === "cod" ? (l.price ?? 0) + (l.ongkir ?? 0) : "",
         clean(l.productTitle),
         "1",
-        l.postalCode ?? "",
       ];
     });
 
@@ -354,212 +415,564 @@ export default function LeadsDashboard() {
   ];
 
   return (
-    <div className="font-sans">
-      <div className="h-full text-gray-900 ">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex justify-end gap-2">
-            <button
-              onClick={() => setShowExportModal(true)}
-              className="border border-gray-300 text-gray-800 px-2 py-1.5 rounded-md 
-							focus:outline-none focus:ring-2 focus:ring-emerald-500 
-							shadow-sm transition-all duration-200 font-medium dark:text-white text-xs"
-            >
-              Export Order
-            </button>
+    <div className="w-full text-gray-800 dark:text-gray-200">
+      {/* =========================
+        TOP TOOLBAR
+    ========================= */}
 
-            <button
-              onClick={exportCompleteAndRTS}
-              className="border border-gray-300 text-gray-800 px-2 py-1.5 rounded-md
-							focus:outline-none focus:ring-2 focus:ring-indigo-500
-							shadow-sm transition-all duration-200 font-medium dark:text-white text-xs"
-            >
-              Export Data
-            </button>
-          </div>
-          <div className="flex items-center gap-2 mb-4 mt-3 bg-white dark:bg-black dark:text-white border border-gray-200 rounded-xl p-2">
-            <select
-              className="px-2 py-1 md:px-4 md:py-4 text-xs rounded-md dark:bg-black dark:text-white border border-gray-200"
-              value={selectedFilter}
-              onChange={(e) => {
-                setSelectedFilter(e.target.value);
-                if (e.target.value !== "custom") {
-                  setCustomRange([null, null]);
-                }
+      <div
+        className="
+      flex
+      flex-col
+      lg:flex-row
+      lg:items-center
+      lg:justify-between
+      gap-3
+      mb-4
+    "
+      >
+        <div>
+          <h1 className="text-lg font-bold">Orders</h1>
+
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            Manage and monitor your leads
+          </p>
+        </div>
+
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowExportModal(true)}
+            className="
+            px-3
+            py-2
+            rounded-lg
+            border
+            border-gray-300
+            dark:border-gray-700
+            bg-white
+            dark:bg-black
+            text-xs
+            font-medium
+            hover:bg-gray-100
+            dark:hover:bg-gray-800
+            transition
+          "
+          >
+            📤 Export Order
+          </button>
+
+          <button
+            onClick={exportCompleteAndRTS}
+            className="
+            px-3
+            py-2
+            rounded-lg
+            border
+            border-gray-300
+            dark:border-gray-700
+            bg-white
+            dark:bg-black
+            text-xs
+            font-medium
+            hover:bg-gray-100
+            dark:hover:bg-gray-800
+            transition
+          "
+          >
+            📊 Export Data
+          </button>
+        </div>
+      </div>
+
+      {/* =========================
+        FILTER + SUMMARY
+    ========================= */}
+
+      <div
+        className="
+      flex
+      flex-col
+      xl:flex-row
+      xl:items-center
+      gap-4
+      mb-4
+      p-3
+      rounded-xl
+      border
+      border-gray-200
+      dark:border-gray-800
+      bg-white
+      dark:bg-black
+    "
+      >
+        {/* DATE FILTER */}
+
+        <div className="flex items-center gap-2">
+          <select
+            className="
+            px-3
+            py-2
+            text-xs
+            rounded-lg
+            border
+            border-gray-200
+            dark:border-gray-700
+            bg-gray-50
+            dark:bg-gray-900
+            outline-none
+          "
+            value={selectedFilter}
+            onChange={(e) => {
+              setSelectedFilter(e.target.value);
+
+              if (e.target.value !== "custom") {
+                setCustomRange([null, null]);
+              }
+            }}
+          >
+            {FILTER_OPTIONS.map((opt) => (
+              <option key={opt.key} value={opt.key}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+
+          {selectedFilter === "custom" && (
+            <DatePicker
+              selected={customRange[0]}
+              onChange={(dates) => {
+                const [start, end] = dates;
+                setCustomRange([start, end]);
               }}
-            >
-              {FILTER_OPTIONS.map((opt) => (
-                <option key={opt.key} value={opt.key}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
+              startDate={customRange[0]}
+              endDate={customRange[1]}
+              selectsRange
+              isClearable
+              placeholderText="Custom"
+              className="
+              w-[140px]
+              px-3
+              py-2
+              text-xs
+              rounded-lg
+              border
+              border-gray-200
+              dark:border-gray-700
+              bg-gray-50
+              dark:bg-black
+              outline-none
+            "
+            />
+          )}
+        </div>
 
-            {selectedFilter === "custom" && (
-              <DatePicker
-                selected={customRange[0]}
-                onChange={(dates) => {
-                  const [start, end] = dates;
-                  setCustomRange([start, end]);
-                }}
-                startDate={customRange[0]}
-                endDate={customRange[1]}
-                selectsRange
-                isClearable
-                placeholderText="Custom"
-                className="w-full max-w-[140px] px-2 py-1 text-xs border border-gray-300 rounded-md shadow-sm dark:text-white bg-white dark:bg-black"
-              />
-            )}
-            <div>
-              <div className="flex space-x-2 text-xs ml-4 md:space-x-30">
-                <div className="border-l p-2 border-gray-300 ">
-                  <p className="dark:text-white">Total</p>
-                  <p className="font-bold dark:text-white">
-                    {summary.totalOrders}
-                  </p>
-                </div>
-                <div className="border-l p-2 border-gray-300">
-                  <p className="dark:text-white">Complete</p>
-                  <p className="font-bold text-green-500">
-                    {summary.completedOrders}
-                  </p>
-                </div>
-                <div className="border-l p-2 border-gray-300">
-                  <p className="dark:text-white">Pending</p>
-                  <p className="font-bold text-yellow-500">
-                    {summary.pendingOrders}
-                  </p>
-                </div>
-                <div className="border-l p-2 border-gray-300">
-                  <p className="dark:text-white">Returns</p>
-                  <p className="font-bold text-red-500">{summary.rtsOrders}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="flex flex-wrap gap-4 items-center mb-6 justify-between">
-            <div className="flex gap-2 overflow-x-auto pb-2">
-              {statusTabs.map((tab) => (
-                <button
-                  key={tab.key}
-                  onClick={() => setSelectedStatus(tab.key)}
-                  className={`px-4 py-2 text-sm font-medium rounded-xl whitespace-nowrap transition 
-        ${
-          selectedStatus === tab.key
-            ? "bg-gray-200 text-black dark:bg-gray-100 dark:text-black"
-            : " text-black dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-        }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
+        {/* SUMMARY */}
+
+        <div
+          className="
+        flex
+        items-center
+        gap-6
+        xl:ml-auto
+        overflow-x-auto
+      "
+        >
+          <div>
+            <p className="text-[10px] text-gray-500 uppercase">Total</p>
+
+            <p className="text-sm font-bold">{summary.totalOrders}</p>
           </div>
 
-          {showExportModal && (
-            <div className="fixed inset-0 bg-black/40 bg-opacity-20 flex items-center justify-center z-50">
-              <div className="bg-gray-50 rounded-lg shadow-xl max-w-xs w-full p-6">
-                <h2 className="text-xl font-semibold mb-5 text-gray-900 text-center">
-                  Pilih format export
-                </h2>
+          <div>
+            <p className="text-[10px] text-gray-500 uppercase">Complete</p>
 
-                <button
-                  className="w-full mb-4 py-3 rounded-md border border-black text-black bg-gray-50 hover:bg-black hover:text-white transition font-medium flex items-center justify-center gap-2"
-                  onClick={() => {
-                    exportToCSV();
-                    setShowExportModal(false);
-                  }}
-                  aria-label="Export CSV"
-                >
-                  <FontAwesomeIcon icon={faFileCsv} />
-                  Export CSV
-                </button>
+            <p className="text-sm font-bold text-green-500">
+              {summary.completedOrders}
+            </p>
+          </div>
 
-                <button
-                  className="w-full py-3 rounded-md border border-black text-black bg-gray-50 hover:bg-black hover:text-white transition font-medium flex items-center justify-center gap-2"
-                  onClick={() => {
-                    exportToXLS();
-                    setShowExportModal(false);
-                  }}
-                  aria-label="Export XLS"
-                >
-                  <FontAwesomeIcon icon={faFileExcel} />
-                  Export XLS (Excel)
-                </button>
+          <div>
+            <p className="text-[10px] text-gray-500 uppercase">Pending</p>
 
-                <button
-                  className="mt-6 w-full text-center text-gray-600 hover:text-gray-900 underline text-sm font-medium"
-                  onClick={() => setShowExportModal(false)}
-                  aria-label="Cancel export"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          )}
+            <p className="text-sm font-bold text-yellow-500">
+              {summary.pendingOrders}
+            </p>
+          </div>
 
-          {!isMobile && (
-            <div className="px-2">
-              <div className="grid grid-cols-10 items-center text-center py-2 text-xs font-medium text-gray-500">
-                <div></div>
-                <span>Tanggal</span>
-                <span>Nama</span>
-                <span>WhatsApp</span>
-                <span>Metode</span>
-                <span>Produk</span>
-                <span>Status</span>
-                <span>Konfirmasi</span>
-                <span>Resi</span>
-                <span>AI</span>
-              </div>
-            </div>
-          )}
+          <div>
+            <p className="text-[10px] text-gray-500 uppercase">RTS</p>
 
-          <div className="divide-y divide-gray-100">
-            {filteredLeads.map((lead, index) => {
-              const currentMonth = new Date(
-                lead.createdAt.seconds * 1000,
-              ).toLocaleString("id-ID", {
-                month: "long",
-                year: "numeric",
-              });
-
-              const prevLead = filteredLeads[index - 1];
-              const prevMonth =
-                prevLead &&
-                new Date(prevLead.createdAt.seconds * 1000).toLocaleString(
-                  "id-ID",
-                  {
-                    month: "long",
-                    year: "numeric",
-                  },
-                );
-
-              return (
-                <div key={lead.id}>
-                  {isMobile ? (
-                    <LeadRowMobile
-                      lead={lead}
-                      copiedId={copiedId}
-                      setCopiedId={setCopiedId}
-                      onSelect={handleSelectLead}
-                      products={products} // 🔥 tambah ini
-                    />
-                  ) : (
-                    <LeadRow
-                      lead={lead}
-                      copiedId={copiedId}
-                      setCopiedId={setCopiedId}
-                      onSelect={handleSelectLead}
-                      selectedLeads={selectedLeads}
-                      products={products} // 🔥 tambah ini
-                    />
-                  )}
-                </div>
-              );
-            })}
+            <p className="text-sm font-bold text-red-500">
+              {summary.rtsOrders}
+            </p>
           </div>
         </div>
       </div>
+
+      {/* =========================
+        STATUS FILTER
+    ========================= */}
+
+      <div
+        className="
+      flex
+      items-center
+      gap-1
+      mb-4
+      overflow-x-auto
+    "
+      >
+        {statusTabs.map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setSelectedStatus(tab.key)}
+            className={`
+            px-3
+            py-1.5
+            rounded-lg
+            text-xs
+            font-medium
+            whitespace-nowrap
+            transition
+
+            ${
+              selectedStatus === tab.key
+                ? `
+                  bg-black
+                  text-white
+                  dark:bg-white
+                  dark:text-black
+                `
+                : `
+                  text-gray-500
+                  hover:bg-gray-100
+                  dark:hover:bg-gray-800
+                `
+            }
+          `}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* =========================
+  BULK ACTION
+========================= */}
+
+      {selectedLeads.length > 0 && (
+        <div
+          className="
+      mb-3
+      flex
+      items-center
+      justify-between
+      gap-3
+      px-4
+      py-3
+      rounded-xl
+      border
+      border-gray-200
+      dark:border-gray-800
+      bg-white
+      dark:bg-gray-900
+    "
+        >
+          <div className="flex items-center gap-3">
+            <div
+              className="
+          w-7
+          h-7
+          rounded-lg
+          bg-gray-100
+          dark:bg-gray-800
+          flex
+          items-center
+          justify-center
+          text-xs
+          font-bold
+        "
+            >
+              {selectedLeads.length}
+            </div>
+
+            <div>
+              <p className="text-xs font-semibold">Order dipilih</p>
+
+              <p className="text-[10px] text-gray-500">
+                {selectedLeads.length} order siap diproses
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={resetSelection}
+              className="
+          px-3
+          py-2
+          rounded-lg
+          text-xs
+          font-medium
+          text-gray-500
+          hover:bg-gray-100
+          dark:hover:bg-gray-800
+        "
+            >
+              Batal
+            </button>
+
+            <button
+              type="button"
+              onClick={handleDeleteSelected}
+              className="
+          px-3
+          py-2
+          rounded-lg
+          bg-red-600
+          text-white
+          text-xs
+          font-semibold
+          hover:bg-red-700
+          transition
+        "
+            >
+              🗑️ Hapus {selectedLeads.length} Order
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* =========================
+        TABLE HEADER
+    ========================= */}
+
+      {!isMobile && (
+        <div
+          className="
+        px-2
+        mb-1
+      "
+        >
+          <div
+            className="
+          grid
+          grid-cols-10
+          items-center
+          gap-1
+          py-2
+          text-[10px]
+          uppercase
+          tracking-wide
+          font-semibold
+          text-gray-400
+        "
+          >
+            <div className="flex items-center justify-center">
+              <input
+                type="checkbox"
+                checked={allFilteredSelected}
+                onChange={(e) => handleSelectAll(e.target.checked)}
+                className="
+      scale-100
+      accent-gray-800
+      dark:accent-gray-200
+      cursor-pointer
+    "
+              />
+            </div>
+
+            <span>Tanggal</span>
+
+            <span>Nama</span>
+
+            <span className="text-center">WhatsApp</span>
+
+            <span className="text-center">Metode</span>
+
+            <span className="text-center">Produk</span>
+
+            <span className="text-center">Status</span>
+
+            <span className="text-center">Confirm</span>
+
+            <span className="text-center">Resi</span>
+
+            <span className="text-center">AI</span>
+          </div>
+        </div>
+      )}
+
+      {/* =========================
+        LEADS
+    ========================= */}
+
+      <div
+        className="
+      divide-y
+      divide-gray-100
+      dark:divide-gray-800
+    "
+      >
+        {filteredLeads.length === 0 ? (
+          <div
+            className="
+          py-12
+          text-center
+          text-xs
+          text-gray-500
+        "
+          >
+            Tidak ada lead.
+          </div>
+        ) : (
+          filteredLeads.map((lead) => (
+            <div key={lead.id}>
+              {isMobile ? (
+                <LeadRowMobile
+                  lead={lead}
+                  copiedId={copiedId}
+                  setCopiedId={setCopiedId}
+                  onSelect={handleSelectLead}
+                  products={products}
+                />
+              ) : (
+                <LeadRow
+                  lead={lead}
+                  copiedId={copiedId}
+                  setCopiedId={setCopiedId}
+                  onSelect={handleSelectLead}
+                  selectedLeads={selectedLeads}
+                  products={products}
+                />
+              )}
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* =========================
+        EXPORT MODAL
+    ========================= */}
+
+      {showExportModal && (
+        <div
+          className="
+        fixed
+        inset-0
+        z-50
+        flex
+        items-center
+        justify-center
+        bg-black/50
+        backdrop-blur-sm
+        p-4
+      "
+        >
+          <div
+            className="
+          w-full
+          max-w-sm
+          rounded-2xl
+          bg-white
+          dark:bg-gray-900
+          border
+          border-gray-200
+          dark:border-gray-800
+          shadow-2xl
+          p-5
+        "
+          >
+            <div className="mb-5">
+              <h2 className="text-base font-bold">Export Order</h2>
+
+              <p
+                className="
+              text-xs
+              text-gray-500
+              mt-1
+            "
+              >
+                Pilih format file yang ingin digunakan.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <button
+                className="
+                w-full
+                flex
+                items-center
+                justify-center
+                gap-2
+                px-4
+                py-2.5
+                rounded-lg
+                border
+                border-gray-300
+                dark:border-gray-700
+                text-xs
+                font-semibold
+                hover:bg-gray-100
+                dark:hover:bg-gray-800
+                transition
+              "
+                onClick={() => {
+                  exportToCSV();
+                  setShowExportModal(false);
+                }}
+              >
+                <FontAwesomeIcon icon={faFileCsv} />
+                Export CSV
+              </button>
+
+              <button
+                className="
+                w-full
+                flex
+                items-center
+                justify-center
+                gap-2
+                px-4
+                py-2.5
+                rounded-lg
+                bg-black
+                dark:bg-white
+                text-white
+                dark:text-black
+                text-xs
+                font-semibold
+                hover:opacity-90
+                transition
+              "
+                onClick={() => {
+                  exportToXLS();
+                  setShowExportModal(false);
+                }}
+              >
+                <FontAwesomeIcon icon={faFileExcel} />
+                Export Excel
+              </button>
+            </div>
+
+            <button
+              className="
+              mt-4
+              w-full
+              py-2
+              text-xs
+              text-gray-500
+              hover:text-gray-900
+              dark:hover:text-white
+            "
+              onClick={() => setShowExportModal(false)}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

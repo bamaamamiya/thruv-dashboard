@@ -24,7 +24,7 @@ export default function AbandonedDashboard() {
   const [isMobile, setIsMobile] = useState(false);
 
   const [selectedStatus, setSelectedStatus] = useState("Semua");
-  const [selectedFilter, setSelectedFilter] = useState("allTime");
+  const [selectedFilter, setSelectedFilter] = useState("week");
   const [customRange, setCustomRange] = useState([null, null]);
 
   const [loading, setLoading] = useState(true);
