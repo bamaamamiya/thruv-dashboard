@@ -29,13 +29,19 @@ export default function NewProductPage() {
     upsells: [],
 
     settings: {
-      bundle: true,
-      upsell: false,
-      cod: true,
-      bankTransfer: true,
-      ongkir: true,
-      comparePrice: true,
-      aiAgent: false,
+      checkout: {
+        cod: true,
+        bankTransfer: true,
+        ongkir: true,
+        bundle: true,
+      },
+
+      automation: {
+        aiAgent: false,
+        reminder: false,
+        faq: false,
+        followUp: false,
+      },
 
       countdown: false,
       countdownMinute: 15,

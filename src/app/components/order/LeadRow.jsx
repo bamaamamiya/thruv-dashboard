@@ -237,7 +237,8 @@ export default function LeadRow({
     const ongkirNormal = getOngkirNormal(ongkirValue);
     const totalPayment = price + ongkir;
     const pesan = `
-Terima kasih sudah melakukan pemesanan 🙏  
+Pesanan Kakak sudah berhasil kami terima.
+  
 Berikut detail pesanan Kakak:
 
 Nama Produk: ${productTitleValue}  
@@ -248,10 +249,9 @@ Total Pembayaran: ${formatHargaSingkat(totalPayment)}
 Nama: ${lead.name}  
 Alamat Lengkap: ${lead.addressClean}
 
-Apakah alamat yang Kakak berikan sudah benar?  
-Kami akan segera proses pesanan Kakak jika alamatnya sudah sesuai ya🙏    
+Pesanan akan segera diproses sesuai data yang telah dikirim saat checkout.
 
-Untuk ongkir, akan dihitung otomatis dan dianggap disetujui oleh sistem.
+Terima kasih sudah pesan di toko kami 🙏
 `;
 
     copyToClipboard(pesan, () => {

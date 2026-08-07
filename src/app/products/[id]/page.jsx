@@ -38,14 +38,19 @@ export default function EditProductPage() {
     price: "",
     cost: "",
     settings: {
-      bundle: true,
-      upsell: false,
-      comparePrice: true,
-      cod: true,
-      bankTransfer: true,
-      ongkir: true,
-      saveLead: true,
-      aiAgent: false,
+      checkout: {
+        cod: true,
+        bankTransfer: true,
+        ongkir: true,
+        bundle: true,
+      },
+
+      automation: {
+        aiAgent: false,
+        reminder: false,
+        faq: false,
+        followUp: false,
+      },
     },
   });
 
@@ -130,7 +135,7 @@ export default function EditProductPage() {
           price: bundle.pricing?.price || 0,
           cost: bundle.pricing?.cost || 0,
         },
-      }))
+      })),
     );
   }
 
@@ -245,7 +250,6 @@ export default function EditProductPage() {
 
   return (
     <div className="max-w-5xl mx-auto p-8 space-y-6">
-
       <ProductImages
         images={images}
         imageUrlInput={imageUrlInput}
@@ -254,10 +258,7 @@ export default function EditProductPage() {
         onRemoveImage={handleRemoveImage}
       />
 
-      <ProductBasicInfo
-        form={form}
-        onChange={handleChange}
-      />
+      <ProductBasicInfo form={form} onChange={handleChange} />
 
       <ProductBundles
         bundles={bundles}
@@ -273,11 +274,7 @@ export default function EditProductPage() {
         onToggle={handleToggle}
       />
 
-      <ProductActions
-        loading={loading}
-        onSave={handleUpdate}
-      />
-
+      <ProductActions loading={loading} onSave={handleUpdate} />
     </div>
   );
 }
