@@ -58,10 +58,11 @@ export default function ProductsPage() {
       {/* TABLE STYLE */}
       <div className="bg-white border rounded-xl overflow-hidden">
         {/* HEADER TABLE */}
-        <div className="grid grid-cols-6 px-6 py-3 text-xs text-gray-500 border-b">
+        <div className="grid grid-cols-7 px-6 py-3 text-xs text-gray-500 border-b">
           <span className="col-span-2">Product</span>
           <span>Category</span>
           <span>Price</span>
+					<span>Economics</span>
           <span>Status</span>
           <span className="text-right">Action</span>
         </div>
@@ -79,7 +80,7 @@ export default function ProductsPage() {
           return (
             <div
               key={p.id}
-              className="grid grid-cols-6 items-center px-6 py-4 border-b hover:bg-gray-50 transition"
+              className="grid grid-cols-7 items-center px-6 py-4 border-b hover:bg-gray-50 transition"
             >
               {/* PRODUCT */}
               <div className="col-span-2 flex items-center gap-3">
@@ -103,7 +104,28 @@ export default function ProductsPage() {
               <span className="text-sm text-gray-600">{p.category || "-"}</span>
 
               {/* PRICE */}
-              <span className="text-sm font-medium">Rp {price}</span>
+              <div className="flex flex-col">
+                <span className="text-sm font-medium">
+                  Rp {price.toLocaleString("id-ID")}
+                </span>
+
+                <span className="text-xs text-gray-500">
+                  HPP: Rp {cost.toLocaleString("id-ID")}
+                </span>
+              </div>
+
+              {/* ECONOMICS */}
+              <div className="flex flex-col gap-1">
+                <span className="text-xs text-gray-600">Contribution</span>
+
+                <span className="text-sm font-semibold">
+                  Rp {profit.toLocaleString("id-ID")}
+                </span>
+
+                <span className="text-xs text-green-600">
+                  BE CAC: Rp {profit.toLocaleString("id-ID")}
+                </span>
+              </div>
 
               {/* STATUS */}
               <div className="flex flex-col gap-1">

@@ -178,21 +178,17 @@ export default function EditProductPage() {
 
         settings: {
           checkout: {
-            cod:
-              settings.checkout?.cod ??
-              DEFAULT_SETTINGS.checkout.cod,
+            cod: settings.checkout?.cod ?? DEFAULT_SETTINGS.checkout.cod,
 
             bankTransfer:
               settings.checkout?.bankTransfer ??
               DEFAULT_SETTINGS.checkout.bankTransfer,
 
             ongkir:
-              settings.checkout?.ongkir ??
-              DEFAULT_SETTINGS.checkout.ongkir,
+              settings.checkout?.ongkir ?? DEFAULT_SETTINGS.checkout.ongkir,
 
             bundle:
-              settings.checkout?.bundle ??
-              DEFAULT_SETTINGS.checkout.bundle,
+              settings.checkout?.bundle ?? DEFAULT_SETTINGS.checkout.bundle,
           },
 
           automation: {
@@ -204,46 +200,31 @@ export default function EditProductPage() {
               settings.automation?.reminder ??
               DEFAULT_SETTINGS.automation.reminder,
 
-            faq:
-              settings.automation?.faq ??
-              DEFAULT_SETTINGS.automation.faq,
+            faq: settings.automation?.faq ?? DEFAULT_SETTINGS.automation.faq,
 
             followUp:
               settings.automation?.followUp ??
               DEFAULT_SETTINGS.automation.followUp,
 
             upsell:
-              settings.automation?.upsell ??
-              DEFAULT_SETTINGS.automation.upsell,
+              settings.automation?.upsell ?? DEFAULT_SETTINGS.automation.upsell,
           },
 
-          comparePrice:
-            settings.comparePrice ??
-            DEFAULT_SETTINGS.comparePrice,
+          comparePrice: settings.comparePrice ?? DEFAULT_SETTINGS.comparePrice,
 
-          saveLead:
-            settings.saveLead ??
-            DEFAULT_SETTINGS.saveLead,
+          saveLead: settings.saveLead ?? DEFAULT_SETTINGS.saveLead,
 
           abandonedLead:
-            settings.abandonedLead ??
-            DEFAULT_SETTINGS.abandonedLead,
+            settings.abandonedLead ?? DEFAULT_SETTINGS.abandonedLead,
 
-          countdown:
-            settings.countdown ??
-            DEFAULT_SETTINGS.countdown,
+          countdown: settings.countdown ?? DEFAULT_SETTINGS.countdown,
 
           countdownMinute:
-            settings.countdownMinute ??
-            DEFAULT_SETTINGS.countdownMinute,
+            settings.countdownMinute ?? DEFAULT_SETTINGS.countdownMinute,
 
-          showStock:
-            settings.showStock ??
-            DEFAULT_SETTINGS.showStock,
+          showStock: settings.showStock ?? DEFAULT_SETTINGS.showStock,
 
-          maxOrder:
-            settings.maxOrder ??
-            DEFAULT_SETTINGS.maxOrder,
+          maxOrder: settings.maxOrder ?? DEFAULT_SETTINGS.maxOrder,
         },
       });
 
@@ -313,6 +294,57 @@ export default function EditProductPage() {
     }));
   }
 
+  function getEconomics() {
+    const price = Number(form.price) || 0;
+    const cost = Number(form.cost) || 0;
+
+    // =========================
+    // BASIC ECONOMICS
+    // =========================
+
+    // Profit sebelum advertising
+    const contributionProfit = price - cost;
+
+    // Contribution margin
+    const contributionMargin =
+      price > 0 ? (contributionProfit / price) * 100 : 0;
+
+    // =========================
+    // TARGET
+    // =========================
+
+    // Target net margin setelah CAC
+    const targetNetProfitMargin = 30;
+
+    // Nominal net profit yang ingin dipertahankan
+    const targetNetProfit = price * (targetNetProfitMargin / 100);
+
+    // =========================
+    // CAC THRESHOLDS
+    // =========================
+
+    // CAC maksimum agar masih mendapatkan
+    // target net margin 30%
+    const scaleCAC = Math.max(0, contributionProfit - targetNetProfit);
+
+    // CAC maksimum sebelum profit menjadi 0
+    const breakEvenCAC = Math.max(0, contributionProfit);
+
+    return {
+      price,
+      cost,
+
+      contributionProfit,
+      contributionMargin,
+
+      targetNetProfitMargin,
+      targetNetProfit,
+
+      scaleCAC,
+      breakEvenCAC,
+    };
+  }
+
   function handleAddImage() {
     const url = imageUrlInput.trim();
 
@@ -329,9 +361,7 @@ export default function EditProductPage() {
   }
 
   function handleRemoveImage(index) {
-    setImages((prev) =>
-      prev.filter((_, i) => i !== index),
-    );
+    setImages((prev) => prev.filter((_, i) => i !== index));
   }
 
   function handleAddBundle() {
@@ -376,9 +406,7 @@ export default function EditProductPage() {
   }
 
   function handleRemoveBundle(index) {
-    setBundles((prev) =>
-      prev.filter((_, i) => i !== index),
-    );
+    setBundles((prev) => prev.filter((_, i) => i !== index));
   }
 
   async function handleUpdate() {
@@ -414,72 +442,40 @@ export default function EditProductPage() {
 
         settings: {
           checkout: {
-            cod: Boolean(
-              form.settings.checkout.cod,
-            ),
+            cod: Boolean(form.settings.checkout.cod),
 
-            bankTransfer: Boolean(
-              form.settings.checkout.bankTransfer,
-            ),
+            bankTransfer: Boolean(form.settings.checkout.bankTransfer),
 
-            ongkir: Boolean(
-              form.settings.checkout.ongkir,
-            ),
+            ongkir: Boolean(form.settings.checkout.ongkir),
 
-            bundle: Boolean(
-              form.settings.checkout.bundle,
-            ),
+            bundle: Boolean(form.settings.checkout.bundle),
           },
 
           automation: {
-            aiAgent: Boolean(
-              form.settings.automation.aiAgent,
-            ),
+            aiAgent: Boolean(form.settings.automation.aiAgent),
 
-            reminder: Boolean(
-              form.settings.automation.reminder,
-            ),
+            reminder: Boolean(form.settings.automation.reminder),
 
-            faq: Boolean(
-              form.settings.automation.faq,
-            ),
+            faq: Boolean(form.settings.automation.faq),
 
-            followUp: Boolean(
-              form.settings.automation.followUp,
-            ),
+            followUp: Boolean(form.settings.automation.followUp),
 
-            upsell: Boolean(
-              form.settings.automation.upsell,
-            ),
+            upsell: Boolean(form.settings.automation.upsell),
           },
 
-          comparePrice: Boolean(
-            form.settings.comparePrice,
-          ),
+          comparePrice: Boolean(form.settings.comparePrice),
 
-          saveLead: Boolean(
-            form.settings.saveLead,
-          ),
+          saveLead: Boolean(form.settings.saveLead),
 
-          abandonedLead: Boolean(
-            form.settings.abandonedLead,
-          ),
+          abandonedLead: Boolean(form.settings.abandonedLead),
 
-          countdown: Boolean(
-            form.settings.countdown,
-          ),
+          countdown: Boolean(form.settings.countdown),
 
-          countdownMinute: Number(
-            form.settings.countdownMinute || 15,
-          ),
+          countdownMinute: Number(form.settings.countdownMinute || 15),
 
-          showStock: Boolean(
-            form.settings.showStock,
-          ),
+          showStock: Boolean(form.settings.showStock),
 
-          maxOrder: Number(
-            form.settings.maxOrder || 3,
-          ),
+          maxOrder: Number(form.settings.maxOrder || 3),
         },
 
         pricing: {
@@ -495,19 +491,11 @@ export default function EditProductPage() {
       };
 
       if (newId !== id) {
-        await setDoc(
-          doc(db, "products", newId),
-          payload,
-        );
+        await setDoc(doc(db, "products", newId), payload);
 
-        await deleteDoc(
-          doc(db, "products", id),
-        );
+        await deleteDoc(doc(db, "products", id));
       } else {
-        await updateDoc(
-          doc(db, "products", id),
-          payload,
-        );
+        await updateDoc(doc(db, "products", id), payload);
       }
 
       alert("Product updated 🚀");
@@ -521,19 +509,15 @@ export default function EditProductPage() {
   }
 
   if (!id) {
-    return (
-      <div className="p-6">
-        Loading...
-      </div>
-    );
+    return <div className="p-6">Loading...</div>;
   }
+
+  const economics = getEconomics();
 
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">
-          Edit Product
-        </h1>
+        <h1 className="text-2xl font-bold">Edit Product</h1>
 
         <p className="text-sm text-gray-500">
           Atur product, bundle, checkout, dan automation.
@@ -543,23 +527,238 @@ export default function EditProductPage() {
       {/* BASIC INFO */}
 
       <div className="border rounded-2xl p-5">
-        <ProductBasicInfo
-          form={form}
-          onChange={handleChange}
-        />
+        <ProductBasicInfo form={form} onChange={handleChange} />
+      </div>
+
+      {/* ECONOMICS */}
+
+      <div className="border rounded-2xl p-5 space-y-5">
+        <div>
+          <h2 className="font-semibold text-lg">💰 Product Economics</h2>
+
+          <p className="text-sm text-gray-500">
+            Menentukan batas CAC berdasarkan target net margin produk.
+          </p>
+        </div>
+
+        {/* BASIC ECONOMICS */}
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {/* SELLING PRICE */}
+
+          <div className="border rounded-xl p-4">
+            <p className="text-xs text-gray-500">Selling Price</p>
+
+            <p className="text-lg font-semibold mt-1">
+              Rp {economics.price.toLocaleString("id-ID")}
+            </p>
+          </div>
+
+          {/* HPP */}
+
+          <div className="border rounded-xl p-4">
+            <p className="text-xs text-gray-500">HPP</p>
+
+            <p className="text-lg font-semibold mt-1">
+              Rp {economics.cost.toLocaleString("id-ID")}
+            </p>
+          </div>
+
+          {/* CONTRIBUTION */}
+
+          <div className="border rounded-xl p-4">
+            <p className="text-xs text-gray-500">Contribution Profit</p>
+
+            <p className="text-lg font-semibold text-green-600 mt-1">
+              Rp {economics.contributionProfit.toLocaleString("id-ID")}
+            </p>
+          </div>
+
+          {/* CONTRIBUTION MARGIN */}
+
+          <div className="border rounded-xl p-4">
+            <p className="text-xs text-gray-500">Contribution Margin</p>
+
+            <p className="text-lg font-semibold mt-1">
+              {economics.contributionMargin.toFixed(1)}%
+            </p>
+          </div>
+        </div>
+
+        {/* TARGET NET PROFIT */}
+
+        <div className="border rounded-xl p-5">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm text-gray-500">Target Net Profit</p>
+
+              <p className="text-xs text-gray-400 mt-1">
+                Target {economics.targetNetProfitMargin}% dari selling price
+                setelah CAC.
+              </p>
+            </div>
+
+            <p className="text-2xl font-bold">
+              Rp {economics.targetNetProfit.toLocaleString("id-ID")}
+            </p>
+          </div>
+        </div>
+
+        {/* SCALE CAC */}
+
+        <div className="border rounded-2xl p-6 bg-green-50">
+          <p className="text-sm font-medium text-green-700">🟢 SCALE CAC</p>
+
+          <p className="text-4xl font-bold text-green-700 mt-2">
+            Rp {economics.scaleCAC.toLocaleString("id-ID")}
+          </p>
+
+          <p className="text-sm text-green-700 mt-2">
+            CAC maksimal agar produk masih mencapai target net margin{" "}
+            {economics.targetNetProfitMargin}%.
+          </p>
+        </div>
+
+        {/* BREAK EVEN CAC */}
+
+        <div className="border rounded-2xl p-6 bg-red-50">
+          <p className="text-sm font-medium text-red-700">🔴 BREAK-EVEN CAC</p>
+
+          <p className="text-3xl font-bold text-red-700 mt-2">
+            Rp {economics.breakEvenCAC.toLocaleString("id-ID")}
+          </p>
+
+          <p className="text-sm text-red-700 mt-2">
+            CAC pada titik ini membuat net profit menjadi Rp 0.
+          </p>
+        </div>
+
+        {/* CAC RANGE */}
+
+        <div className="border rounded-xl p-5">
+          <div className="mb-4">
+            <p className="font-semibold">CAC Performance Range</p>
+
+            <p className="text-xs text-gray-500 mt-1">
+              Bandingkan CAC aktual dari Ads Manager dengan batas economics
+              produk.
+            </p>
+          </div>
+
+          {/* RANGE BAR */}
+
+          <div className="relative">
+            <div className="flex h-4 rounded-full overflow-hidden">
+              {/* SCALE */}
+
+              <div
+                className="bg-green-500"
+                style={{
+                  width:
+                    economics.breakEvenCAC > 0
+                      ? `${Math.min(
+                          100,
+                          (economics.scaleCAC / economics.breakEvenCAC) * 100,
+                        )}%`
+                      : "0%",
+                }}
+              />
+
+              {/* WATCH */}
+
+              <div
+                className="bg-yellow-400"
+                style={{
+                  width:
+                    economics.breakEvenCAC > 0
+                      ? `${Math.max(
+                          0,
+                          100 -
+                            (economics.scaleCAC / economics.breakEvenCAC) * 100,
+                        )}%`
+                      : "0%",
+                }}
+              />
+            </div>
+
+            {/* LABEL */}
+
+            <div className="flex justify-between mt-3 text-xs">
+              <span className="text-green-600 font-medium">🟢 SCALE</span>
+
+              <span className="text-yellow-600 font-medium">🟡 WATCH</span>
+
+              <span className="text-red-600 font-medium">🔴 STOP</span>
+            </div>
+
+            {/* VALUES */}
+
+            <div className="flex justify-between mt-2 text-xs">
+              <span>Rp 0</span>
+
+              <span className="font-semibold text-green-600">
+                Scale: Rp {economics.scaleCAC.toLocaleString("id-ID")}
+              </span>
+
+              <span className="font-semibold text-red-600">
+                BE: Rp {economics.breakEvenCAC.toLocaleString("id-ID")}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* DECISION RULES */}
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {/* SCALE */}
+
+          <div className="border rounded-xl p-4">
+            <p className="text-xs text-gray-500">CAC ≤ Scale CAC</p>
+
+            <p className="text-sm font-semibold text-green-600 mt-1">
+              🟢 SCALE
+            </p>
+
+            <p className="text-xs text-gray-500 mt-1">
+              Net margin ≥ {economics.targetNetProfitMargin}%.
+            </p>
+          </div>
+
+          {/* WATCH */}
+
+          <div className="border rounded-xl p-4">
+            <p className="text-xs text-gray-500">
+              Scale CAC &lt; CAC &lt; BE CAC
+            </p>
+
+            <p className="text-sm font-semibold text-yellow-600 mt-1">
+              🟡 WATCH
+            </p>
+
+            <p className="text-xs text-gray-500 mt-1">
+              Masih profitable, tetapi net margin sudah di bawah target.
+            </p>
+          </div>
+
+          {/* STOP */}
+
+          <div className="border rounded-xl p-4">
+            <p className="text-xs text-gray-500">CAC ≥ BE CAC</p>
+
+            <p className="text-sm font-semibold text-red-600 mt-1">🔴 STOP</p>
+
+            <p className="text-xs text-gray-500 mt-1">Net profit ≤ Rp 0.</p>
+          </div>
+        </div>
       </div>
 
       {/* IMAGES */}
 
       <div className="border rounded-2xl p-5 space-y-4">
         <div>
-          <h2 className="font-semibold text-lg">
-            Product Images
-          </h2>
+          <h2 className="font-semibold text-lg">Product Images</h2>
 
-          <p className="text-sm text-gray-500">
-            Maksimal 10 gambar.
-          </p>
+          <p className="text-sm text-gray-500">Maksimal 10 gambar.</p>
         </div>
 
         <div className="flex gap-3 flex-wrap">
@@ -576,9 +775,7 @@ export default function EditProductPage() {
 
               <button
                 type="button"
-                onClick={() =>
-                  handleRemoveImage(index)
-                }
+                onClick={() => handleRemoveImage(index)}
                 className="absolute top-1 right-1 bg-white text-red-500 rounded-full px-2 py-1 text-xs"
               >
                 ×
@@ -591,9 +788,7 @@ export default function EditProductPage() {
           <input
             type="text"
             value={imageUrlInput}
-            onChange={(e) =>
-              setImageUrlInput(e.target.value)
-            }
+            onChange={(e) => setImageUrlInput(e.target.value)}
             placeholder="Paste image URL..."
             className="border rounded-lg p-2 flex-1"
           />
@@ -613,9 +808,7 @@ export default function EditProductPage() {
       <div className="border rounded-2xl p-5">
         <ProductBundles
           bundles={bundles}
-          comparePriceEnabled={
-            form.settings.comparePrice
-          }
+          comparePriceEnabled={form.settings.comparePrice}
           onAddBundle={handleAddBundle}
           onBundleChange={handleBundleChange}
           onRemoveBundle={handleRemoveBundle}
@@ -626,9 +819,7 @@ export default function EditProductPage() {
 
       <div className="border rounded-2xl p-5 space-y-4">
         <div>
-          <h2 className="font-semibold text-lg">
-            🛒 Checkout Settings
-          </h2>
+          <h2 className="font-semibold text-lg">🛒 Checkout Settings</h2>
 
           <p className="text-sm text-gray-500">
             Atur fitur yang tersedia di funnel checkout.
@@ -641,18 +832,8 @@ export default function EditProductPage() {
               key={feature.key}
               title={feature.title}
               description={feature.description}
-              value={
-                form.settings.checkout[
-                  feature.key
-                ]
-              }
-              onChange={(value) =>
-                handleToggle(
-                  "checkout",
-                  feature.key,
-                  value,
-                )
-              }
+              value={form.settings.checkout[feature.key]}
+              onChange={(value) => handleToggle("checkout", feature.key, value)}
             />
           ))}
         </div>
@@ -662,13 +843,10 @@ export default function EditProductPage() {
 
       <div className="border rounded-2xl p-5 space-y-4">
         <div>
-          <h2 className="font-semibold text-lg">
-            🤖 Automation Settings
-          </h2>
+          <h2 className="font-semibold text-lg">🤖 Automation Settings</h2>
 
           <p className="text-sm text-gray-500">
-            Automation hanya berjalan jika fitur
-            product tersebut aktif.
+            Automation hanya berjalan jika fitur product tersebut aktif.
           </p>
         </div>
 
@@ -678,17 +856,9 @@ export default function EditProductPage() {
               key={feature.key}
               title={feature.title}
               description={feature.description}
-              value={
-                form.settings.automation[
-                  feature.key
-                ]
-              }
+              value={form.settings.automation[feature.key]}
               onChange={(value) =>
-                handleToggle(
-                  "automation",
-                  feature.key,
-                  value,
-                )
+                handleToggle("automation", feature.key, value)
               }
             />
           ))}
@@ -699,9 +869,7 @@ export default function EditProductPage() {
 
       <div className="border rounded-2xl p-5 space-y-4">
         <div>
-          <h2 className="font-semibold text-lg">
-            ⚙️ General Settings
-          </h2>
+          <h2 className="font-semibold text-lg">⚙️ General Settings</h2>
 
           <p className="text-sm text-gray-500">
             Pengaturan tambahan untuk product.
@@ -714,15 +882,8 @@ export default function EditProductPage() {
               key={feature.key}
               title={feature.title}
               description={feature.description}
-              value={
-                form.settings[feature.key]
-              }
-              onChange={(value) =>
-                handleGeneralToggle(
-                  feature.key,
-                  value,
-                )
-              }
+              value={form.settings[feature.key]}
+              onChange={(value) => handleGeneralToggle(feature.key, value)}
             />
           ))}
         </div>
@@ -731,23 +892,18 @@ export default function EditProductPage() {
 
         {form.settings.countdown && (
           <div>
-            <label className="text-sm font-medium">
-              Countdown Duration
-            </label>
+            <label className="text-sm font-medium">Countdown Duration</label>
 
             <input
               type="number"
               min="1"
-              value={
-                form.settings.countdownMinute
-              }
+              value={form.settings.countdownMinute}
               onChange={(e) =>
                 setForm((prev) => ({
                   ...prev,
                   settings: {
                     ...prev.settings,
-                    countdownMinute:
-                      Number(e.target.value),
+                    countdownMinute: Number(e.target.value),
                   },
                 }))
               }
@@ -759,9 +915,7 @@ export default function EditProductPage() {
         {/* MAX ORDER */}
 
         <div>
-          <label className="text-sm font-medium">
-            Max Order
-          </label>
+          <label className="text-sm font-medium">Max Order</label>
 
           <input
             type="number"
@@ -772,8 +926,7 @@ export default function EditProductPage() {
                 ...prev,
                 settings: {
                   ...prev.settings,
-                  maxOrder:
-                    Number(e.target.value),
+                  maxOrder: Number(e.target.value),
                 },
               }))
             }
@@ -785,25 +938,16 @@ export default function EditProductPage() {
       {/* DEBUG AUTOMATION */}
 
       <div className="border rounded-2xl p-5 bg-gray-50">
-        <h2 className="font-semibold mb-2">
-          🔍 Automation Preview
-        </h2>
+        <h2 className="font-semibold mb-2">🔍 Automation Preview</h2>
 
         <pre className="text-xs overflow-auto">
-          {JSON.stringify(
-            form.settings,
-            null,
-            2,
-          )}
+          {JSON.stringify(form.settings, null, 2)}
         </pre>
       </div>
 
       {/* ACTION */}
 
-      <ProductActions
-        loading={loading}
-        onSave={handleUpdate}
-      />
+      <ProductActions loading={loading} onSave={handleUpdate} />
     </div>
   );
 }
