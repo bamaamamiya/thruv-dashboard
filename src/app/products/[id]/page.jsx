@@ -314,7 +314,7 @@ export default function EditProductPage() {
     // =========================
 
     // Target net margin setelah CAC
-    const targetNetProfitMargin = 30;
+    const targetNetProfitMargin = 22.5;
 
     // Nominal net profit yang ingin dipertahankan
     const targetNetProfit = price * (targetNetProfitMargin / 100);
