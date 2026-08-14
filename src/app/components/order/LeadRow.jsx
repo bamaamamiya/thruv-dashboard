@@ -149,32 +149,13 @@ export default function LeadRow({
   // =========================================================
 
   useEffect(() => {
-    if (!selectedProduct) return;
+    setProductTitleValue(lead.productTitle || "");
+    setPriceValue(Number(lead.price || 0));
+    setCostProductValue(Number(lead.costProduct || 0));
 
-    // =========================================
-    // MAIN PRODUCT — TANPA BUNDLE
-    // =========================================
-    if (!selectedBundleId) {
-      setProductTitleValue(selectedProduct.title || "");
-
-      setPriceValue(Number(selectedProduct.pricing?.price || 0));
-
-      setCostProductValue(Number(selectedProduct.pricing?.cost || 0));
-
-      return;
-    }
-
-    // =========================================
-    // BUNDLE
-    // =========================================
-    if (selectedBundle) {
-      setProductTitleValue(selectedBundle.title || selectedProduct.title || "");
-
-      setPriceValue(Number(selectedBundle.pricing?.price || 0));
-
-      setCostProductValue(Number(selectedBundle.pricing?.cost || 0));
-    }
-  }, [selectedProduct, selectedBundle, selectedBundleId]);
+    setSelectedProductId(lead.productId || "");
+    setSelectedBundleId(lead.bundleId || "");
+  }, [lead.id]);
 
   // =========================================================
   // MODAL SCROLL LOCK
