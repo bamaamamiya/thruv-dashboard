@@ -41,7 +41,8 @@ export async function POST(req) {
     // 🔥 Fetch dari Meta API per hari
     const url =
       `https://graph.facebook.com/v25.0/${adAccountId}/insights` +
-      `?fields=spend,date_start` +
+      `?fields=ad_id,ad_name,campaign_name,adset_name,spend,clicks,date_start` +
+      `&level=ad` +
       `&time_range={"since":"${sinceDate}","until":"${untilDate}"}` +
       `&time_increment=1` +
       `&access_token=${token}`;
@@ -67,34 +68,65 @@ export async function POST(req) {
 
     for (const item of data.data) {
       const date = item.date_start;
-      const spend = Number(item.spend);
+      const adId = item.ad_id;
+      const spend = Number(item.spend || 0);
 
-      // cek apakah sudah ada
+      if (!adId) continue;
+
+      // Cari berdasarkan DATE + AD ID
       const existing = await getDocs(
         query(
           collection(db, "adSpends"),
           where("date", "==", date),
-          where("platform", "==", "Meta Ads"),
+          where("metaAdId", "==", adId),
         ),
       );
 
+      const adData = {
+        platform: "Meta Ads",
+
+        date,
+
+        // Meta identification
+        metaAdId: adId,
+        adName: item.ad_name || "",
+
+        campaignName: item.campaign_name || "",
+        adsetName: item.adset_name || "",
+
+        // Economics
+        adSpend: spend,
+
+        // nanti bisa kita isi
+        clicks: Number(item.clicks || 0),
+
+        source: "meta",
+        updatedAt: Timestamp.now(),
+      };
+
       if (!existing.empty) {
-        // update jika sudah ada
-        await updateDoc(existing.docs[0].ref, {
-          adSpend: spend,
-          updatedAt: Timestamp.now(),
-        });
-        results.push({ date, spend, action: "updated" });
-      } else {
-        // insert baru
-        await addDoc(collection(db, "adSpends"), {
-          platform: "Meta Ads",
+        await updateDoc(existing.docs[0].ref, adData);
+
+        results.push({
           date,
-          adSpend: spend,
-          source: "auto",
+          adId,
+          adName: item.ad_name,
+          spend,
+          action: "updated",
+        });
+      } else {
+        await addDoc(collection(db, "adSpends"), {
+          ...adData,
           createdAt: Timestamp.fromDate(new Date(date)),
         });
-        results.push({ date, spend, action: "created" });
+
+        results.push({
+          date,
+          adId,
+          adName: item.ad_name,
+          spend,
+          action: "created",
+        });
       }
     }
 

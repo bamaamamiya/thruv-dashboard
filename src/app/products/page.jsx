@@ -5,6 +5,7 @@ import { db } from "@/lib/firebaseClient";
 import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
 import Link from "next/link";
 import { Pencil, Trash2, CheckCircle2, XCircle } from "lucide-react";
+import { calculateUnitEconomics } from "@/lib/economics";
 export default function ProductsPage() {
   const [products, setProducts] = useState([]);
 
@@ -62,7 +63,7 @@ export default function ProductsPage() {
           <span className="col-span-2">Product</span>
           <span>Category</span>
           <span>Price</span>
-					<span>Economics</span>
+          <span>Economics</span>
           <span>Status</span>
           <span className="text-right">Action</span>
         </div>

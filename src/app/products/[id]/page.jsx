@@ -18,6 +18,11 @@ import ProductBundles from "@/app/products/components/ProductBundles";
 import ProductActions from "@/app/products/components/ProductActions";
 import FeatureToggle from "@/app/products/components/FeatureToggle";
 
+import {
+  calculateUnitEconomics,
+  calculateAdEconomics,
+  calculateEconomicsDecision,
+} from "@/lib/economics";
 const DEFAULT_SETTINGS = {
   checkout: {
     cod: true,
@@ -294,56 +299,17 @@ export default function EditProductPage() {
     }));
   }
 
-  function getEconomics() {
-    const price = Number(form.price) || 0;
-    const cost = Number(form.cost) || 0;
+  const unitEconomics = calculateUnitEconomics({
+  price: form.price,
+  cost: form.cost,
+  shippingCost: 0,
+});
 
-    // =========================
-    // BASIC ECONOMICS
-    // =========================
-
-    // Profit sebelum advertising
-    const contributionProfit = price - cost;
-
-    // Contribution margin
-    const contributionMargin =
-      price > 0 ? (contributionProfit / price) * 100 : 0;
-
-    // =========================
-    // TARGET
-    // =========================
-
-    // Target net margin setelah CAC
-    const targetNetProfitMargin = 22.5;
-
-    // Nominal net profit yang ingin dipertahankan
-    const targetNetProfit = price * (targetNetProfitMargin / 100);
-
-    // =========================
-    // CAC THRESHOLDS
-    // =========================
-
-    // CAC maksimum agar masih mendapatkan
-    // target net margin 30%
-    const scaleCAC = Math.max(0, contributionProfit - targetNetProfit);
-
-    // CAC maksimum sebelum profit menjadi 0
-    const breakEvenCAC = Math.max(0, contributionProfit);
-
-    return {
-      price,
-      cost,
-
-      contributionProfit,
-      contributionMargin,
-
-      targetNetProfitMargin,
-      targetNetProfit,
-
-      scaleCAC,
-      breakEvenCAC,
-    };
-  }
+  const economicsDecision = calculateEconomicsDecision({
+    sellingPrice: unitEconomics.sellingPrice,
+    contributionProfit: unitEconomics.grossProfitPerUnit,
+    targetNetProfitMargin: 22.5,
+  });
 
   function handleAddImage() {
     const url = imageUrlInput.trim();
@@ -508,12 +474,6 @@ export default function EditProductPage() {
     }
   }
 
-  if (!id) {
-    return <div className="p-6">Loading...</div>;
-  }
-
-  const economics = getEconomics();
-
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-6">
       <div>
@@ -550,7 +510,7 @@ export default function EditProductPage() {
             <p className="text-xs text-gray-500">Selling Price</p>
 
             <p className="text-lg font-semibold mt-1">
-              Rp {economics.price.toLocaleString("id-ID")}
+              Rp {unitEconomics.sellingPrice.toLocaleString("id-ID")}
             </p>
           </div>
 
@@ -560,7 +520,7 @@ export default function EditProductPage() {
             <p className="text-xs text-gray-500">HPP</p>
 
             <p className="text-lg font-semibold mt-1">
-              Rp {economics.cost.toLocaleString("id-ID")}
+              Rp {unitEconomics.cogs.toLocaleString("id-ID")}
             </p>
           </div>
 
@@ -570,7 +530,7 @@ export default function EditProductPage() {
             <p className="text-xs text-gray-500">Contribution Profit</p>
 
             <p className="text-lg font-semibold text-green-600 mt-1">
-              Rp {economics.contributionProfit.toLocaleString("id-ID")}
+              Rp {unitEconomics.grossProfitPerUnit.toLocaleString("id-ID")}
             </p>
           </div>
 
@@ -580,7 +540,7 @@ export default function EditProductPage() {
             <p className="text-xs text-gray-500">Contribution Margin</p>
 
             <p className="text-lg font-semibold mt-1">
-              {economics.contributionMargin.toFixed(1)}%
+              {unitEconomics.grossMargin.toFixed(1)}%
             </p>
           </div>
         </div>
@@ -593,13 +553,13 @@ export default function EditProductPage() {
               <p className="text-sm text-gray-500">Target Net Profit</p>
 
               <p className="text-xs text-gray-400 mt-1">
-                Target {economics.targetNetProfitMargin}% dari selling price
-                setelah CAC.
+                Target {economicsDecision.targetNetProfitMargin}% dari
+                contribution setelah CAC.
               </p>
             </div>
 
             <p className="text-2xl font-bold">
-              Rp {economics.targetNetProfit.toLocaleString("id-ID")}
+              Rp {economicsDecision.targetNetProfit.toLocaleString("id-ID")}
             </p>
           </div>
         </div>
@@ -610,12 +570,12 @@ export default function EditProductPage() {
           <p className="text-sm font-medium text-green-700">🟢 SCALE CAC</p>
 
           <p className="text-4xl font-bold text-green-700 mt-2">
-            Rp {economics.scaleCAC.toLocaleString("id-ID")}
+            Rp {economicsDecision.scaleCAC.toLocaleString("id-ID")}
           </p>
 
           <p className="text-sm text-green-700 mt-2">
             CAC maksimal agar produk masih mencapai target net margin{" "}
-            {economics.targetNetProfitMargin}%.
+            {economicsDecision.targetNetProfitMargin}%.
           </p>
         </div>
 
@@ -625,7 +585,7 @@ export default function EditProductPage() {
           <p className="text-sm font-medium text-red-700">🔴 BREAK-EVEN CAC</p>
 
           <p className="text-3xl font-bold text-red-700 mt-2">
-            Rp {economics.breakEvenCAC.toLocaleString("id-ID")}
+            Rp {economicsDecision.breakEvenCAC.toLocaleString("id-ID")}
           </p>
 
           <p className="text-sm text-red-700 mt-2">
@@ -645,8 +605,6 @@ export default function EditProductPage() {
             </p>
           </div>
 
-          {/* RANGE BAR */}
-
           <div className="relative">
             <div className="flex h-4 rounded-full overflow-hidden">
               {/* SCALE */}
@@ -655,10 +613,12 @@ export default function EditProductPage() {
                 className="bg-green-500"
                 style={{
                   width:
-                    economics.breakEvenCAC > 0
+                    economicsDecision.breakEvenCAC > 0
                       ? `${Math.min(
                           100,
-                          (economics.scaleCAC / economics.breakEvenCAC) * 100,
+                          (economicsDecision.scaleCAC /
+                            economicsDecision.breakEvenCAC) *
+                            100,
                         )}%`
                       : "0%",
                 }}
@@ -670,18 +630,18 @@ export default function EditProductPage() {
                 className="bg-yellow-400"
                 style={{
                   width:
-                    economics.breakEvenCAC > 0
+                    economicsDecision.breakEvenCAC > 0
                       ? `${Math.max(
                           0,
                           100 -
-                            (economics.scaleCAC / economics.breakEvenCAC) * 100,
+                            (economicsDecision.scaleCAC /
+                              economicsDecision.breakEvenCAC) *
+                              100,
                         )}%`
                       : "0%",
                 }}
               />
             </div>
-
-            {/* LABEL */}
 
             <div className="flex justify-between mt-3 text-xs">
               <span className="text-green-600 font-medium">🟢 SCALE</span>
@@ -691,17 +651,15 @@ export default function EditProductPage() {
               <span className="text-red-600 font-medium">🔴 STOP</span>
             </div>
 
-            {/* VALUES */}
-
             <div className="flex justify-between mt-2 text-xs">
               <span>Rp 0</span>
 
               <span className="font-semibold text-green-600">
-                Scale: Rp {economics.scaleCAC.toLocaleString("id-ID")}
+                Scale: Rp {economicsDecision.scaleCAC.toLocaleString("id-ID")}
               </span>
 
               <span className="font-semibold text-red-600">
-                BE: Rp {economics.breakEvenCAC.toLocaleString("id-ID")}
+                BE: Rp {economicsDecision.breakEvenCAC.toLocaleString("id-ID")}
               </span>
             </div>
           </div>
@@ -710,8 +668,6 @@ export default function EditProductPage() {
         {/* DECISION RULES */}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          {/* SCALE */}
-
           <div className="border rounded-xl p-4">
             <p className="text-xs text-gray-500">CAC ≤ Scale CAC</p>
 
@@ -720,11 +676,9 @@ export default function EditProductPage() {
             </p>
 
             <p className="text-xs text-gray-500 mt-1">
-              Net margin ≥ {economics.targetNetProfitMargin}%.
+              Net margin ≥ {economicsDecision.targetNetProfitMargin}%.
             </p>
           </div>
-
-          {/* WATCH */}
 
           <div className="border rounded-xl p-4">
             <p className="text-xs text-gray-500">
@@ -740,8 +694,6 @@ export default function EditProductPage() {
             </p>
           </div>
 
-          {/* STOP */}
-
           <div className="border rounded-xl p-4">
             <p className="text-xs text-gray-500">CAC ≥ BE CAC</p>
 
@@ -751,7 +703,6 @@ export default function EditProductPage() {
           </div>
         </div>
       </div>
-
       {/* IMAGES */}
 
       <div className="border rounded-2xl p-5 space-y-4">
