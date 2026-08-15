@@ -475,140 +475,163 @@ export default function EditProductPage() {
   }
 
   return (
+  <div className="min-h-screen bg-gray-50 dark:bg-black text-gray-900 dark:text-gray-100 transition-colors">
     <div className="max-w-5xl mx-auto p-6 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Edit Product</h1>
 
-        <p className="text-sm text-gray-500">
+      {/* HEADER */}
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          Edit Product
+        </h1>
+
+        <p className="text-sm text-gray-500 dark:text-gray-400">
           Atur product, bundle, checkout, dan automation.
         </p>
       </div>
 
       {/* BASIC INFO */}
-
-      <div className="border rounded-2xl p-5">
+      <div className="border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 rounded-2xl p-5 transition-colors">
         <ProductBasicInfo form={form} onChange={handleChange} />
       </div>
 
       {/* ECONOMICS */}
+      <div className="border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 rounded-2xl p-5 space-y-5 transition-colors">
 
-      <div className="border rounded-2xl p-5 space-y-5">
         <div>
-          <h2 className="font-semibold text-lg">💰 Product Economics</h2>
+          <h2 className="font-semibold text-lg text-gray-900 dark:text-white">
+            💰 Product Economics
+          </h2>
 
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             Menentukan batas CAC berdasarkan target net margin produk.
           </p>
         </div>
 
         {/* BASIC ECONOMICS */}
-
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+
           {/* SELLING PRICE */}
+          <div className="border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Selling Price
+            </p>
 
-          <div className="border rounded-xl p-4">
-            <p className="text-xs text-gray-500">Selling Price</p>
-
-            <p className="text-lg font-semibold mt-1">
+            <p className="text-lg font-semibold mt-1 text-gray-900 dark:text-white">
               Rp {unitEconomics.sellingPrice.toLocaleString("id-ID")}
             </p>
           </div>
 
           {/* HPP */}
+          <div className="border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              HPP
+            </p>
 
-          <div className="border rounded-xl p-4">
-            <p className="text-xs text-gray-500">HPP</p>
-
-            <p className="text-lg font-semibold mt-1">
+            <p className="text-lg font-semibold mt-1 text-gray-900 dark:text-white">
               Rp {unitEconomics.cogs.toLocaleString("id-ID")}
             </p>
           </div>
 
           {/* CONTRIBUTION */}
+          <div className="border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Contribution Profit
+            </p>
 
-          <div className="border rounded-xl p-4">
-            <p className="text-xs text-gray-500">Contribution Profit</p>
-
-            <p className="text-lg font-semibold text-green-600 mt-1">
-              Rp {unitEconomics.grossProfitPerUnit.toLocaleString("id-ID")}
+            <p className="text-lg font-semibold text-green-600 dark:text-green-400 mt-1">
+              Rp{" "}
+              {unitEconomics.grossProfitPerUnit.toLocaleString("id-ID")}
             </p>
           </div>
 
           {/* CONTRIBUTION MARGIN */}
+          <div className="border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Contribution Margin
+            </p>
 
-          <div className="border rounded-xl p-4">
-            <p className="text-xs text-gray-500">Contribution Margin</p>
-
-            <p className="text-lg font-semibold mt-1">
+            <p className="text-lg font-semibold mt-1 text-gray-900 dark:text-white">
               {unitEconomics.grossMargin.toFixed(1)}%
             </p>
           </div>
         </div>
 
         {/* TARGET NET PROFIT */}
-
-        <div className="border rounded-xl p-5">
+        <div className="border border-gray-200 dark:border-gray-800 rounded-xl p-5 bg-white dark:bg-gray-900">
           <div className="flex items-center justify-between gap-4">
-            <div>
-              <p className="text-sm text-gray-500">Target Net Profit</p>
 
-              <p className="text-xs text-gray-400 mt-1">
+            <div>
+              <p className="text-sm text-gray-600 dark:text-gray-300">
+                Target Net Profit
+              </p>
+
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                 Target {economicsDecision.targetNetProfitMargin}% dari
                 contribution setelah CAC.
               </p>
             </div>
 
-            <p className="text-2xl font-bold">
-              Rp {economicsDecision.targetNetProfit.toLocaleString("id-ID")}
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">
+              Rp{" "}
+              {economicsDecision.targetNetProfit.toLocaleString("id-ID")}
             </p>
+
           </div>
         </div>
 
         {/* SCALE CAC */}
-
-        <div className="border rounded-2xl p-6 bg-green-50">
-          <p className="text-sm font-medium text-green-700">🟢 SCALE CAC</p>
-
-          <p className="text-4xl font-bold text-green-700 mt-2">
-            Rp {economicsDecision.scaleCAC.toLocaleString("id-ID")}
+        <div className="border border-green-200 dark:border-green-900/50 rounded-2xl p-6 bg-green-50 dark:bg-green-950/30">
+          <p className="text-sm font-medium text-green-700 dark:text-green-400">
+            🟢 SCALE CAC
           </p>
 
-          <p className="text-sm text-green-700 mt-2">
+          <p className="text-4xl font-bold text-green-700 dark:text-green-400 mt-2">
+            Rp{" "}
+            {economicsDecision.scaleCAC.toLocaleString("id-ID")}
+          </p>
+
+          <p className="text-sm text-green-700 dark:text-green-400 mt-2">
             CAC maksimal agar produk masih mencapai target net margin{" "}
             {economicsDecision.targetNetProfitMargin}%.
           </p>
         </div>
 
         {/* BREAK EVEN CAC */}
-
-        <div className="border rounded-2xl p-6 bg-red-50">
-          <p className="text-sm font-medium text-red-700">🔴 BREAK-EVEN CAC</p>
-
-          <p className="text-3xl font-bold text-red-700 mt-2">
-            Rp {economicsDecision.breakEvenCAC.toLocaleString("id-ID")}
+        <div className="border border-red-200 dark:border-red-900/50 rounded-2xl p-6 bg-red-50 dark:bg-red-950/30">
+          <p className="text-sm font-medium text-red-700 dark:text-red-400">
+            🔴 BREAK-EVEN CAC
           </p>
 
-          <p className="text-sm text-red-700 mt-2">
+          <p className="text-3xl font-bold text-red-700 dark:text-red-400 mt-2">
+            Rp{" "}
+            {economicsDecision.breakEvenCAC.toLocaleString("id-ID")}
+          </p>
+
+          <p className="text-sm text-red-700 dark:text-red-400 mt-2">
             CAC pada titik ini membuat net profit menjadi Rp 0.
           </p>
         </div>
 
         {/* CAC RANGE */}
-
-        <div className="border rounded-xl p-5">
+        <div className="border border-gray-200 dark:border-gray-800 rounded-xl p-5">
           <div className="mb-4">
-            <p className="font-semibold">CAC Performance Range</p>
 
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="font-semibold text-gray-900 dark:text-white">
+              CAC Performance Range
+            </p>
+
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
               Bandingkan CAC aktual dari Ads Manager dengan batas economics
               produk.
             </p>
+
           </div>
 
           <div className="relative">
-            <div className="flex h-4 rounded-full overflow-hidden">
-              {/* SCALE */}
 
+            <div className="flex h-4 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-800">
+
+              {/* SCALE */}
               <div
                 className="bg-green-500"
                 style={{
@@ -618,14 +641,13 @@ export default function EditProductPage() {
                           100,
                           (economicsDecision.scaleCAC /
                             economicsDecision.breakEvenCAC) *
-                            100,
+                            100
                         )}%`
                       : "0%",
                 }}
               />
 
               {/* WATCH */}
-
               <div
                 className="bg-yellow-400"
                 style={{
@@ -636,87 +658,113 @@ export default function EditProductPage() {
                           100 -
                             (economicsDecision.scaleCAC /
                               economicsDecision.breakEvenCAC) *
-                              100,
+                              100
                         )}%`
                       : "0%",
                 }}
               />
+
             </div>
 
             <div className="flex justify-between mt-3 text-xs">
-              <span className="text-green-600 font-medium">🟢 SCALE</span>
+              <span className="text-green-600 dark:text-green-400 font-medium">
+                🟢 SCALE
+              </span>
 
-              <span className="text-yellow-600 font-medium">🟡 WATCH</span>
+              <span className="text-yellow-600 dark:text-yellow-400 font-medium">
+                🟡 WATCH
+              </span>
 
-              <span className="text-red-600 font-medium">🔴 STOP</span>
+              <span className="text-red-600 dark:text-red-400 font-medium">
+                🔴 STOP
+              </span>
             </div>
 
-            <div className="flex justify-between mt-2 text-xs">
+            <div className="flex justify-between mt-2 text-xs text-gray-500 dark:text-gray-400">
               <span>Rp 0</span>
 
-              <span className="font-semibold text-green-600">
-                Scale: Rp {economicsDecision.scaleCAC.toLocaleString("id-ID")}
+              <span className="font-semibold text-green-600 dark:text-green-400">
+                Scale: Rp{" "}
+                {economicsDecision.scaleCAC.toLocaleString("id-ID")}
               </span>
 
-              <span className="font-semibold text-red-600">
-                BE: Rp {economicsDecision.breakEvenCAC.toLocaleString("id-ID")}
+              <span className="font-semibold text-red-600 dark:text-red-400">
+                BE: Rp{" "}
+                {economicsDecision.breakEvenCAC.toLocaleString("id-ID")}
               </span>
             </div>
+
           </div>
         </div>
 
         {/* DECISION RULES */}
-
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <div className="border rounded-xl p-4">
-            <p className="text-xs text-gray-500">CAC ≤ Scale CAC</p>
 
-            <p className="text-sm font-semibold text-green-600 mt-1">
+          <div className="border border-gray-200 dark:border-gray-800 rounded-xl p-4">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              CAC ≤ Scale CAC
+            </p>
+
+            <p className="text-sm font-semibold text-green-600 dark:text-green-400 mt-1">
               🟢 SCALE
             </p>
 
-            <p className="text-xs text-gray-500 mt-1">
-              Net margin ≥ {economicsDecision.targetNetProfitMargin}%.
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Net margin ≥{" "}
+              {economicsDecision.targetNetProfitMargin}%.
             </p>
           </div>
 
-          <div className="border rounded-xl p-4">
-            <p className="text-xs text-gray-500">
+          <div className="border border-gray-200 dark:border-gray-800 rounded-xl p-4">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
               Scale CAC &lt; CAC &lt; BE CAC
             </p>
 
-            <p className="text-sm font-semibold text-yellow-600 mt-1">
+            <p className="text-sm font-semibold text-yellow-600 dark:text-yellow-400 mt-1">
               🟡 WATCH
             </p>
 
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
               Masih profitable, tetapi net margin sudah di bawah target.
             </p>
           </div>
 
-          <div className="border rounded-xl p-4">
-            <p className="text-xs text-gray-500">CAC ≥ BE CAC</p>
+          <div className="border border-gray-200 dark:border-gray-800 rounded-xl p-4">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              CAC ≥ BE CAC
+            </p>
 
-            <p className="text-sm font-semibold text-red-600 mt-1">🔴 STOP</p>
+            <p className="text-sm font-semibold text-red-600 dark:text-red-400 mt-1">
+              🔴 STOP
+            </p>
 
-            <p className="text-xs text-gray-500 mt-1">Net profit ≤ Rp 0.</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Net profit ≤ Rp 0.
+            </p>
           </div>
+
         </div>
       </div>
+
       {/* IMAGES */}
+      <div className="border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 rounded-2xl p-5 space-y-4">
 
-      <div className="border rounded-2xl p-5 space-y-4">
         <div>
-          <h2 className="font-semibold text-lg">Product Images</h2>
+          <h2 className="font-semibold text-lg text-gray-900 dark:text-white">
+            Product Images
+          </h2>
 
-          <p className="text-sm text-gray-500">Maksimal 10 gambar.</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Maksimal 10 gambar.
+          </p>
         </div>
 
         <div className="flex gap-3 flex-wrap">
+
           {images.map((img, index) => (
             <div
               key={`${img}-${index}`}
-              className="relative w-24 h-24 border rounded-xl overflow-hidden"
+              className="relative w-24 h-24 border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden"
             >
               <img
                 src={img}
@@ -727,36 +775,38 @@ export default function EditProductPage() {
               <button
                 type="button"
                 onClick={() => handleRemoveImage(index)}
-                className="absolute top-1 right-1 bg-white text-red-500 rounded-full px-2 py-1 text-xs"
+                className="absolute top-1 right-1 bg-white dark:bg-gray-900 text-red-500 hover:text-red-600 rounded-full px-2 py-1 text-xs shadow-sm"
               >
                 ×
               </button>
             </div>
           ))}
+
         </div>
 
         <div className="flex gap-2">
+
           <input
             type="text"
             value={imageUrlInput}
             onChange={(e) => setImageUrlInput(e.target.value)}
             placeholder="Paste image URL..."
-            className="border rounded-lg p-2 flex-1"
+            className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 rounded-lg p-2 flex-1 outline-none focus:ring-2 focus:ring-blue-500"
           />
 
           <button
             type="button"
             onClick={handleAddImage}
-            className="bg-black text-white px-4 rounded-lg"
+            className="bg-black hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-200 dark:text-black text-white px-4 rounded-lg transition"
           >
             Add
           </button>
+
         </div>
       </div>
 
       {/* BUNDLES */}
-
-      <div className="border rounded-2xl p-5">
+      <div className="border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 rounded-2xl p-5">
         <ProductBundles
           bundles={bundles}
           comparePriceEnabled={form.settings.comparePrice}
@@ -767,12 +817,14 @@ export default function EditProductPage() {
       </div>
 
       {/* CHECKOUT SETTINGS */}
+      <div className="border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 rounded-2xl p-5 space-y-4">
 
-      <div className="border rounded-2xl p-5 space-y-4">
         <div>
-          <h2 className="font-semibold text-lg">🛒 Checkout Settings</h2>
+          <h2 className="font-semibold text-lg text-gray-900 dark:text-white">
+            🛒 Checkout Settings
+          </h2>
 
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             Atur fitur yang tersedia di funnel checkout.
           </p>
         </div>
@@ -784,19 +836,24 @@ export default function EditProductPage() {
               title={feature.title}
               description={feature.description}
               value={form.settings.checkout[feature.key]}
-              onChange={(value) => handleToggle("checkout", feature.key, value)}
+              onChange={(value) =>
+                handleToggle("checkout", feature.key, value)
+              }
             />
           ))}
         </div>
+
       </div>
 
       {/* AUTOMATION SETTINGS */}
+      <div className="border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 rounded-2xl p-5 space-y-4">
 
-      <div className="border rounded-2xl p-5 space-y-4">
         <div>
-          <h2 className="font-semibold text-lg">🤖 Automation Settings</h2>
+          <h2 className="font-semibold text-lg text-gray-900 dark:text-white">
+            🤖 Automation Settings
+          </h2>
 
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             Automation hanya berjalan jika fitur product tersebut aktif.
           </p>
         </div>
@@ -814,15 +871,18 @@ export default function EditProductPage() {
             />
           ))}
         </div>
+
       </div>
 
       {/* GENERAL SETTINGS */}
+      <div className="border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 rounded-2xl p-5 space-y-4">
 
-      <div className="border rounded-2xl p-5 space-y-4">
         <div>
-          <h2 className="font-semibold text-lg">⚙️ General Settings</h2>
+          <h2 className="font-semibold text-lg text-gray-900 dark:text-white">
+            ⚙️ General Settings
+          </h2>
 
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             Pengaturan tambahan untuk product.
           </p>
         </div>
@@ -834,16 +894,19 @@ export default function EditProductPage() {
               title={feature.title}
               description={feature.description}
               value={form.settings[feature.key]}
-              onChange={(value) => handleGeneralToggle(feature.key, value)}
+              onChange={(value) =>
+                handleGeneralToggle(feature.key, value)
+              }
             />
           ))}
         </div>
 
         {/* COUNTDOWN MINUTE */}
-
         {form.settings.countdown && (
           <div>
-            <label className="text-sm font-medium">Countdown Duration</label>
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Countdown Duration
+            </label>
 
             <input
               type="number"
@@ -858,15 +921,16 @@ export default function EditProductPage() {
                   },
                 }))
               }
-              className="border rounded-lg p-2 w-full mt-1"
+              className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg p-2 w-full mt-1 outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
         )}
 
         {/* MAX ORDER */}
-
         <div>
-          <label className="text-sm font-medium">Max Order</label>
+          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            Max Order
+          </label>
 
           <input
             type="number"
@@ -881,24 +945,32 @@ export default function EditProductPage() {
                 },
               }))
             }
-            className="border rounded-lg p-2 w-full mt-1"
+            className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg p-2 w-full mt-1 outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
+
       </div>
 
       {/* DEBUG AUTOMATION */}
+      <div className="border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 rounded-2xl p-5">
 
-      <div className="border rounded-2xl p-5 bg-gray-50">
-        <h2 className="font-semibold mb-2">🔍 Automation Preview</h2>
+        <h2 className="font-semibold mb-2 text-gray-900 dark:text-white">
+          🔍 Automation Preview
+        </h2>
 
-        <pre className="text-xs overflow-auto">
+        <pre className="text-xs overflow-auto text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-lg p-4">
           {JSON.stringify(form.settings, null, 2)}
         </pre>
+
       </div>
 
       {/* ACTION */}
+      <ProductActions
+        loading={loading}
+        onSave={handleUpdate}
+      />
 
-      <ProductActions loading={loading} onSave={handleUpdate} />
     </div>
-  );
+  </div>
+);
 }
