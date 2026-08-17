@@ -165,111 +165,7 @@ export default function DashboardPage() {
           end={end}
         />
 
-        <div className="space-y-4">
-          <h2 className="text-xl font-bold">Product Economics</h2>
-
-          <div className="space-y-3">
-            {productEconomics.map((item) => (
-              <div
-                key={item.productId}
-                className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-4"
-              >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-bold">{item.productId}</h3>
-
-                    <p className="text-sm text-gray-500">
-                      {item.orders} orders
-                    </p>
-                  </div>
-
-                  <div className="text-right">
-                    <p className="text-sm text-gray-500">CAC</p>
-
-                    <p className="text-xl font-bold">
-                      {item.cac !== null
-                        ? `Rp ${Math.round(item.cac).toLocaleString("id-ID")}`
-                        : "-"}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-4">
-                  <div>
-                    <p className="text-xs text-gray-500">Ad Spend</p>
-                    <p className="font-semibold">
-                      Rp {Math.round(item.adSpend).toLocaleString("id-ID")}
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-xs text-gray-500">Orders</p>
-                    <p className="font-semibold">{item.orders}</p>
-                  </div>
-
-                  <div>
-                    <p className="text-xs text-gray-500">Revenue</p>
-                    <p className="font-semibold">
-                      Rp {Math.round(item.revenue).toLocaleString("id-ID")}
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-xs text-gray-500">AOV</p>
-                    <p className="font-semibold">
-                      Rp {Math.round(item.aov).toLocaleString("id-ID")}
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-xs text-gray-500">CAC</p>
-                    <p className="font-semibold">
-                      {item.cac !== null
-                        ? `Rp ${Math.round(item.cac).toLocaleString("id-ID")}`
-                        : "-"}
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-xs text-gray-500">Gross Profit</p>
-                    <p className="font-semibold">
-                      Rp {Math.round(item.grossProfit).toLocaleString("id-ID")}
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-xs text-gray-500">GP / Order</p>
-                    <p className="font-semibold">
-                      Rp{" "}
-                      {Math.round(item.grossProfitPerOrder).toLocaleString(
-                        "id-ID",
-                      )}
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-xs text-gray-500">LTGP : CAC</p>
-                    <p className="font-semibold">
-                      {item.ltgpToCac !== null
-                        ? `${item.ltgpToCac.toFixed(2)}x`
-                        : "-"}
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-xs text-gray-500">After Ads</p>
-                    <p className="font-semibold">
-                      Rp{" "}
-                      {Math.round(item.contributionAfterAds).toLocaleString(
-                        "id-ID",
-                      )}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+       
 
         {/* Chart Section */}
         <div className="mt-10 space-y-4">
@@ -452,6 +348,112 @@ export default function DashboardPage() {
               </>
             )}
           </div>
+
+					 <div className="space-y-4">
+          <h2 className="text-xl font-bold">Product Economics</h2>
+
+          <div className="space-y-3">
+            {productEconomics.map((item) => (
+              <div
+                key={item.productId}
+                className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-4"
+              >
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-bold">{item.productId}</h3>
+
+                    <p className="text-sm text-gray-500">
+                      {item.orders} orders
+                    </p>
+                  </div>
+
+                  <div className="text-right">
+                    <p className="text-sm text-gray-500">CAC</p>
+
+                    <p className="text-xl font-bold">
+                      {item.cac !== null
+                        ? `Rp ${Math.round(item.cac).toLocaleString("id-ID")}`
+                        : "-"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-4">
+                  <div>
+                    <p className="text-xs text-gray-500">Ad Spend</p>
+                    <p className="font-semibold">
+                      Rp {Math.round(item.adSpend).toLocaleString("id-ID")}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-xs text-gray-500">Orders</p>
+                    <p className="font-semibold">{item.orders}</p>
+                  </div>
+
+                  <div>
+                    <p className="text-xs text-gray-500">Revenue</p>
+                    <p className="font-semibold">
+                      Rp {Math.round(item.revenue).toLocaleString("id-ID")}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-xs text-gray-500">AOV</p>
+                    <p className="font-semibold">
+                      Rp {Math.round(item.aov).toLocaleString("id-ID")}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-xs text-gray-500">CAC</p>
+                    <p className="font-semibold">
+                      {item.cac !== null
+                        ? `Rp ${Math.round(item.cac).toLocaleString("id-ID")}`
+                        : "-"}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-xs text-gray-500">Gross Profit</p>
+                    <p className="font-semibold">
+                      Rp {Math.round(item.grossProfit).toLocaleString("id-ID")}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-xs text-gray-500">GP / Order</p>
+                    <p className="font-semibold">
+                      Rp{" "}
+                      {Math.round(item.grossProfitPerOrder).toLocaleString(
+                        "id-ID",
+                      )}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-xs text-gray-500">LTGP : CAC</p>
+                    <p className="font-semibold">
+                      {item.ltgpToCac !== null
+                        ? `${item.ltgpToCac.toFixed(2)}x`
+                        : "-"}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-xs text-gray-500">After Ads</p>
+                    <p className="font-semibold">
+                      Rp{" "}
+                      {Math.round(item.contributionAfterAds).toLocaleString(
+                        "id-ID",
+                      )}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
         </div>
       </div>
     </div>
