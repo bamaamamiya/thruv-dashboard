@@ -14,8 +14,9 @@ const copyToClipboard = async (text, onCopied) => {
   }
 };
 
-export default function AbandonedLeadRow({ lead, copiedId, setCopiedId }) {
+export default function AbandonedLeadRow({ lead }) {
   const [showModal, setShowModal] = useState(false);
+  const [copiedId, setCopiedId] = useState(null);
 
   const handleStatusChange = useCallback(
     async (newStatus) => {
@@ -30,27 +31,21 @@ export default function AbandonedLeadRow({ lead, copiedId, setCopiedId }) {
         alert("Gagal update status.");
       }
     },
-    [lead]
+    [lead],
   );
 
-  const productLinks = {
-    "CCTV E27": "https://thruv.vercel.app/cctv",
-    "Alat Pijat 4 in 1": "https://thruv.vercel.app/pijat",
-    // tambahkan produk lain di sini
-  };
 
   const handleCopy = () => {
-  const pesan = `Permisi Kak ${lead.name || ""} 🌟,
+    const pesan = `Permisi Kak ${lead.name || ""},
 Aku cek tadi Kak sempat lihat produk kami *${lead.productTitle}* tapi belum tulis alamat lengkap🙏
 
 Khusus Kak aku kasih diskon 50% ya. Silakan tulis alamat lengkap kalau masih minat sama promonya😊`;
 
-  copyToClipboard(pesan, () => {
-    setCopiedId(lead.id);
-    setTimeout(() => setCopiedId(null), 2000);
-  });
-};
-
+    copyToClipboard(pesan, () => {
+      setCopiedId(lead.id);
+      setTimeout(() => setCopiedId(null), 2000);
+    });
+  };
 
   const statusOptions = [
     { value: "abandoned", label: "🛑 Abandoned" },
@@ -95,8 +90,8 @@ Khusus Kak aku kasih diskon 50% ya. Silakan tulis alamat lengkap kalau masih min
             lead.status === "converted"
               ? "text-green-600 dark:text-green-400"
               : lead.status === "followup"
-              ? "text-yellow-600 dark:text-yellow-400"
-              : "text-red-600 dark:text-red-400"
+                ? "text-yellow-600 dark:text-yellow-400"
+                : "text-red-600 dark:text-red-400"
           }`}
         >
           {lead.status}
