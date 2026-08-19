@@ -312,11 +312,11 @@ export default function AdsPage() {
   // =========================================================
 
   return (
-    <div className="min-h-screen px-4 py-6 bg-gray-100 dark:bg-black transition-colors">
-      <div className="max-w-3xl mx-auto space-y-6">
+    <div className="min-h-screen px-4 py-4 sm:py-6 bg-gray-100 dark:bg-black transition-colors">
+      <div className="max-w-3xl mx-auto space-y-4 sm:space-y-6">
         {/* =====================================================
-            FILTER
-        ===================================================== */}
+          FILTER
+      ===================================================== */}
 
         <FilterBar
           selectedFilter={selectedFilter}
@@ -326,76 +326,104 @@ export default function AdsPage() {
         />
 
         {/* =====================================================
-            HEADER
-        ===================================================== */}
+          HEADER
+      ===================================================== */}
 
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-extrabold text-gray-800 dark:text-gray-100">
-            Ad Spend Tracker
-          </h1>
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h1 className="text-xl sm:text-3xl font-extrabold text-gray-800 dark:text-gray-100">
+              Ad Spend Tracker
+            </h1>
 
-          <MetaSyncButton />
+            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
+              Track your advertising spend
+            </p>
+          </div>
+
+          <div className="shrink-0">
+            <MetaSyncButton />
+          </div>
         </div>
 
         {/* =====================================================
-            INPUT FORM
-        ===================================================== */}
+          INPUT FORM
+      ===================================================== */}
 
         <form
           onSubmit={handleSubmit}
-          className="p-5 bg-gray-50 dark:bg-gray-800 shadow-lg rounded-2xl space-y-4"
+          className="p-4 sm:p-5 bg-gray-50 dark:bg-gray-800 shadow-lg rounded-2xl space-y-4"
         >
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             {/* DATE */}
+            <div>
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">
+                Date
+              </label>
 
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="border dark:border-gray-700 p-2 rounded-lg w-full bg-gray-50 dark:bg-gray-700 dark:text-white"
-            />
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="border dark:border-gray-700 p-2.5 rounded-lg w-full bg-gray-50 dark:bg-gray-700 dark:text-white text-sm"
+              />
+            </div>
 
             {/* PLATFORM */}
+            <div>
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">
+                Platform
+              </label>
 
-            <input
-              type="text"
-              value={platform}
-              onChange={(e) => setPlatform(e.target.value)}
-              className="border dark:border-gray-700 p-2 rounded-lg w-full bg-gray-50 dark:bg-gray-700 dark:text-white"
-              placeholder="Platform"
-            />
+              <input
+                type="text"
+                value={platform}
+                onChange={(e) => setPlatform(e.target.value)}
+                className="border dark:border-gray-700 p-2.5 rounded-lg w-full bg-gray-50 dark:bg-gray-700 dark:text-white text-sm"
+                placeholder="Platform"
+              />
+            </div>
 
             {/* PRODUCT */}
+            <div>
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">
+                Product
+              </label>
 
-            <select
-              value={productId}
-              onChange={(e) => setProductId(e.target.value)}
-              className="border dark:border-gray-700 p-2 rounded-lg w-full bg-gray-50 dark:bg-gray-700 dark:text-white"
-            >
-              <option value="">Select Product</option>
+              <select
+                value={productId}
+                onChange={(e) => setProductId(e.target.value)}
+                className="border dark:border-gray-700 p-2.5 rounded-lg w-full bg-gray-50 dark:bg-gray-700 dark:text-white text-sm"
+              >
+                <option value="">Select Product</option>
 
-              {products.map((product) => (
-                <option key={product.id} value={product.id}>
-                  {product.title || product.id}
-                </option>
-              ))}
-            </select>
+                {products.map((product) => (
+                  <option key={product.id} value={product.id}>
+                    {product.title || product.id}
+                  </option>
+                ))}
+              </select>
+            </div>
 
             {/* AD SPEND */}
+            <div>
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">
+                Ad Spend
+              </label>
 
-            <input
-              type="number"
-              min="0"
-              value={adSpend}
-              onChange={(e) => setAdSpend(e.target.value)}
-              className="border dark:border-gray-700 p-2 rounded-lg w-full bg-gray-50 dark:bg-gray-700 dark:text-white"
-              placeholder="Ad Spend (Rp)"
-            />
+              <input
+                type="number"
+                min="0"
+                value={adSpend}
+                onChange={(e) => setAdSpend(e.target.value)}
+                className="border dark:border-gray-700 p-2.5 rounded-lg w-full bg-gray-50 dark:bg-gray-700 dark:text-white text-sm"
+                placeholder="Rp 0"
+              />
+            </div>
           </div>
 
           <button
             type="submit"
-            className="flex items-center justify-center gap-2 bg-black dark:bg-blue-600 text-white py-2 rounded-xl w-full hover:opacity-90 transition"
+            className="flex items-center justify-center gap-2 bg-black dark:bg-blue-600 text-white py-2.5 rounded-xl w-full hover:opacity-90 transition text-sm font-medium"
           >
             <Plus className="h-4 w-4" />
             Save Entry
@@ -403,64 +431,80 @@ export default function AdsPage() {
         </form>
 
         {/* =====================================================
-            ADS ECONOMICS SUMMARY
-        ===================================================== */}
+          ADS ECONOMICS SUMMARY
+      ===================================================== */}
 
-        <div className="p-5 bg-gray-50 dark:bg-gray-800 shadow-lg rounded-2xl">
-          <h2 className="font-semibold text-xl text-gray-800 dark:text-gray-100 mb-4">
-            Ads Economics
-          </h2>
+        <div className="p-4 sm:p-5 bg-gray-50 dark:bg-gray-800 shadow-lg rounded-2xl">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-semibold text-lg sm:text-xl text-gray-800 dark:text-gray-100">
+              Ads Economics
+            </h2>
 
-          <div className="space-y-3">
-            {/* AD SPEND */}
+            <span className="text-[11px] px-2 py-1 rounded-md bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
+              {selectedFilter}
+            </span>
+          </div>
 
-            <p className="text-lg text-gray-700 dark:text-gray-300">
-              Total Ad Spend:{" "}
-              <span className="font-bold text-green-600 dark:text-green-400">
+          {/* METRICS */}
+
+          <div className="grid grid-cols-2 gap-3">
+            {/* SPEND */}
+            <div className="p-3 sm:p-4 bg-white dark:bg-gray-700 rounded-xl">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Ad Spend
+              </p>
+
+              <p className="mt-1 text-sm sm:text-base font-bold text-green-600 dark:text-green-400 break-words">
                 {formatCurrency(adsEconomics.adSpend)}
-              </span>
-            </p>
-
-            {/* CLICKS */}
-
-            <p className="text-lg text-gray-700 dark:text-gray-300">
-              Total Clicks:{" "}
-              <span className="font-bold text-blue-600 dark:text-blue-400">
-                {Number(adsEconomics.clicks || 0).toLocaleString("id-ID")}
-              </span>
-            </p>
-
-            {/* CPC */}
-
-            <p className="text-lg text-gray-700 dark:text-gray-300">
-              CPC:{" "}
-              <span className="font-bold text-indigo-600 dark:text-indigo-400">
-                {adsEconomics.cpc > 0 ? formatCurrency(adsEconomics.cpc) : "-"}
-              </span>
-            </p>
-
-            {/* INFO */}
-
-            <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                CAC, AOV, Revenue, ROAS, CVR, dan Profit akan dihitung setelah
-                attribution Product → Lead → Order selesai.
               </p>
             </div>
+
+            {/* CLICKS */}
+            <div className="p-3 sm:p-4 bg-white dark:bg-gray-700 rounded-xl">
+              <p className="text-xs text-gray-500 dark:text-gray-400">Clicks</p>
+
+              <p className="mt-1 text-sm sm:text-base font-bold text-blue-600 dark:text-blue-400">
+                {Number(adsEconomics.clicks || 0).toLocaleString("id-ID")}
+              </p>
+            </div>
+
+            {/* CPC */}
+            <div className="p-3 sm:p-4 bg-white dark:bg-gray-700 rounded-xl col-span-2">
+              <p className="text-xs text-gray-500 dark:text-gray-400">CPC</p>
+
+              <p className="mt-1 text-sm sm:text-base font-bold text-indigo-600 dark:text-indigo-400">
+                {adsEconomics.cpc > 0 ? formatCurrency(adsEconomics.cpc) : "-"}
+              </p>
+            </div>
+          </div>
+
+          {/* INFO */}
+
+          <div className="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
+            <p className="text-xs sm:text-sm leading-relaxed text-gray-500 dark:text-gray-400">
+              CAC, AOV, Revenue, ROAS, CVR, dan Profit akan dihitung setelah
+              attribution Product → Lead → Order selesai.
+            </p>
           </div>
         </div>
 
         {/* =====================================================
-            ADS LIST
-        ===================================================== */}
+          ADS LIST
+      ===================================================== */}
 
-        <div className="p-5 bg-gray-50 dark:bg-gray-800 shadow-lg rounded-2xl">
-          <h2 className="font-semibold text-xl text-gray-800 dark:text-gray-100 mb-3">
-            Entries
-          </h2>
+        <div className="p-4 sm:p-5 bg-gray-50 dark:bg-gray-800 shadow-lg rounded-2xl">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-semibold text-lg sm:text-xl text-gray-800 dark:text-gray-100">
+              Entries
+            </h2>
+
+            <span className="text-xs text-gray-500 dark:text-gray-400">
+              {filteredAds.length} entries
+            </span>
+          </div>
 
           {filteredAds.length === 0 ? (
-            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+            <div className="text-center py-8 text-sm text-gray-500 dark:text-gray-400">
               No ad spend data found.
             </div>
           ) : (
@@ -473,96 +517,114 @@ export default function AdsPage() {
 
                   const cpc = clicks > 0 ? spend / clicks : null;
 
-                  // Orders untuk product ini
-                  const productOrders = leads.filter((lead) => {
-                    if (lead.productId !== ad.productId) return false;
-
-                    if (!lead.createdAt) return false;
-
-                    const leadDate =
-                      lead.createdAt?.toDate?.() || new Date(lead.createdAt);
-
-                    return isDateInRange(leadDate, start, end);
-                  });
-
-                  const orders = productOrders.length;
-
-                  // CAC
-                  const cac = orders > 0 ? spend / orders : null;
-
                   return (
                     <li
                       key={ad.id}
-                      className="flex justify-between items-center p-4 bg-gray-50 dark:bg-gray-700 rounded-xl"
+                      className="p-4 bg-white dark:bg-gray-700 rounded-xl border border-gray-200 dark:border-gray-600"
                     >
                       {/* =================================================
-                          DATA
-                      ================================================= */}
+                        ENTRY HEADER
+                    ================================================= */}
 
-                      <div className="text-gray-800 dark:text-gray-200 space-y-1">
-                        <div className="font-medium">
-                          {ad.date} - {ad.platform}
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="font-semibold text-sm text-gray-800 dark:text-gray-100">
+                              {ad.date}
+                            </span>
+
+                            <span className="text-[11px] px-2 py-0.5 rounded-md bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-300">
+                              {ad.platform}
+                            </span>
+                          </div>
                         </div>
 
-                        <div className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2">
-                          <span>Product:</span>
+                        {/* SPEND */}
+                        <span className="text-sm font-bold text-gray-900 dark:text-white shrink-0">
+                          {formatCurrency(spend)}
+                        </span>
+                      </div>
 
-                          <select
-                            value={ad.productId || ""}
-                            onChange={(e) =>
-                              handleMapProduct(ad.id, e.target.value)
-                            }
-                            className="border dark:border-gray-600 p-1 rounded-lg
-      bg-gray-50 dark:bg-gray-600
-      dark:text-white text-sm"
-                          >
-                            <option value="">Select Product</option>
+                      {/* =================================================
+                        PRODUCT
+                    ================================================= */}
 
-                            {products.map((product) => (
-                              <option key={product.id} value={product.id}>
-                                {product.title || product.id}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
+                      <div className="mt-4">
+                        <label className="block text-[11px] font-medium text-gray-500 dark:text-gray-400 mb-1.5">
+                          Product
+                        </label>
 
-                        <div className="text-sm text-gray-600 dark:text-gray-400">
-                          Ad Spend:{" "}
-                          <span className="font-medium">
+                        <select
+                          value={ad.productId || ""}
+                          onChange={(e) =>
+                            handleMapProduct(ad.id, e.target.value)
+                          }
+                          className="border dark:border-gray-600 p-2.5 rounded-lg
+                        bg-gray-50 dark:bg-gray-600
+                        dark:text-white text-sm w-full"
+                        >
+                          <option value="">Select Product</option>
+
+                          {products.map((product) => (
+                            <option key={product.id} value={product.id}>
+                              {product.title || product.id}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* =================================================
+                        METRICS
+                    ================================================= */}
+
+                      <div className="grid grid-cols-2 gap-2 mt-3">
+                        {/* SPEND */}
+                        <div className="p-2.5 rounded-lg bg-gray-50 dark:bg-gray-600">
+                          <p className="text-[10px] uppercase tracking-wide text-gray-400 dark:text-gray-300">
+                            Spend
+                          </p>
+
+                          <p className="text-xs sm:text-sm font-semibold text-gray-800 dark:text-white mt-0.5">
                             {formatCurrency(spend)}
-                          </span>
+                          </p>
                         </div>
 
-                        {/* ORDERS */}
-                        <div className="text-sm text-gray-600 dark:text-gray-400">
-                          Orders:{" "}
-                          <span className="font-medium">
-                            {orders.toLocaleString("id-ID")}
-                          </span>
+                        {/* CPC */}
+                        <div className="p-2.5 rounded-lg bg-gray-50 dark:bg-gray-600">
+                          <p className="text-[10px] uppercase tracking-wide text-gray-400 dark:text-gray-300">
+                            CPC
+                          </p>
+
+                          <p className="text-xs sm:text-sm font-semibold text-gray-800 dark:text-white mt-0.5">
+                            {cpc ? formatCurrency(cpc) : "-"}
+                          </p>
                         </div>
                       </div>
 
                       {/* =================================================
-                          ACTIONS
-                      ================================================= */}
+                        ACTIONS
+                    ================================================= */}
 
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center justify-end gap-2 mt-4 pt-3 border-t border-gray-200 dark:border-gray-600">
                         {editingId === ad.id ? (
-                          <div className="flex items-center gap-2">
-                            {/* AD SPEND */}
+                          <div className="w-full space-y-2">
+                            {/* EDIT SPEND */}
+
                             <input
                               type="number"
                               min="0"
                               value={editValue}
                               onChange={(e) => setEditValue(e.target.value)}
-                              className="border dark:border-gray-600 p-1 rounded-lg w-24 bg-gray-50 dark:bg-gray-600 dark:text-white"
+                              className="border dark:border-gray-600 p-2.5 rounded-lg w-full bg-gray-50 dark:bg-gray-600 dark:text-white text-sm"
+                              placeholder="Ad Spend"
                             />
 
-                            {/* PRODUCT */}
+                            {/* EDIT PRODUCT */}
+
                             <select
                               value={editProductId}
                               onChange={(e) => setEditProductId(e.target.value)}
-                              className="border dark:border-gray-600 p-1 rounded-lg bg-gray-50 dark:bg-gray-600 dark:text-white max-w-[160px]"
+                              className="border dark:border-gray-600 p-2.5 rounded-lg w-full bg-gray-50 dark:bg-gray-600 dark:text-white text-sm"
                             >
                               <option value="">Select Product</option>
 
@@ -573,34 +635,34 @@ export default function AdsPage() {
                               ))}
                             </select>
 
-                            {/* SAVE */}
-                            <button
-                              type="button"
-                              onClick={() => handleUpdate(ad.id)}
-                              className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
-                            >
-                              <Save className="h-4 w-4" />
-                            </button>
+                            {/* SAVE / CANCEL */}
 
-                            {/* CANCEL */}
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setEditingId(null);
-                                setEditValue("");
-                                setEditProductId("");
-                              }}
-                              className="p-2 bg-gray-400 text-white rounded-lg hover:bg-gray-500"
-                            >
-                              <X className="h-4 w-4" />
-                            </button>
+                            <div className="grid grid-cols-2 gap-2">
+                              <button
+                                type="button"
+                                onClick={() => handleUpdate(ad.id)}
+                                className="flex items-center justify-center gap-2 p-2.5 bg-green-500 text-white rounded-lg hover:bg-green-600 text-sm"
+                              >
+                                <Save className="h-4 w-4" />
+                                Save
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setEditingId(null);
+                                  setEditValue("");
+                                  setEditProductId("");
+                                }}
+                                className="flex items-center justify-center gap-2 p-2.5 bg-gray-400 text-white rounded-lg hover:bg-gray-500 text-sm"
+                              >
+                                <X className="h-4 w-4" />
+                                Cancel
+                              </button>
+                            </div>
                           </div>
                         ) : (
-                          <>
-                            <span className="text-gray-900 dark:text-gray-100 font-semibold">
-                              {formatCurrency(spend)}
-                            </span>
-
+                          <div className="flex items-center gap-2">
                             <button
                               type="button"
                               onClick={() => {
@@ -608,19 +670,21 @@ export default function AdsPage() {
                                 setEditValue(ad.adSpend || "");
                                 setEditProductId(ad.productId || "");
                               }}
-                              className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                              className="flex items-center gap-1.5 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-xs sm:text-sm"
                             >
-                              <Edit2 className="h-4 w-4" />
+                              <Edit2 className="h-3.5 w-3.5" />
+                              Edit
                             </button>
 
                             <button
                               type="button"
                               onClick={() => handleDelete(ad.id)}
-                              className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                              className="flex items-center gap-1.5 px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 text-xs sm:text-sm"
                             >
-                              <Trash2 className="h-4 w-4" />
+                              <Trash2 className="h-3.5 w-3.5" />
+                              Delete
                             </button>
-                          </>
+                          </div>
                         )}
                       </div>
                     </li>

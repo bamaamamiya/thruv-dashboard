@@ -8,6 +8,7 @@ import {
   ShoppingCart,
   BarChart3,
   Package,
+  Wallet,
   ChevronDown,
   ChevronRight,
 } from "lucide-react";
@@ -126,6 +127,15 @@ const MobileSidebar = ({
           >
             <BarChart3 size={18} />
             Ads
+          </button>
+
+          {/* Cashflow */}
+          <button
+            onClick={() => handleNav("/cashflow")}
+            className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-900"
+          >
+            <Wallet size={18} />
+            Cashflow
           </button>
         </div>
 
