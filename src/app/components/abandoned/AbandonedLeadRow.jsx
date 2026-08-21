@@ -34,7 +34,6 @@ export default function AbandonedLeadRow({ lead }) {
     [lead],
   );
 
-
   const handleCopy = () => {
     const pesan = `Permisi Kak ${lead.name || ""},
 Aku cek tadi Kak sempat lihat produk kami *${lead.productTitle}* tapi belum tulis alamat lengkap🙏

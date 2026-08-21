@@ -63,7 +63,7 @@ export default function LeadsDashboard() {
       setLoading(true);
 
       try {
-        const q = query(collection(db, "leads"));
+        const q = query(collection(db, "leads"), orderBy("createdAt", "desc"));
         const snap = await getDocs(q);
 
         const data = snap.docs.map((d) => ({
